@@ -37,6 +37,7 @@
 - name: Install Homebrew casks
   community.general.homebrew_cask:
     name:
+      - 1password
       - 1password-cli
       - iterm2
       - visual-studio-code
