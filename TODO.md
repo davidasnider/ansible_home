@@ -1,33 +1,11 @@
 # TODO List
 
-## 1. **Set Up the Repository**
-
-- [x] Create a modular and reusable role-based design for playbooks.
-- [x] Separate inventories, variables, and configurations for local and cloud targets.
-- [x] Secure secrets management by integrating HashiCorp Vault (and optionally Ansible Vault as a fallback).
-
-## 2. **Establish Directory Structure**
-
-- [x] Create the recommended directory structure:
-  - [x] `.github/workflows/` for CI/CD workflows.
-  - [x] `docs/` for project documentation.
-  - [x] `inventory/` for environment-specific inventories.
-  - [x] `playbooks/` for entry-point playbooks.
-  - [x] `roles/` for Ansible roles.
-  - [x] `group_vars/` and `host_vars/` for shared and host-specific variables.
-  - [x] `vault/` for encrypted secrets.
-  - [x] `library/` and `filter_plugins/` for custom modules and plugins.
-  - [x] `tests/` for Molecule test scenarios.
-
-## 3. **Set Up Python Environment**
-
-- [x] Use Poetry for dependency management:
-  - Initialize the project with `poetry init`.
-  - Add dependencies like `ansible` and `hvac`.
-- [x] Ensure contributors use the same virtual environment (`poetry shell`).
+## 3. **Where we left off**
+- [ ] Add the nerd fonts for the terminal.
 
 ## 4. **Secrets Management**
 
+- [ ] Secure secrets management by integrating HashiCorp Vault (and optionally Ansible Vault as a fallback).
 - [ ] Integrate HashiCorp Vault for centralized secrets management.
 - [ ] Document Vault usage in the `docs/` folder.
 - [ ] Optionally, set up Ansible Vault for local fallback encryption.
