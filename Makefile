@@ -6,11 +6,11 @@ dev-setup:
 		fi \
 	fi
 	@if ! command -v python3 >/dev/null 2>&1; then \
-		brew install python@3; \
-		brew link python@3; \
+		/opt/homebrew/bin/brew install python@3; \
+		/opt/homebrew/bin/brew link python@3; \
 	fi
 	@if ! command -v poetry >/dev/null 2>&1; then \
-		brew install poetry; \
+		/opt/homebrew/bin/brew install poetry; \
 	fi
 	poetry env remove --all || true
 	rm -rf .venv
