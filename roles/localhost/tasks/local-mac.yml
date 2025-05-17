@@ -41,3 +41,25 @@
       - iterm2
       - visual-studio-code
     state: present
+
+- name: Ensure .gitignore exists in home directory
+  ansible.builtin.file:
+    path: "{{ lookup('env', 'HOME') }}/.gitignore"
+    state: touch
+    mode: '0600'
+  changed_when: false # This task only ensures the file exists
+
+- name: Add .dotfiles to .gitignore
+  ansible.builtin.lineinfile:
+    path: "{{ lookup('env', 'HOME') }}/.gitignore"
+    line: ".dotfiles"
+  register: gitignore_status
+
+- name: Clone the dotfiles repository
+  ansible.builtin.git:
+    repo: https://github.com/davidasnider/dotfiles.git
+    dest: "{{ lookup('env', 'HOME') }}/.dotfiles"
+    version: main # Or specify a branch/tag if needed
+    # force: yes
+  register: clone_status
+  notify: ignore untracked files for dotfiles
