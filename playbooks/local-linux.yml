@@ -1,4 +1,0 @@
-- name: Print message
-  ansible.builtin.debug:
-    msg: "Running local setup for Linux host"
-# Add more tasks as needed for Linux setup

@@ -1,12 +1,12 @@
 ---
-- name: Detect OS and include the appropriate local playbook
+- name: Detect OS and include the appropriate local task file
   hosts: localhost
   gather_facts: true
   tasks:
-    - name: Include local-mac.yml if MacOS
-      ansible.builtin.include_tasks: local-mac.yml
+    - name: Include local-mac tasks if MacOS
+      ansible.builtin.include_tasks: ../roles/localhost/tasks/local-mac.yml
       when: ansible_facts['os_family'] == 'Darwin'
 
-    - name: Include local-linux.yml if Linux
-      ansible.builtin.include_tasks: local-linux.yml
+    - name: Include local-linux tasks if Linux
+      ansible.builtin.include_tasks: ../roles/localhost/tasks/local-linux.yml
       when: ansible_facts['os_family'] == 'Linux'

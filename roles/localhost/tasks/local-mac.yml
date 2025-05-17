@@ -41,4 +41,3 @@
       - iterm2
       - visual-studio-code
     state: present
-

@@ -1,0 +1,10 @@
+repos:
+  - repo: https://github.com/ansible/ansible-lint
+    rev: v24.2.2  # Use the latest stable version or pin as needed
+    hooks:
+      - id: ansible-lint
+        name: ansible-lint
+        entry: ansible-lint
+        language: python
+        types: [yaml]
+        files: ^playbooks/|^roles/|\.yml$
