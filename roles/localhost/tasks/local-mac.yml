@@ -1,7 +1,7 @@
 # ansible-task
 - name: Ensure ~/code directory exists
   ansible.builtin.file:
-    path: "{{ lookup('env','HOME') }}/code"
+    path: "{{ lookup('env', 'HOME') }}/code"
     state: directory
     mode: '0755'
 
