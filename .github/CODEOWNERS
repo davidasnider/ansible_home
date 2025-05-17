@@ -1,0 +1,5 @@
+# This file specifies code ownership rules for the repository
+# Define owners for specific paths or the entire repository
+
+# Default owners for all files
+*       @davidsnider
