@@ -1,0 +1,4 @@
+- name: Print message
+  debug:
+    msg: "Running local setup for MacOS host"
+# Add more tasks as needed for Mac setup
