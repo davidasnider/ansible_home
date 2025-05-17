@@ -1,4 +1,44 @@
-- name: Print message
-  debug:
-    msg: "Running local setup for MacOS host"
-# Add more tasks as needed for Mac setup
+# ansible-task
+- name: Ensure ~/code directory exists
+  ansible.builtin.file:
+    path: "{{ lookup('env','HOME') }}/code"
+    state: directory
+    mode: '0755'
+
+- name: Install Homebrew if not present
+  ansible.builtin.shell: |
+    /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+  args:
+    creates: /opt/homebrew/bin/brew
+  become: false
+  changed_when: false
+
+- name: Check last Homebrew update time
+  ansible.builtin.stat:
+    path: /opt/homebrew/.git/FETCH_HEAD
+  register: brew_update_stat
+
+- name: Set update_brew variable if last update was more than 24 hours ago
+  ansible.builtin.set_fact:
+    update_brew: >-
+      {{ (brew_update_stat.stat.exists and ((ansible_date_time.epoch | int) - (brew_update_stat.stat.mtime | int) > 86400))
+         or (not brew_update_stat.stat.exists) }}
+
+- name: Update Homebrew and install packages
+  community.general.homebrew:
+    name:
+      - gh
+      - htop
+      - oh-my-posh
+      - poetry
+    state: present
+    update_homebrew: "{{ update_brew }}"
+
+- name: Install Homebrew casks
+  community.general.homebrew_cask:
+    name:
+      - 1password-cli
+      - iterm2
+      - visual-studio-code
+    state: present
+
