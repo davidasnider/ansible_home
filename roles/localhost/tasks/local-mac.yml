@@ -31,6 +31,8 @@
       - htop
       - oh-my-posh
       - poetry
+      - pre-commit
+      - zsh-history-substring-search
     state: present
     update_homebrew: "{{ update_brew }}"
 
@@ -61,6 +63,49 @@
     repo: https://github.com/davidasnider/dotfiles.git
     dest: "{{ lookup('env', 'HOME') }}/.dotfiles"
     version: main # Or specify a branch/tag if needed
-    # force: yes
+    force: true
   register: clone_status
-  notify: ignore untracked files for dotfiles
+  notify: Ignore untracked files for dotfiles
+
+- name: Check if Oh My Zsh is installed
+  ansible.builtin.stat:
+    path: "{{ lookup('env', 'HOME') }}/.oh-my-zsh"
+  register: oh_my_zsh_stat
+
+- name: Remove .zprofile if it exists
+  ansible.builtin.file:
+    path: "{{ lookup('env', 'HOME') }}/.zprofile"
+    state: absent
+
+- name: Install Oh My Zsh if not present
+  ansible.builtin.shell: |
+    sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
+  args:
+    creates: "{{ lookup('env', 'HOME') }}/.oh-my-zsh"
+  when: not oh_my_zsh_stat.stat.exists
+  changed_when: false
+
+- name: Configure Oh My Zsh in .zshrc
+  ansible.builtin.blockinfile:
+    path: "{{ lookup('env', 'HOME') }}/.zshrc"
+    create: true
+    mode: '0600'
+    marker: "# {mark} ANSIBLE MANAGED OH MY ZSH CONFIGURATION"
+    block: |
+      # Python auto env setup
+      PYTHON_VENV_NAME=".venv"
+      PYTHON_AUTO_VRUN=true
+      PYTHON_VENV_NAMES=($PYTHON_VENV_NAME venv)
+
+      # Path to your Oh My Zsh installation
+      export ZSH="$HOME/.oh-my-zsh"
+
+      # Theme and plugins configuration
+      ZSH_THEME=""
+      plugins=(git gh macos pip poetry python)
+
+      # Source Oh My Zsh
+      source $ZSH/oh-my-zsh.sh
+
+      # Additional plugin configuration
+      source $(brew --prefix)/share/zsh-history-substring-search/zsh-history-substring-search.zsh
