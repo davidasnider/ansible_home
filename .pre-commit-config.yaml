@@ -1,6 +1,6 @@
 repos:
   - repo: https://github.com/ansible/ansible-lint
-    rev: v24.2.2  # Use the latest stable version or pin as needed
+    rev: v25.5.0  # Use the latest stable version or pin as needed
     hooks:
       - id: ansible-lint
         name: ansible-lint
