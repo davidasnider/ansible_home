@@ -32,6 +32,9 @@
       - oh-my-posh
       - poetry
       - pre-commit
+      - zsh-autocomplete
+      - zsh-autosuggestions
+      - zsh-fast-syntax-highlighting
       - zsh-history-substring-search
     state: present
     update_homebrew: "{{ update_brew }}"
@@ -92,6 +95,15 @@
     mode: '0600'
     marker: "# {mark} ANSIBLE MANAGED OH MY ZSH CONFIGURATION"
     block: |
+      # Syntax highlighting
+      source /opt/homebrew/opt/zsh-fast-syntax-highlighting/share/zsh-fast-syntax-highlighting/fast-syntax-highlighting.plugin.zsh
+
+      # Turn on zsh autocomplete
+      source /opt/homebrew/share/zsh-autocomplete/zsh-autocomplete.plugin.zsh
+
+      # Set vi mode
+      set -o vi
+
       # Python auto env setup
       PYTHON_VENV_NAME=".venv"
       PYTHON_AUTO_VRUN=true
@@ -101,7 +113,6 @@
       export ZSH="$HOME/.oh-my-zsh"
 
       # Theme and plugins configuration
-      ZSH_THEME=""
       plugins=(git gh macos pip poetry python)
 
       # Source Oh My Zsh
@@ -109,3 +120,6 @@
 
       # Additional plugin configuration
       source $(brew --prefix)/share/zsh-history-substring-search/zsh-history-substring-search.zsh
+
+      # Auto Suggestions
+      source /opt/homebrew/share/zsh-autosuggestions/zsh-autosuggestions.zsh
