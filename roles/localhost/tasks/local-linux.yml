@@ -11,9 +11,10 @@
     name: 
       - gh
       - htop
-      # - oh-my-posh
+      - jq
       - python3-poetry
       - pre-commit
+      - zsh
       # - zsh-autocomplete
       - zsh-autosuggestions
       - zsh-syntax-highlighting
@@ -21,6 +22,17 @@
     state: present
     update_cache: yes
     cache_valid_time: 86400 # in seconds, equals 24 hours
+
+- name: Get current user
+  ansible.builtin.command: whoami
+  register: current_user
+  changed_when: false
+
+- name: Set zsh as default shell
+  ansible.builtin.user:
+    name: "{{ current_user.stdout }}"
+    shell: /usr/bin/zsh
+  become: true
 
 - name: Ensure ~/.local/bin directory exists
   ansible.builtin.file:
