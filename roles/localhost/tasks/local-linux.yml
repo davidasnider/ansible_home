@@ -4,3 +4,108 @@
     path: "{{ lookup('env', 'HOME') }}/code"
     state: directory
     mode: '0755'
+
+- name: Install a package and update cache if needed
+  become: true
+  ansible.builtin.apt:
+    name: 
+      - gh
+      - htop
+      # - oh-my-posh
+      - python3-poetry
+      - pre-commit
+      # - zsh-autocomplete
+      - zsh-autosuggestions
+      - zsh-syntax-highlighting
+      - unzip
+    state: present
+    update_cache: yes
+    cache_valid_time: 86400 # in seconds, equals 24 hours
+
+- name: Ensure ~/.local/bin directory exists
+  ansible.builtin.file:
+    path: "{{ lookup('env', 'HOME') }}/.local/bin"
+    state: directory
+    mode: '0755'
+
+- name: Install oh-my-posh if not present
+  ansible.builtin.shell:
+    cmd: curl -s https://ohmyposh.dev/install.sh | bash -s
+  environment:
+    OMP_INSTALL_DIR: "{{ lookup('env', 'HOME') }}/.local/bin"
+  args:
+    creates: "{{ lookup('env', 'HOME') }}/.local/bin/oh-my-posh"
+
+- name: Check if Oh My Zsh is installed
+  ansible.builtin.stat:
+    path: "{{ lookup('env', 'HOME') }}/.oh-my-zsh"
+  register: oh_my_zsh_stat
+
+- name: Remove .zprofile if it exists
+  ansible.builtin.file:
+    path: "{{ lookup('env', 'HOME') }}/.zprofile"
+    state: absent
+
+- name: Install Oh My Zsh if not present
+  ansible.builtin.shell: |
+    sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
+  args:
+    creates: "{{ lookup('env', 'HOME') }}/.oh-my-zsh"
+  when: not oh_my_zsh_stat.stat.exists
+  changed_when: false
+
+- name: Copy template to .zshrc
+  ansible.builtin.template:
+    src: zshrc-linux.j2
+    dest: "{{ lookup('env', 'HOME') }}/.zshrc"
+    mode: '0644'
+
+- name: Download and install 1Password CLI
+  block:
+    - name: Download 1Password GPG key
+      ansible.builtin.get_url:
+        url: https://downloads.1password.com/linux/keys/1password.asc
+        dest: /tmp/1password.asc
+        mode: '0644'
+
+    - name: Create 1Password keyring directory
+      ansible.builtin.file:
+        path: /usr/share/keyrings
+        state: directory
+        mode: '0755'
+      become: true
+
+    - name: Import 1Password GPG key to system keyring
+      ansible.builtin.shell: |
+        gpg --dearmor < /tmp/1password.asc > /usr/share/keyrings/1password-archive-keyring.gpg
+      become: true
+
+    - name: Get system architecture
+      ansible.builtin.command: dpkg --print-architecture
+      register: system_arch
+      changed_when: false
+
+    - name: Add 1Password repository
+      ansible.builtin.apt_repository:
+        repo: "deb [arch={{ system_arch.stdout }} signed-by=/usr/share/keyrings/1password-archive-keyring.gpg] https://downloads.1password.com/linux/debian/{{ system_arch.stdout }} stable main"
+        filename: 1password
+        state: present
+      become: true
+
+    - name: Update apt cache
+      ansible.builtin.apt:
+        update_cache: yes
+      become: true
+
+    - name: Install 1Password CLI
+      ansible.builtin.apt:
+        name: 1password-cli
+        state: present
+      become: true
+
+  always:
+    - name: Clean up temporary files
+      ansible.builtin.file:
+        path: /tmp/1password.asc
+        state: absent
+
