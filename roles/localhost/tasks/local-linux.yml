@@ -5,6 +5,18 @@
     state: directory
     mode: '0755'
 
+- name: Configure git user name
+  ansible.builtin.git_config:
+    name: user.name
+    value: "David Snider"
+    scope: global
+
+- name: Configure git user email
+  ansible.builtin.git_config:
+    name: user.email
+    value: "david@davidsnider.org"
+    scope: global
+
 - name: Install a package and update cache if needed
   become: true
   ansible.builtin.apt:

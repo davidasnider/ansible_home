@@ -59,9 +59,9 @@ fi
 alias opload='eval $(op signin) && eval $(cat ~/.env | op inject --)'
 
 # Load environment variables from .env file with validation
+REQUIRED_VARS=(GITHUB_TOKEN ANSIBLE_SUDO_PASS)
 if [ -f "$HOME/.env" ]; then
     # Check if required variables are referenced in .env
-    REQUIRED_VARS=(GITHUB_TOKEN ANSIBLE_SUDO_PASS)
     MISSING_VARS=()
     
     for var in ${REQUIRED_VARS[@]}; do
@@ -78,4 +78,9 @@ if [ -f "$HOME/.env" ]; then
     fi
 else
     echo "Warning: .env file not found in $HOME"
+    # Provide instructions to create it using the REQUIRED_VARS array above
+    echo "Please create a .env file in your home directory with the following content:"
+    for var in ${REQUIRED_VARS[@]}; do
+        echo "export $var="
+    done
 fi
