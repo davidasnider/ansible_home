@@ -54,12 +54,12 @@
   when: not oh_my_zsh_stat.stat.exists
   changed_when: false
 
-- name: Copy template to .zshrc
-  ansible.builtin.template:
-    src: zshrc-linux.j2
+- name: Copy zshrc file
+  ansible.builtin.copy:
+    src: zshrc-linux
     dest: "{{ lookup('env', 'HOME') }}/.zshrc"
     mode: '0644'
-
+    
 - name: Download and install 1Password CLI
   block:
     - name: Download 1Password GPG key
