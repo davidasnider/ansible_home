@@ -4,7 +4,7 @@ github_repository: ansible_home
 github_token: "{{ lookup('env', 'GITHUB_TOKEN') }}"
 
 # Repository settings
-repository_settings:
+github_repository_settings:
   description: "Ansible configuration for home automation and system setup"
   homepage: ""
   private: false
@@ -19,7 +19,7 @@ repository_settings:
   vulnerability_alerts: true
 
 # Branch protection settings
-branch_protection:
+github_branch_protection:
   branch: main
   enforce_admins: true
   required_status_checks:
@@ -43,7 +43,7 @@ branch_protection:
   require_conversation_resolution: true
 
 # Security settings
-security_settings:
+github_security_settings:
   enable_secret_scanning: true
   enable_secret_scanning_push_protection: true
   enable_dependency_alerts: true
