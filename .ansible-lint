@@ -1,0 +1,13 @@
+exclude_paths:
+  - .venv/
+  - .git/
+  - .github/
+  - src/
+  - tests/
+
+skip_list:
+  - yaml[line-length]  # Allow longer lines in YAML
+  - name[casing]       # Allow flexible task naming
+
+warn_list:
+  - experimental       # Warn about experimental features
