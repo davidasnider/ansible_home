@@ -132,6 +132,12 @@
     dest: "{{ lookup('env', 'HOME') }}/.zshrc"
     mode: '0644'
 
+- name: Copy zprofile file
+  ansible.builtin.copy:
+    src: zprofile-linux
+    dest: "{{ lookup('env', 'HOME') }}/.zprofile"
+    mode: '0644'
+
 - name: Download and install 1Password CLI
   block:
     - name: Download 1Password GPG key
