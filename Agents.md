@@ -220,7 +220,7 @@ all:
 - gh, htop, oh-my-posh, poetry, pre-commit
 - zsh-autocomplete, zsh-autosuggestions, zsh-fast-syntax-highlighting
 
-# Homebrew casks  
+# Homebrew casks
 - 1password, 1password-cli, iterm2, visual-studio-code
 ```
 
@@ -395,7 +395,7 @@ echo $ANSIBLE_SUDO_PASS
 # Add to roles/localhost/tasks/local-linux.yml
 - name: Install packages
   ansible.builtin.apt:
-    name: 
+    name:
       - existing-package
       - new-package-name  # Add here
     state: present

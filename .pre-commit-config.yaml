@@ -1,10 +1,20 @@
 repos:
-  - repo: https://github.com/ansible/ansible-lint
-    rev: v24.2.2  # Use the latest stable version or pin as needed
+  # Temporarily disabled due to compatibility issues with Python 3.13
+  # - repo: https://github.com/ansible/ansible-lint
+  #   rev: v6.22.2
+  #   hooks:
+  #     - id: ansible-lint
+  #       name: ansible-lint
+  #       entry: ansible-lint
+  #       language: python
+  #       types: [yaml]
+  #       files: ^playbooks/|^roles/|\.yml$
+  #       additional_dependencies: ['ansible-core>=2.12.0']
+
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.4.0
     hooks:
-      - id: ansible-lint
-        name: ansible-lint
-        entry: ansible-lint
-        language: python
-        types: [yaml]
-        files: ^playbooks/|^roles/|\.yml$
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-added-large-files

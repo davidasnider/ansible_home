@@ -20,7 +20,7 @@
 - name: Install a package and update cache if needed
   become: true
   ansible.builtin.apt:
-    name: 
+    name:
       - gh
       - htop
       - jq
@@ -83,7 +83,7 @@
     src: zshrc-linux
     dest: "{{ lookup('env', 'HOME') }}/.zshrc"
     mode: '0644'
-    
+
 - name: Download and install 1Password CLI
   block:
     - name: Download 1Password GPG key
@@ -132,4 +132,3 @@
       ansible.builtin.file:
         path: /tmp/1password.asc
         state: absent
-
