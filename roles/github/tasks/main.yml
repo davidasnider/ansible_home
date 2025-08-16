@@ -1,0 +1,84 @@
+# GitHub repository management tasks
+- name: Configure repository settings
+  community.general.github_repo:
+    token: "{{ github_token }}"
+    organization: "{{ github_owner }}"
+    repo: "{{ github_repository }}"
+    name: "{{ github_repository }}"
+    description: "{{ repository_settings.description }}"
+    homepage: "{{ repository_settings.homepage }}"
+    private: "{{ repository_settings.private }}"
+    has_issues: "{{ repository_settings.has_issues }}"
+    has_projects: "{{ repository_settings.has_projects }}"
+    has_wiki: "{{ repository_settings.has_wiki }}"
+    allow_merge_commit: "{{ repository_settings.allow_merge_commit }}"
+    allow_squash_merge: "{{ repository_settings.allow_squash_merge }}"
+    allow_rebase_merge: "{{ repository_settings.allow_rebase_merge }}"
+    allow_auto_merge: "{{ repository_settings.allow_auto_merge }}"
+    delete_branch_on_merge: "{{ repository_settings.delete_branch_on_merge }}"
+    state: present
+
+- name: Enable vulnerability alerts
+  uri:
+    url: "https://api.github.com/repos/{{ github_owner }}/{{ github_repository }}/vulnerability-alerts"
+    method: PUT
+    headers:
+      Authorization: "token {{ github_token }}"
+      Accept: "application/vnd.github.dorian-preview+json"
+    status_code: [204, 409]  # 409 means already enabled
+  when: repository_settings.vulnerability_alerts
+
+- name: Enable secret scanning
+  uri:
+    url: "https://api.github.com/repos/{{ github_owner }}/{{ github_repository }}"
+    method: PATCH
+    headers:
+      Authorization: "token {{ github_token }}"
+      Accept: "application/vnd.github+json"
+    body_format: json
+    body:
+      security_and_analysis:
+        secret_scanning:
+          status: "{{ 'enabled' if security_settings.enable_secret_scanning else 'disabled' }}"
+        secret_scanning_push_protection:
+          status: "{{ 'enabled' if security_settings.enable_secret_scanning_push_protection else 'disabled' }}"
+    status_code: [200]
+  when: security_settings.enable_secret_scanning or security_settings.enable_secret_scanning_push_protection
+
+- name: Enable automated security fixes
+  uri:
+    url: "https://api.github.com/repos/{{ github_owner }}/{{ github_repository }}/automated-security-fixes"
+    method: PUT
+    headers:
+      Authorization: "token {{ github_token }}"
+      Accept: "application/vnd.github.london-preview+json"
+    status_code: [204, 409]  # 409 means already enabled
+  when: security_settings.enable_automated_security_fixes
+
+- name: Configure branch protection
+  uri:
+    url: "https://api.github.com/repos/{{ github_owner }}/{{ github_repository }}/branches/{{ branch_protection.branch }}/protection"
+    method: PUT
+    headers:
+      Authorization: "token {{ github_token }}"
+      Accept: "application/vnd.github+json"
+    body_format: json
+    body:
+      required_status_checks:
+        strict: "{{ branch_protection.required_status_checks.strict }}"
+        contexts: "{{ branch_protection.required_status_checks.contexts }}"
+      enforce_admins: "{{ branch_protection.enforce_admins }}"
+      required_pull_request_reviews:
+        required_approving_review_count: "{{ branch_protection.required_pull_request_reviews.required_approving_review_count }}"
+        dismiss_stale_reviews: "{{ branch_protection.required_pull_request_reviews.dismiss_stale_reviews }}"
+        require_code_owner_reviews: "{{ branch_protection.required_pull_request_reviews.require_code_owner_reviews }}"
+        restrict_dismissals: "{{ branch_protection.required_pull_request_reviews.restrict_dismissals }}"
+      restrictions:
+        users: "{{ branch_protection.restrictions.push }}"
+        teams: []
+        apps: "{{ branch_protection.restrictions.apps }}"
+      allow_force_pushes: "{{ branch_protection.allow_force_pushes }}"
+      allow_deletions: "{{ branch_protection.allow_deletions }}"
+      required_linear_history: "{{ branch_protection.require_linear_history }}"
+      required_conversation_resolution: "{{ branch_protection.require_conversation_resolution }}"
+    status_code: [200]

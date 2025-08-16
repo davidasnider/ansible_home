@@ -1,0 +1,98 @@
+name: CI & Quality Checks
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  ansible-lint:
+    name: Ansible Linting
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install ansible ansible-lint
+
+      - name: Run ansible-lint
+        run: ansible-lint
+
+  pre-commit:
+    name: Pre-commit Checks
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install pre-commit
+        run: |
+          python -m pip install --upgrade pip
+          pip install pre-commit
+
+      - name: Run pre-commit
+        run: pre-commit run --all-files
+
+  syntax-check:
+    name: Ansible Syntax Check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install Ansible
+        run: |
+          python -m pip install --upgrade pip
+          pip install ansible
+
+      - name: Check playbook syntax
+        run: ansible-playbook --syntax-check -i inventory/local.yml playbooks/local-main.yml
+
+  auto-approve:
+    name: Auto Approve PR
+    runs-on: ubuntu-latest
+    needs: [ansible-lint, pre-commit, syntax-check]
+    permissions:
+      contents: read
+      pull-requests: write
+    if: github.event_name == 'pull_request' && (github.actor == 'davidasnider' || github.actor == 'dependabot[bot]')
+    steps:
+      - name: Auto approve PR
+        uses: hmarr/auto-approve-action@v4
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          review-message: "Auto-approved after all checks passed"
+
+  auto-merge:
+    name: Auto Merge PR
+    runs-on: ubuntu-latest
+    needs: auto-approve
+    permissions:
+      contents: write
+      pull-requests: write
+    if: github.event_name == 'pull_request' && (github.actor == 'davidasnider' || github.actor == 'dependabot[bot]')
+    steps:
+      - name: Enable auto-merge for PR
+        uses: peter-evans/enable-pull-request-automerge@v3
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          pull-request-number: ${{ github.event.pull_request.number }}
+          merge-method: squash
