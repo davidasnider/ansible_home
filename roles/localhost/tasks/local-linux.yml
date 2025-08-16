@@ -6,43 +6,43 @@
     mode: '0755'
 
 - name: Configure git user name
-  ansible.builtin.git_config:
+  community.general.git_config:
     name: user.name
     value: "David Snider"
     scope: global
 
 - name: Configure git user email
-  ansible.builtin.git_config:
+  community.general.git_config:
     name: user.email
     value: "david@davidsnider.org"
     scope: global
 
 - name: Configure git to use ssh.exe for SSH connections
-  ansible.builtin.git_config:
+  community.general.git_config:
     name: core.sshCommand
     value: "ssh.exe"
     scope: global
 
 - name: Configure git signing key
-  ansible.builtin.git_config:
+  community.general.git_config:
     name: user.signingkey
     value: "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIKWm36FodEyxXOXxqhkCj0YLDHkori4Dzmq3hI0PsrX9"
     scope: global
 
 - name: Configure GPG format
-  ansible.builtin.git_config:
+  community.general.git_config:
     name: gpg.format
     value: "ssh"
     scope: global
 
 - name: Configure GPG SSH program
-  ansible.builtin.git_config:
+  community.general.git_config:
     name: gpg.ssh.program
     value: "/mnt/c/Users/david/AppData/Local/1Password/app/8/op-ssh-sign-wsl"
     scope: global
 
 - name: Enable commit GPG signing
-  ansible.builtin.git_config:
+  community.general.git_config:
     name: commit.gpgsign
     value: "true"
     scope: global
@@ -60,7 +60,7 @@
     mode: '0644'
 
 - name: Configure Git allowed signers file
-  ansible.builtin.git_config:
+  community.general.git_config:
     name: gpg.ssh.allowedSignersFile
     value: "{{ lookup('env', 'HOME') }}/.ssh/allowed_signers"
     scope: global
@@ -80,7 +80,7 @@
       - zsh-syntax-highlighting
       - unzip
     state: present
-    update_cache: yes
+    update_cache: true
     cache_valid_time: 86400 # in seconds, equals 24 hours
 
 - name: Get current user
@@ -172,7 +172,7 @@
 
     - name: Update apt cache
       ansible.builtin.apt:
-        update_cache: yes
+        update_cache: true
       become: true
 
     - name: Install 1Password CLI
