@@ -55,6 +55,12 @@ if [ -f /usr/share/zsh-history-substring-search/zsh-history-substring-search.zsh
     source /usr/share/zsh-history-substring-search/zsh-history-substring-search.zsh
 fi
 
+# WSL-specific aliases (only if running in WSL)
+if grep -q microsoft /proc/version 2>/dev/null; then
+    alias ssh='ssh.exe'
+    alias ssh-add='ssh-add.exe'
+fi
+
 # 1Password login and environment variable loading alias
 alias opload='eval $(op signin) && eval $(cat ~/.env | op inject --)'
 
