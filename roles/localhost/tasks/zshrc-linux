@@ -77,7 +77,10 @@ if [ -f "$HOME/.env" ]; then
     done
 
     if [ ${#MISSING_VARS[@]} -eq 0 ]; then
-        echo "Use opload to load environment variables from .env"
+        # Check if user is already authenticated to 1Password
+        if ! op whoami >/dev/null 2>&1; then
+            echo "Use opload to load environment variables from .env"
+        fi
     else
         echo "Warning: Missing required variables in .env file:"
         printf '%s\n' "${MISSING_VARS[@]}"
