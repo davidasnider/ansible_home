@@ -1,0 +1,8 @@
+name: ansible-home-infrastructure
+runtime: python
+description: Infrastructure as code for ansible_home repository management
+template:
+  config:
+    github:token:
+      description: GitHub personal access token for repository management
+      secret: true
