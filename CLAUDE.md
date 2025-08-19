@@ -3,3 +3,5 @@
 - Use opload to get ask-become-pass variable for "become: true" tasks
 
 - When I ask for a TODO or an Issue or Feature request, always use GitHub issues for this repository to track those
+
+- never copy files manually, only use ansible
