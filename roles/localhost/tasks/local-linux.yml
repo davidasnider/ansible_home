@@ -129,7 +129,7 @@
     owner: "{{ lookup('env', 'USER') }}"
 
 - name: Create SSH config for enhanced security
-  ansible.builtin.template:
+  ansible.builtin.copy:
     dest: "{{ lookup('env', 'HOME') }}/.ssh/config"
     mode: '0600'
     content: |
@@ -165,7 +165,7 @@
         ServerAliveCountMax 3
 
 - name: Create GPG key rotation script
-  ansible.builtin.template:
+  ansible.builtin.copy:
     dest: "{{ lookup('env', 'HOME') }}/.local/bin/rotate-git-keys"
     mode: '0755'
     content: |
