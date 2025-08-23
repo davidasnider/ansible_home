@@ -1,7 +1,0 @@
----
-- name: Configure GitHub repository settings
-  hosts: localhost
-  connection: local
-  gather_facts: false
-  roles:
-    - github
