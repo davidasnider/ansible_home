@@ -65,6 +65,164 @@
     value: "{{ lookup('env', 'HOME') }}/.ssh/allowed_signers"
     scope: global
 
+# Enhanced Git Security Configuration
+- name: Require all commits to be signed
+  community.general.git_config:
+    name: commit.gpgsign
+    value: "true"
+    scope: global
+
+- name: Require all tags to be signed
+  community.general.git_config:
+    name: tag.gpgsign
+    value: "true"
+    scope: global
+
+- name: Enable strict SSL verification
+  community.general.git_config:
+    name: http.sslverify
+    value: "true"
+    scope: global
+
+- name: Enable push signature verification
+  community.general.git_config:
+    name: receive.fsckobjects
+    value: "true"
+    scope: global
+
+- name: Enable transfer signature verification
+  community.general.git_config:
+    name: transfer.fsckobjects
+    value: "true"
+    scope: global
+
+- name: Enable fetch signature verification
+  community.general.git_config:
+    name: fetch.fsckobjects
+    value: "true"
+    scope: global
+
+- name: Set minimum TLS version for HTTPS
+  community.general.git_config:
+    name: http.sslversion
+    value: "tlsv1.2"
+    scope: global
+
+- name: Configure SSH key validation
+  community.general.git_config:
+    name: gpg.ssh.defaultKeyCommand
+    value: "ssh-add -L"
+    scope: global
+
+# SSH Key Management and Validation
+- name: Validate SSH directory permissions
+  ansible.builtin.file:
+    path: "{{ lookup('env', 'HOME') }}/.ssh"
+    state: directory
+    mode: '0700'
+    owner: "{{ lookup('env', 'USER') }}"
+
+- name: Validate allowed_signers file permissions
+  ansible.builtin.file:
+    path: "{{ lookup('env', 'HOME') }}/.ssh/allowed_signers"
+    mode: '0644'
+    owner: "{{ lookup('env', 'USER') }}"
+
+- name: Create SSH config for enhanced security
+  ansible.builtin.template:
+    dest: "{{ lookup('env', 'HOME') }}/.ssh/config"
+    mode: '0600'
+    content: |
+      # Enhanced SSH Security Configuration
+      Host *
+        # Use only the configured keys
+        IdentitiesOnly yes
+
+        # Disable agent forwarding for security
+        ForwardAgent no
+
+        # Disable X11 forwarding for security
+        ForwardX11 no
+
+        # Use strong ciphers only
+        Ciphers chacha20-poly1305@openssh.com,aes256-gcm@openssh.com,aes128-gcm@openssh.com,aes256-ctr,aes192-ctr,aes128-ctr
+
+        # Use strong MACs only
+        MACs hmac-sha2-256-etm@openssh.com,hmac-sha2-512-etm@openssh.com,hmac-sha2-256,hmac-sha2-512
+
+        # Use strong key exchange algorithms only
+        KexAlgorithms curve25519-sha256@libssh.org,diffie-hellman-group16-sha512,diffie-hellman-group18-sha512
+
+        # Use strong host key algorithms only
+        HostKeyAlgorithms ssh-ed25519-cert-v01@openssh.com,ssh-rsa-cert-v01@openssh.com,ssh-ed25519,rsa-sha2-512,rsa-sha2-256
+
+        # Verify host keys strictly
+        StrictHostKeyChecking ask
+
+        # Connection timeout and keep-alive settings
+        ConnectTimeout 30
+        ServerAliveInterval 60
+        ServerAliveCountMax 3
+
+- name: Create GPG key rotation script
+  ansible.builtin.template:
+    dest: "{{ lookup('env', 'HOME') }}/.local/bin/rotate-git-keys"
+    mode: '0755'
+    content: |
+      #!/bin/bash
+      # Git SSH Key Rotation Script
+      # This script helps rotate SSH keys used for Git signing
+
+      set -euo pipefail
+
+      SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+      SSH_DIR="$HOME/.ssh"
+      ALLOWED_SIGNERS="$SSH_DIR/allowed_signers"
+      BACKUP_DIR="$SSH_DIR/backups/$(date +%Y%m%d_%H%M%S)"
+
+      echo "🔐 Git SSH Key Rotation Script"
+      echo "=============================="
+
+      # Create backup directory
+      mkdir -p "$BACKUP_DIR"
+
+      # Backup current allowed_signers
+      if [[ -f "$ALLOWED_SIGNERS" ]]; then
+          cp "$ALLOWED_SIGNERS" "$BACKUP_DIR/allowed_signers.backup"
+          echo "✅ Backed up current allowed_signers to $BACKUP_DIR"
+      fi
+
+      echo ""
+      echo "Current signing keys in allowed_signers:"
+      if [[ -f "$ALLOWED_SIGNERS" ]]; then
+          cat "$ALLOWED_SIGNERS" | nl
+      else
+          echo "No allowed_signers file found"
+      fi
+
+      echo ""
+      echo "Available SSH keys in agent:"
+      if command -v ssh-add >/dev/null 2>&1; then
+          ssh-add -L 2>/dev/null || echo "No keys in SSH agent"
+      else
+          echo "ssh-add not available"
+      fi
+
+      echo ""
+      echo "To add a new key to allowed_signers:"
+      echo "1. Ensure your new key is loaded in 1Password SSH agent"
+      echo "2. Run: echo 'david@davidsnider.org <new-key-type> <new-public-key>' >> ~/.ssh/allowed_signers"
+      echo "3. Update Git configuration: git config --global user.signingkey '<new-public-key>'"
+      echo ""
+      echo "⚠️  Remember to update the Ansible configuration in roles/localhost/tasks/local-linux.yml"
+      echo "    with the new signing key for consistent deployment."
+
+      echo ""
+      echo "🔍 Verifying current Git configuration..."
+      echo "Current signing key: $(git config --global user.signingkey || echo 'Not set')"
+      echo "GPG format: $(git config --global gpg.format || echo 'Not set')"
+      echo "Commit signing enabled: $(git config --global commit.gpgsign || echo 'Not set')"
+
 - name: Install a package and update cache if needed
   become: true
   ansible.builtin.apt:
