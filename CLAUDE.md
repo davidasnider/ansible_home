@@ -7,3 +7,5 @@
 - never copy files manually, only use ansible
 
 - The github owner for this repository is davidasnider the repository name is ansible_home
+
+- Always ask me to validate, by running the ansible playbook commands before you do the full PR
