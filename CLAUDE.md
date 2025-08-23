@@ -5,3 +5,5 @@
 - When I ask for a TODO or an Issue or Feature request, always use GitHub issues for this repository to track those
 
 - never copy files manually, only use ansible
+
+- The github owner for this repository is davidasnider the repository name is ansible_home
