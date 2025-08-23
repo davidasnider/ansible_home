@@ -46,9 +46,11 @@ branch_protection = github.BranchProtection(
     required_status_checks=github.BranchProtectionRequiredStatusCheckArgs(
         strict=True,
         contexts=[
-            "Auto Approve PR",
-            "dependency-review",
-            "pre-commit.ci - pr",
+            "Ansible Linting",
+            "Pre-commit Checks",
+            "Ansible Syntax Check",
+            "Molecule Tests",
+            "Dependency Review",
         ],
     ),
     required_pull_request_reviews=github.BranchProtectionRequiredPullRequestReviewArgs(
