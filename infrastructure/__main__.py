@@ -48,6 +48,7 @@ branch_protection = github.BranchProtection(
         contexts=[
             "Ansible Linting",
             "Pre-commit Checks",
+            "Secret Scanning",
             "Ansible Syntax Check",
             "Molecule Tests",
             "Dependency Review",
