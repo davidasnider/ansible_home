@@ -46,9 +46,8 @@ branch_protection = github.BranchProtection(
     required_status_checks=github.BranchProtectionRequiredStatusCheckArgs(
         strict=True,
         contexts=[
-            "CI & Quality Checks",
-            "CodeQL Security Analysis",
-            "Dependency Review",
+            "Auto Approve PR",
+            "dependency-review",
             "pre-commit.ci - pr",
         ],
     ),
