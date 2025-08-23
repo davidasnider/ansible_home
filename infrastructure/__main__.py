@@ -51,7 +51,6 @@ branch_protection = github.BranchProtection(
             "Ansible Syntax Check",
             "Molecule Tests",
             "Dependency Review",
-            "Analyze Code",
         ],
     ),
     required_pull_request_reviews=github.BranchProtectionRequiredPullRequestReviewArgs(
