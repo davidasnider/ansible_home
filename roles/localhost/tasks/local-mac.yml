@@ -16,13 +16,13 @@
 - name: Check last Homebrew update time
   ansible.builtin.stat:
     path: /opt/homebrew/.git/FETCH_HEAD
-  register: brew_update_stat
+  register: localhost_brew_update_stat
 
 - name: Set update_brew variable if last update was more than 24 hours ago
   ansible.builtin.set_fact:
-    update_brew: >-
-      {{ (brew_update_stat.stat.exists and ((ansible_date_time.epoch | int) - (brew_update_stat.stat.mtime | int) > 86400))
-         or (not brew_update_stat.stat.exists) }}
+    localhost_update_brew: >-
+      {{ (localhost_brew_update_stat.stat.exists and ((ansible_date_time.epoch | int) - (localhost_brew_update_stat.stat.mtime | int) > 86400))
+         or (not localhost_brew_update_stat.stat.exists) }}
 
 - name: Update Homebrew and install packages
   community.general.homebrew:
@@ -37,7 +37,7 @@
       - zsh-fast-syntax-highlighting
       - zsh-history-substring-search
     state: present
-    update_homebrew: "{{ update_brew }}"
+    update_homebrew: "{{ localhost_update_brew }}"
 
 - name: Install Homebrew casks
   community.general.homebrew_cask:
@@ -59,7 +59,7 @@
   ansible.builtin.lineinfile:
     path: "{{ lookup('env', 'HOME') }}/.gitignore"
     line: ".dotfiles"
-  register: gitignore_status
+  register: localhost_gitignore_status
 
 - name: Clone the dotfiles repository
   ansible.builtin.git:
@@ -67,13 +67,13 @@
     dest: "{{ lookup('env', 'HOME') }}/.dotfiles"
     version: main # Or specify a branch/tag if needed
     force: true
-  register: clone_status
+  register: localhost_clone_status
   notify: Ignore untracked files for dotfiles
 
 - name: Check if Oh My Zsh is installed
   ansible.builtin.stat:
     path: "{{ lookup('env', 'HOME') }}/.oh-my-zsh"
-  register: oh_my_zsh_stat
+  register: localhost_oh_my_zsh_stat
 
 - name: Remove .zprofile if it exists
   ansible.builtin.file:
@@ -85,7 +85,7 @@
     sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
   args:
     creates: "{{ lookup('env', 'HOME') }}/.oh-my-zsh"
-  when: not oh_my_zsh_stat.stat.exists
+  when: not localhost_oh_my_zsh_stat.stat.exists
   changed_when: false
 
 - name: Configure Oh My Zsh in .zshrc
