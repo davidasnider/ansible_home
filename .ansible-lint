@@ -1,17 +1,41 @@
+---
+# Configuration file for ansible-lint
+# See https://ansible.readthedocs.io/projects/lint/
+
+# Enable checking of loop variable prefixes in roles
+loop_var_prefix: "^(__|{role}_)"
+
+# Patterns to exclude files from scanning
 exclude_paths:
-  - .venv/
-  - .git/
+  - .cache/  # implicit unless exclude_paths is defined in config
   - .github/
-  - src/
-  - tests/
+  - infrastructure/
+  - .secrets.baseline
 
+# Enable offline mode to disable rules requiring Internet connectivity
+offline: true
+
+# Enable or disable rules
 skip_list:
-  - yaml[line-length]  # Allow longer lines in YAML
-  - name[casing]       # Allow flexible task naming
-  - var-naming[no-role-prefix]  # Skip variable naming issues in existing localhost role
-  - command-instead-of-module   # Skip existing curl usage in localhost role
-  - risky-shell-pipe           # Skip existing shell pipe usage in localhost role
-  - no-changed-when            # Skip existing changed_when issues in localhost role
+  # Skip rules that might not apply to all environments
+  - experimental  # all rules tagged as experimental
 
-warn_list:
-  - experimental       # Warn about experimental features
+# Use default rules
+use_default_rules: true
+
+# Mock modules for testing environments
+mock_modules:
+  - zuul_return
+
+# Mock roles for testing environments
+mock_roles:
+  - mocked_role
+
+# Profile to use, this is based on ansible version
+profile: production
+
+# Enable reporting of pre-tasks
+enable_list:
+  - no-changed-when
+  - no-handler
+  - key-order
