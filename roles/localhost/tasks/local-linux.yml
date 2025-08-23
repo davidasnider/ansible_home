@@ -243,12 +243,12 @@
 
 - name: Get current user
   ansible.builtin.command: whoami
-  register: current_user
+  register: localhost_current_user
   changed_when: false
 
 - name: Set zsh as default shell
   ansible.builtin.user:
-    name: "{{ current_user.stdout }}"
+    name: "{{ localhost_current_user.stdout }}"
     shell: /usr/bin/zsh
   become: true
 
@@ -258,9 +258,17 @@
     state: directory
     mode: '0755'
 
+- name: Download oh-my-posh installation script
+  ansible.builtin.get_url:
+    url: https://ohmyposh.dev/install.sh
+    dest: /tmp/oh-my-posh-install.sh
+    mode: '0755'
+
 - name: Install oh-my-posh if not present
   ansible.builtin.shell:
-    cmd: curl -s https://ohmyposh.dev/install.sh | bash -s
+    cmd: |
+      set -o pipefail
+      bash /tmp/oh-my-posh-install.sh
   environment:
     OMP_INSTALL_DIR: "{{ lookup('env', 'HOME') }}/.local/bin"
   args:
@@ -269,7 +277,7 @@
 - name: Check if Oh My Zsh is installed
   ansible.builtin.stat:
     path: "{{ lookup('env', 'HOME') }}/.oh-my-zsh"
-  register: oh_my_zsh_stat
+  register: localhost_oh_my_zsh_stat
 
 - name: Remove .zprofile if it exists
   ansible.builtin.file:
@@ -281,18 +289,18 @@
     sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
   args:
     creates: "{{ lookup('env', 'HOME') }}/.oh-my-zsh"
-  when: not oh_my_zsh_stat.stat.exists
+  when: not localhost_oh_my_zsh_stat.stat.exists
   changed_when: false
 
 - name: Copy zshrc file
   ansible.builtin.copy:
-    src: zshrc-linux
+    src: "{{ playbook_dir }}/../roles/localhost/files/zshrc-linux"
     dest: "{{ lookup('env', 'HOME') }}/.zshrc"
     mode: '0644'
 
 - name: Copy zprofile file
   ansible.builtin.copy:
-    src: zprofile-linux
+    src: "{{ playbook_dir }}/../roles/localhost/files/zprofile-linux"
     dest: "{{ lookup('env', 'HOME') }}/.zprofile"
     mode: '0644'
 
@@ -300,14 +308,21 @@
   block:
     - name: Check if Pulumi is already installed
       ansible.builtin.command: which pulumi
-      register: pulumi_check
+      register: localhost_pulumi_check
       failed_when: false
       changed_when: false
 
-    - name: Download and install Pulumi CLI
+    - name: Download Pulumi installation script
+      ansible.builtin.get_url:
+        url: https://get.pulumi.com
+        dest: /tmp/pulumi-install.sh
+        mode: '0755'
+      when: localhost_pulumi_check.rc != 0
+    - name: Install Pulumi CLI
       ansible.builtin.shell: |
-        curl -fsSL https://get.pulumi.com | sh
-      when: pulumi_check.rc != 0
+        set -o pipefail
+        bash /tmp/pulumi-install.sh
+      when: localhost_pulumi_check.rc != 0
       changed_when: true
 
 
@@ -330,15 +345,20 @@
       ansible.builtin.shell: |
         gpg --dearmor < /tmp/1password.asc > /usr/share/keyrings/1password-archive-keyring.gpg
       become: true
+      changed_when: true
 
     - name: Get system architecture
       ansible.builtin.command: dpkg --print-architecture
-      register: system_arch
+      register: localhost_system_arch
       changed_when: false
 
     - name: Add 1Password repository
       ansible.builtin.apt_repository:
-        repo: "deb [arch={{ system_arch.stdout }} signed-by=/usr/share/keyrings/1password-archive-keyring.gpg] https://downloads.1password.com/linux/debian/{{ system_arch.stdout }} stable main"
+        repo: >-
+          deb [arch={{ localhost_system_arch.stdout }}
+          signed-by=/usr/share/keyrings/1password-archive-keyring.gpg]
+          https://downloads.1password.com/linux/debian/{{ localhost_system_arch.stdout }}
+          stable main
         filename: 1password
         state: present
       become: true
