@@ -36,3 +36,21 @@ ansible-playbook -i inventory/local.yml playbooks/local-main.yml
 ```
 
 This will automatically detect your OS (macOS or Linux) and apply the appropriate configuration tasks. Ensure you have Ansible installed and any required prerequisites met before running the playbook.
+
+## GitHub MCP Setup
+
+To enable GitHub integration with Claude Code, you'll need to set up the GitHub MCP server:
+
+1. First, export your GitHub Personal Access Token:
+   ```zsh
+   export GITHUB_TOKEN=<your-PAT>
+   ```
+
+2. Add the GitHub MCP server to Claude:
+   ```zsh
+   claude mcp add github https://api.githubcopilot.com/mcp/ \
+       --header "Authorization: Bearer $GITHUB_TOKEN" \
+       --transport http
+   ```
+
+This will allow Claude Code to interact with GitHub repositories, issues, and pull requests.
