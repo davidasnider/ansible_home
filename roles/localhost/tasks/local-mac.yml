@@ -47,6 +47,14 @@
     state: directory
     mode: '0700'
 
+- name: Create SSH config file with 1Password agent
+  ansible.builtin.copy:
+    content: |
+      Host *
+        IdentityAgent "~/Library/Group Containers/2BUA8C4S2C.com.1password/t/agent.sock"
+    dest: "{{ lookup('env', 'HOME') }}/.ssh/config"
+    mode: '0600'
+
 - name: Create SSH allowed signers file
   ansible.builtin.copy:
     content: "david@davidsnider.org ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIKWm36FodEyxXOXxqhkCj0YLDHkori4Dzmq3hI0PsrX9"
@@ -177,15 +185,6 @@
     path: "{{ lookup('env', 'HOME') }}/.gitignore"
     line: ".dotfiles"
   register: localhost_gitignore_status
-
-- name: Clone the dotfiles repository
-  ansible.builtin.git:
-    repo: https://github.com/davidasnider/dotfiles.git
-    dest: "{{ lookup('env', 'HOME') }}/.dotfiles"
-    version: main # Or specify a branch/tag if needed
-    force: true
-  register: localhost_clone_status
-  notify: Ignore untracked files for dotfiles
 
 - name: Ensure ~/.local/bin directory exists
   ansible.builtin.file:
