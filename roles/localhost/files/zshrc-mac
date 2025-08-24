@@ -24,7 +24,7 @@ else
     echo "Could not set OMP_THEME_CMD" >&2
     OMP_THEME_CMD=""
 fi
-DOTFILES_ALIAS="alias dotfiles='/usr/bin/git --git-dir="$HOME/.dotfiles/.git/" --work-tree="$HOME"'"
+
 # Homebrew
 if [ -x "$BREW_PREFIX/brew" ]; then
     eval "$($BREW_PREFIX/brew shellenv)"
@@ -33,11 +33,6 @@ fi
 # Setup oh-my-posh theme if defined
 if [ -n "$OMP_THEME_CMD" ]; then
     eval "$OMP_THEME_CMD"
-fi
-
-# Setup dotfiles alias if defined
-if [ -n "$DOTFILES_ALIAS" ]; then
-    eval "$DOTFILES_ALIAS"
 fi
 
 # Get all environment variables from the .env file
