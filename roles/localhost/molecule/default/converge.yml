@@ -1,0 +1,48 @@
+- name: Converge
+  hosts: localhost_linux
+  become: true
+  gather_facts: true
+
+  tasks:
+    # Test basic directory creation (core localhost role functionality)
+  - name: Ensure ~/code directory exists
+    ansible.builtin.file:
+      path: "{{ lookup('env', 'HOME') | default('/root') }}/code"
+      state: directory
+      mode: '0755'
+
+  - name: Configure git user name
+    community.general.git_config:
+      name: user.name
+      value: David Snider
+      scope: global
+
+  - name: Configure git user email
+    community.general.git_config:
+      name: user.email
+      value: david@davidsnider.org
+      scope: global
+
+  - name: Configure git signing key
+    community.general.git_config:
+      name: user.signingkey
+      value: ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIKWm36FodEyxXOXxqhkCj0YLDHkori4Dzmq3hI0PsrX9
+      scope: global
+
+  - name: Ensure .ssh directory exists
+    ansible.builtin.file:
+      path: "{{ lookup('env', 'HOME') | default('/root') }}/.ssh"
+      state: directory
+      mode: '0700'
+
+  - name: Create SSH allowed signers file
+    ansible.builtin.copy:
+      content: david@davidsnider.org ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIKWm36FodEyxXOXxqhkCj0YLDHkori4Dzmq3hI0PsrX9
+      dest: "{{ lookup('env', 'HOME') | default('/root') }}/.ssh/allowed_signers"
+      mode: '0644'
+
+  - name: Ensure ~/.local/bin directory exists
+    ansible.builtin.file:
+      path: "{{ lookup('env', 'HOME') | default('/root') }}/.local/bin"
+      state: directory
+      mode: '0755'

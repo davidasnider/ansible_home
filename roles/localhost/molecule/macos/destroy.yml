@@ -1,0 +1,11 @@
+- name: Destroy
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  no_log: '{{ molecule_no_log }}'
+  tasks:
+  - name: Note about macOS cleanup
+    ansible.builtin.debug:
+      msg: |
+        macOS testing cleanup completed.
+        No containers to destroy in delegated mode.

@@ -1,0 +1,35 @@
+- name: Bootstrap Python
+  hosts: localhost_linux
+  become: false
+  gather_facts: false
+
+  tasks:
+  - name: Update apt cache and install Python
+    ansible.builtin.raw: apt-get update -qq && apt-get install -y python3 python3-pip sudo curl wget git
+    changed_when: true
+
+- name: Prepare idempotency test environment
+  hosts: localhost_linux
+  become: false
+  gather_facts: true
+
+  tasks:
+  - name: Create test directories
+    ansible.builtin.file:
+      path: '{{ item.path }}'
+      state: directory
+      mode: '{{ item.mode }}'
+    loop:
+    - {path: /root/code, mode: '0755'}
+    - {path: /root/.ssh, mode: '0700'}
+    - {path: /root/.local/bin, mode: '0755'}
+
+  - name: Set basic environment variables
+    ansible.builtin.lineinfile:
+      path: /root/.bashrc
+      create: true
+      line: '{{ item }}'
+      mode: '0644'
+    loop:
+    - export HOME=/root
+    - export USER=root

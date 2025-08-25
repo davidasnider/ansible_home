@@ -1,0 +1,51 @@
+dependency:
+  name: galaxy
+
+driver:
+  name: docker
+
+platforms:
+- name: localhost-idempotence-test
+  image: ubuntu:22.04
+  pre_build_image: true
+  groups:
+  - localhost_linux
+
+provisioner:
+  name: ansible
+  inventory:
+    host_vars:
+      localhost-idempotence-test:
+        ansible_python_interpreter: /usr/bin/python3
+  config_options:
+    defaults:
+      interpreter_python: auto_silent
+      stdout_callback: yaml
+      bin_ansible_callbacks: true
+      # Enable callback plugins for better idempotency tracking
+      callback_whitelist: profile_tasks,timer
+    ssh_connection:
+      pipelining: false
+  # Run the playbook twice to test idempotency
+  playbooks:
+    converge: converge.yml
+
+verifier:
+  name: testinfra
+
+scenario:
+  test_sequence:
+  - dependency
+  - cleanup
+  - destroy
+  - syntax
+  - create
+  - prepare
+  - converge
+    # Run converge again to test idempotency
+  - converge
+    # Custom idempotency check
+  - idempotence
+  - verify
+  - cleanup
+  - destroy

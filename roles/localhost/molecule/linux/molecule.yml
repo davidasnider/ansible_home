@@ -1,0 +1,44 @@
+dependency:
+  name: galaxy
+
+driver:
+  name: docker
+
+platforms:
+- name: localhost-ubuntu-22
+  image: ubuntu:22.04
+  pre_build_image: true
+  groups:
+  - localhost_linux
+
+provisioner:
+  name: ansible
+  inventory:
+    host_vars:
+      localhost-ubuntu-22:
+        ansible_python_interpreter: /usr/bin/python3
+  config_options:
+    defaults:
+      interpreter_python: auto_silent
+      stdout_callback: yaml
+      bin_ansible_callbacks: true
+    ssh_connection:
+      pipelining: false
+
+verifier:
+  name: testinfra
+
+scenario:
+  test_sequence:
+  - dependency
+  - cleanup
+  - destroy
+  - syntax
+  - create
+  - prepare
+  - converge
+  - idempotence
+  - side_effect
+  - verify
+  - cleanup
+  - destroy

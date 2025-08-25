@@ -1,4 +1,3 @@
----
 - name: Detect OS and include the appropriate local task file
   hosts: localhost
   gather_facts: true
@@ -6,10 +5,10 @@
     ansible_become_pass: "{{ lookup('ansible.builtin.env', 'ANSIBLE_SUDO_PASS') }}"
 
   tasks:
-    - name: Include local-mac tasks if MacOS
-      ansible.builtin.include_tasks: ../roles/localhost/tasks/local-mac.yml
-      when: ansible_system == 'Darwin'
+  - name: Include local-mac tasks if MacOS
+    ansible.builtin.include_tasks: ../roles/localhost/tasks/local-mac.yml
+    when: ansible_system == 'Darwin'
 
-    - name: Include local-linux tasks if Linux
-      ansible.builtin.include_tasks: ../roles/localhost/tasks/local-linux.yml
-      when: ansible_system == 'Linux'
+  - name: Include local-linux tasks if Linux
+    ansible.builtin.include_tasks: ../roles/localhost/tasks/local-linux.yml
+    when: ansible_system == 'Linux'

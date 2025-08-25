@@ -8,43 +8,43 @@
 - name: Configure git user name
   community.general.git_config:
     name: user.name
-    value: "David Snider"
+    value: David Snider
     scope: global
 
 - name: Configure git user email
   community.general.git_config:
     name: user.email
-    value: "david@davidsnider.org"
+    value: david@davidsnider.org
     scope: global
 
 - name: Configure git to use ssh.exe for SSH connections
   community.general.git_config:
     name: core.sshCommand
-    value: "ssh.exe"
+    value: ssh.exe
     scope: global
 
 - name: Configure git signing key
   community.general.git_config:
     name: user.signingkey
-    value: "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIKWm36FodEyxXOXxqhkCj0YLDHkori4Dzmq3hI0PsrX9"
+    value: ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIKWm36FodEyxXOXxqhkCj0YLDHkori4Dzmq3hI0PsrX9
     scope: global
 
 - name: Configure GPG format
   community.general.git_config:
     name: gpg.format
-    value: "ssh"
+    value: ssh
     scope: global
 
 - name: Configure GPG SSH program
   community.general.git_config:
     name: gpg.ssh.program
-    value: "/mnt/c/Users/david/AppData/Local/1Password/app/8/op-ssh-sign-wsl"
+    value: /mnt/c/Users/david/AppData/Local/1Password/app/8/op-ssh-sign-wsl
     scope: global
 
 - name: Enable commit GPG signing
   community.general.git_config:
     name: commit.gpgsign
-    value: "true"
+    value: 'true'
     scope: global
 
 - name: Ensure .ssh directory exists
@@ -55,7 +55,7 @@
 
 - name: Create SSH allowed signers file
   ansible.builtin.copy:
-    content: "david@davidsnider.org ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIKWm36FodEyxXOXxqhkCj0YLDHkori4Dzmq3hI0PsrX9"
+    content: david@davidsnider.org ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIKWm36FodEyxXOXxqhkCj0YLDHkori4Dzmq3hI0PsrX9
     dest: "{{ lookup('env', 'HOME') }}/.ssh/allowed_signers"
     mode: '0644'
 
@@ -69,49 +69,49 @@
 - name: Require all commits to be signed
   community.general.git_config:
     name: commit.gpgsign
-    value: "true"
+    value: 'true'
     scope: global
 
 - name: Require all tags to be signed
   community.general.git_config:
     name: tag.gpgsign
-    value: "true"
+    value: 'true'
     scope: global
 
 - name: Enable strict SSL verification
   community.general.git_config:
     name: http.sslverify
-    value: "true"
+    value: 'true'
     scope: global
 
 - name: Enable push signature verification
   community.general.git_config:
     name: receive.fsckobjects
-    value: "true"
+    value: 'true'
     scope: global
 
 - name: Enable transfer signature verification
   community.general.git_config:
     name: transfer.fsckobjects
-    value: "true"
+    value: 'true'
     scope: global
 
 - name: Enable fetch signature verification
   community.general.git_config:
     name: fetch.fsckobjects
-    value: "true"
+    value: 'true'
     scope: global
 
 - name: Set minimum TLS version for HTTPS
   community.general.git_config:
     name: http.sslversion
-    value: "tlsv1.2"
+    value: tlsv1.2
     scope: global
 
 - name: Configure SSH key validation
   community.general.git_config:
     name: gpg.ssh.defaultKeyCommand
-    value: "ssh-add -L"
+    value: ssh-add -L
     scope: global
 
 # SSH Key Management and Validation
@@ -227,16 +227,16 @@
   become: true
   ansible.builtin.apt:
     name:
-      - gh
-      - htop
-      - jq
-      - python3-poetry
-      - pre-commit
-      - zsh
+    - gh
+    - htop
+    - jq
+    - python3-poetry
+    - pre-commit
+    - zsh
       # - zsh-autocomplete
-      - zsh-autosuggestions
-      - zsh-syntax-highlighting
-      - unzip
+    - zsh-autosuggestions
+    - zsh-syntax-highlighting
+    - unzip
     state: present
     update_cache: true
     cache_valid_time: 86400 # in seconds, equals 24 hours
@@ -248,7 +248,7 @@
 
 - name: Set zsh as default shell
   ansible.builtin.user:
-    name: "{{ localhost_current_user.stdout }}"
+    name: '{{ localhost_current_user.stdout }}'
     shell: /usr/bin/zsh
   become: true
 
@@ -294,88 +294,88 @@
 
 - name: Copy zshrc file
   ansible.builtin.copy:
-    src: "{{ playbook_dir }}/../roles/localhost/files/zshrc-linux"
+    src: '{{ playbook_dir }}/../roles/localhost/files/zshrc-linux'
     dest: "{{ lookup('env', 'HOME') }}/.zshrc"
     mode: '0644'
 
 - name: Copy zprofile file
   ansible.builtin.copy:
-    src: "{{ playbook_dir }}/../roles/localhost/files/zprofile-linux"
+    src: '{{ playbook_dir }}/../roles/localhost/files/zprofile-linux'
     dest: "{{ lookup('env', 'HOME') }}/.zprofile"
     mode: '0644'
 
 - name: Install Pulumi CLI
   block:
-    - name: Check if Pulumi is already installed
-      ansible.builtin.command: which pulumi
-      register: localhost_pulumi_check
-      failed_when: false
-      changed_when: false
+  - name: Check if Pulumi is already installed
+    ansible.builtin.command: which pulumi
+    register: localhost_pulumi_check
+    failed_when: false
+    changed_when: false
 
-    - name: Download Pulumi installation script
-      ansible.builtin.get_url:
-        url: https://get.pulumi.com
-        dest: /tmp/pulumi-install.sh
-        mode: '0755'
-      when: localhost_pulumi_check.rc != 0
-    - name: Install Pulumi CLI
-      ansible.builtin.shell: |
-        set -o pipefail
-        bash /tmp/pulumi-install.sh
-      when: localhost_pulumi_check.rc != 0
-      changed_when: true
+  - name: Download Pulumi installation script
+    ansible.builtin.get_url:
+      url: https://get.pulumi.com
+      dest: /tmp/pulumi-install.sh
+      mode: '0755'
+    when: localhost_pulumi_check.rc != 0
+  - name: Install Pulumi CLI
+    ansible.builtin.shell: |
+      set -o pipefail
+      bash /tmp/pulumi-install.sh
+    when: localhost_pulumi_check.rc != 0
+    changed_when: true
 
 
 - name: Download and install 1Password CLI
   block:
-    - name: Download 1Password GPG key
-      ansible.builtin.get_url:
-        url: https://downloads.1password.com/linux/keys/1password.asc
-        dest: /tmp/1password.asc
-        mode: '0644'
+  - name: Download 1Password GPG key
+    ansible.builtin.get_url:
+      url: https://downloads.1password.com/linux/keys/1password.asc
+      dest: /tmp/1password.asc
+      mode: '0644'
 
-    - name: Create 1Password keyring directory
-      ansible.builtin.file:
-        path: /usr/share/keyrings
-        state: directory
-        mode: '0755'
-      become: true
+  - name: Create 1Password keyring directory
+    ansible.builtin.file:
+      path: /usr/share/keyrings
+      state: directory
+      mode: '0755'
+    become: true
 
-    - name: Import 1Password GPG key to system keyring
-      ansible.builtin.shell: |
-        gpg --dearmor < /tmp/1password.asc > /usr/share/keyrings/1password-archive-keyring.gpg
-      become: true
-      changed_when: true
+  - name: Import 1Password GPG key to system keyring
+    ansible.builtin.shell: |
+      gpg --dearmor < /tmp/1password.asc > /usr/share/keyrings/1password-archive-keyring.gpg
+    become: true
+    changed_when: true
 
-    - name: Get system architecture
-      ansible.builtin.command: dpkg --print-architecture
-      register: localhost_system_arch
-      changed_when: false
+  - name: Get system architecture
+    ansible.builtin.command: dpkg --print-architecture
+    register: localhost_system_arch
+    changed_when: false
 
-    - name: Add 1Password repository
-      ansible.builtin.apt_repository:
-        repo: >-
-          deb [arch={{ localhost_system_arch.stdout }}
-          signed-by=/usr/share/keyrings/1password-archive-keyring.gpg]
-          https://downloads.1password.com/linux/debian/{{ localhost_system_arch.stdout }}
-          stable main
-        filename: 1password
-        state: present
-      become: true
+  - name: Add 1Password repository
+    ansible.builtin.apt_repository:
+      repo: >-
+        deb [arch={{ localhost_system_arch.stdout }}
+        signed-by=/usr/share/keyrings/1password-archive-keyring.gpg]
+        https://downloads.1password.com/linux/debian/{{ localhost_system_arch.stdout }}
+        stable main
+      filename: 1password
+      state: present
+    become: true
 
-    - name: Update apt cache
-      ansible.builtin.apt:
-        update_cache: true
-      become: true
+  - name: Update apt cache
+    ansible.builtin.apt:
+      update_cache: true
+    become: true
 
-    - name: Install 1Password CLI
-      ansible.builtin.apt:
-        name: 1password-cli
-        state: present
-      become: true
+  - name: Install 1Password CLI
+    ansible.builtin.apt:
+      name: 1password-cli
+      state: present
+    become: true
 
   always:
-    - name: Clean up temporary files
-      ansible.builtin.file:
-        path: /tmp/1password.asc
-        state: absent
+  - name: Clean up temporary files
+    ansible.builtin.file:
+      path: /tmp/1password.asc
+      state: absent

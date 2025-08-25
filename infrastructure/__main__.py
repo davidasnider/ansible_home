@@ -46,12 +46,21 @@ branch_protection = github.BranchProtection(
     required_status_checks=github.BranchProtectionRequiredStatusCheckArgs(
         strict=True,
         contexts=[
+            # Existing checks
             "Ansible Linting",
             "Pre-commit Checks",
             "Secret Scanning",
             "Ansible Syntax Check",
-            "Molecule Tests",
             "Dependency Review",
+            # Molecule testing checks (required for PR approval)
+            "Lint Ansible Code",
+            "Molecule Test - default",
+            "Molecule Test - linux",
+            "Molecule Test - idempotence",
+            "Molecule Test - macOS",
+            "All Molecule Tests",
+            # Coverage reporting
+            "Test Coverage Report",
         ],
     ),
     required_pull_request_reviews=github.BranchProtectionRequiredPullRequestReviewArgs(
@@ -71,3 +80,16 @@ branch_protection = github.BranchProtection(
 pulumi.export("repository_name", repo.name)
 pulumi.export("repository_url", repo.html_url)
 pulumi.export("repository_clone_url", repo.git_clone_url)
+
+# Export branch protection information
+pulumi.export("branch_protection_enabled", True)
+pulumi.export("required_status_checks", [
+    "Lint Ansible Code",
+    "Molecule Test - default",
+    "Molecule Test - linux",
+    "Molecule Test - idempotence",
+    "All Molecule Tests",
+    "Test Coverage Report"
+])
+pulumi.export("required_reviews", 1)
+pulumi.export("require_conversation_resolution", True)

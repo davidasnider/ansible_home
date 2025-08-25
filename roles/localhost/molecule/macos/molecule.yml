@@ -1,0 +1,58 @@
+dependency:
+  name: galaxy
+
+driver:
+  name: default
+
+platforms:
+- name: localhost-macos
+    # Environment-aware configuration:
+    # - CI (GitHub Actions): Uses local connection on macOS runner
+    # - Local dev: Can target OrbStack VM or local macOS
+  groups:
+  - localhost_macos
+
+provisioner:
+  name: ansible
+  inventory:
+    host_vars:
+      localhost-macos:
+        # Use environment variables to determine connection method
+        # CI: ansible_connection=local (GitHub Actions macOS runner)
+        # Local: ansible_connection=ssh (UTM macOS VM)
+        ansible_connection: "{{ lookup('env', 'MOLECULE_MACOS_CONNECTION') | default('local', true) }}"
+        ansible_host: "{{ lookup('env', 'MOLECULE_MACOS_HOST') | default('localhost', true) }}"
+        ansible_user: "{{ lookup('env', 'MOLECULE_MACOS_USER') | default(lookup('env', 'USER'), true) }}"
+        ansible_port: "{{ lookup('env', 'MOLECULE_MACOS_PORT') | default('22', true) }}"
+        ansible_python_interpreter: "{{ lookup('env', 'MOLECULE_MACOS_PYTHON') | default('/usr/bin/python3', true) }}"
+        # For SSH connections, configure SSH options for UTM VM
+        ansible_ssh_common_args: >-
+          {{ '-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o ConnectTimeout=30'
+             if (lookup('env', 'MOLECULE_MACOS_CONNECTION') == 'ssh') else '' }}
+        # SSH private key for UTM VM authentication
+        ansible_ssh_private_key_file: >-
+          {{ lookup('env', 'MOLECULE_MACOS_SSH_KEY') | default('~/.ssh/id_rsa', true)
+             if (lookup('env', 'MOLECULE_MACOS_CONNECTION') == 'ssh') else omit }}
+  config_options:
+    defaults:
+      interpreter_python: auto_silent
+      stdout_callback: yaml
+      bin_ansible_callbacks: true
+      host_key_checking: false
+
+verifier:
+  name: testinfra
+
+scenario:
+  test_sequence:
+  - dependency
+  - syntax
+  - converge
+  - idempotence
+  - verify
+
+  create_sequence:
+  - create
+
+  destroy_sequence:
+  - destroy

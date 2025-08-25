@@ -1,0 +1,12 @@
+- name: Converge macOS-specific test
+  hosts: localhost_macos
+  gather_facts: true
+  connection: local
+
+  tasks:
+    # Include macOS-specific tasks from the localhost role
+  - name: Include macOS localhost tasks
+    ansible.builtin.include_tasks: ../../tasks/local-mac.yml
+    vars:
+        # Override for testing to prevent actual system changes
+      localhost_test_mode: true

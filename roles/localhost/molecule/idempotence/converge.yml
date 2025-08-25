@@ -1,0 +1,85 @@
+- name: Converge for idempotency testing
+  hosts: localhost_linux
+  become: true
+  gather_facts: true
+  vars:
+    ansible_user_shell: /bin/bash
+
+  pre_tasks:
+  - name: Update apt cache
+    ansible.builtin.apt:
+      update_cache: true
+      cache_valid_time: 3600
+    when: ansible_os_family == "Debian"
+
+  - name: Install essential packages
+    ansible.builtin.package:
+      name:
+      - python3-pip
+      - curl
+      - git
+      - gpg
+      state: present
+
+  - name: Create test user home directory
+    ansible.builtin.file:
+      path: "{{ ansible_env.HOME | default('/home/ansible') }}"
+      state: directory
+      mode: '0755'
+      owner: '{{ ansible_user_id }}'
+
+  tasks:
+    # Run a subset of tasks that should be idempotent
+  - name: Ensure ~/code directory exists (idempotency test)
+    ansible.builtin.file:
+      path: /root/code
+      state: directory
+      mode: '0755'
+    register: code_directory_result
+
+  - name: Configure git user name (idempotency test)
+    community.general.git_config:
+      name: user.name
+      value: David Snider
+      scope: global
+    register: git_name_result
+
+  - name: Configure git user email (idempotency test)
+    community.general.git_config:
+      name: user.email
+      value: david@davidsnider.org
+      scope: global
+    register: git_email_result
+
+  - name: Ensure .ssh directory exists (idempotency test)
+    ansible.builtin.file:
+      path: /root/.ssh
+      state: directory
+      mode: '0700'
+    register: ssh_directory_result
+
+  - name: Create SSH allowed signers file (idempotency test)
+    ansible.builtin.copy:
+      content: david@davidsnider.org ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIKWm36FodEyxXOXxqhkCj0YLDHkori4Dzmq3hI0PsrX9
+      dest: /root/.ssh/allowed_signers
+      mode: '0644'
+    register: allowed_signers_result
+
+  - name: Ensure ~/.local/bin directory exists (idempotency test)
+    ansible.builtin.file:
+      path: /root/.local/bin
+      state: directory
+      mode: '0755'
+    register: local_bin_result
+
+    # Test that results show no changes on second run
+  - name: Debug idempotency results
+    ansible.builtin.debug:
+      msg: |
+        Idempotency Test Results:
+        - Code directory changed: {{ code_directory_result.changed }}
+        - Git name config changed: {{ git_name_result.changed }}
+        - Git email config changed: {{ git_email_result.changed }}
+        - SSH directory changed: {{ ssh_directory_result.changed }}
+        - Allowed signers changed: {{ allowed_signers_result.changed }}
+        - Local bin directory changed: {{ local_bin_result.changed }}
