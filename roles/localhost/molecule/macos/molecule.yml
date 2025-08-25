@@ -1,3 +1,4 @@
+---
 dependency:
   name: galaxy
 
@@ -5,12 +6,12 @@ driver:
   name: default
 
 platforms:
-- name: localhost-macos
+  - name: localhost-macos
     # Environment-aware configuration:
     # - CI (GitHub Actions): Uses local connection on macOS runner
     # - Local dev: Can target OrbStack VM or local macOS
-  groups:
-  - localhost_macos
+    groups:
+      - localhost_macos
 
 provisioner:
   name: ansible
@@ -45,14 +46,14 @@ verifier:
 
 scenario:
   test_sequence:
-  - dependency
-  - syntax
-  - converge
-  - idempotence
-  - verify
+    - dependency
+    - syntax
+    - converge
+    - idempotence
+    - verify
 
   create_sequence:
-  - create
+    - create
 
   destroy_sequence:
-  - destroy
+    - destroy

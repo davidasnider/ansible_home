@@ -1,88 +1,83 @@
+---
 repos:
-- repo: https://github.com/ansible/ansible-lint
-  rev: v25.8.2
-  hooks:
-  - id: ansible-lint
-    name: ansible-lint
-    files: ^(playbooks/|roles/).+\.(yml|yaml)$
-    exclude: ^roles/.+/(files|templates)/
+  # ansible-lint is run separately via 'make test-lint' to avoid
+  # community.general collection dependency issues in pre-commit environment
+  # - repo: https://github.com/ansible/ansible-lint
+  #   rev: v25.8.2
+  #   hooks:
+  #     - id: ansible-lint
+  #       name: ansible-lint
+  #       files: ^(playbooks/|roles/).+\.(yml|yaml)$
+  #       exclude: ^roles/.+/(files|templates)/|^roles/.+/molecule/
 
-- repo: https://github.com/pre-commit/pre-commit-hooks
-  rev: v6.0.0
-  hooks:
-  - id: trailing-whitespace
-  - id: end-of-file-fixer
-  - id: check-yaml
-  - id: check-added-large-files
-
-  # YAML formatting
-- repo: https://github.com/macisamuele/language-formatters-pre-commit-hooks
-  rev: v2.15.0
-  hooks:
-  - id: pretty-format-yaml
-    args: [--autofix, --indent, '2']
-    files: \.(yaml|yml)$
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-added-large-files
 
   # Secret scanning and detection
-- repo: https://github.com/Yelp/detect-secrets
-  rev: v1.5.0
-  hooks:
-  - id: detect-secrets
-    name: detect-secrets
-    args: [--baseline, .secrets.baseline]
-    exclude: package.lock.json
+  - repo: https://github.com/Yelp/detect-secrets
+    rev: v1.5.0
+    hooks:
+      - id: detect-secrets
+        name: detect-secrets
+        args: [--baseline, .secrets.baseline]
+        exclude: package.lock.json
 
   # Git Security Validation Hooks
-- repo: local
-  hooks:
-  - id: verify-commit-signature
-    name: Verify commit signature
-    entry: bash
-    args:
-    - -c
-    - |
-      if ! git verify-commit HEAD >/dev/null 2>&1; then
-        echo "❌ Commit signature verification failed! All commits must be signed."
-        exit 1
-      else
-        echo "✅ Commit signature verified"
-      fi
-    language: system
-    stages: [commit-msg]
-    always_run: true
+  - repo: local
+    hooks:
+      - id: verify-commit-signature
+        name: Verify commit signature
+        entry: bash
+        args:
+          - -c
+          - |
+            if ! git verify-commit HEAD >/dev/null 2>&1; then
+              echo "❌ Commit signature verification failed! All commits must be signed."
+              exit 1
+            else
+              echo "✅ Commit signature verified"
+            fi
+        language: system
+        stages: [commit-msg]
+        always_run: true
 
-  - id: check-ssh-key-permissions
-    name: Check SSH key permissions
-    entry: bash
-    args:
-    - -c
-    - |
-      if [[ -d ~/.ssh ]]; then
-        find ~/.ssh -type f -name "id_*" -not -name "*.pub" -not -perm 600 \
-          -exec echo "❌ SSH private key {} has incorrect permissions (should be 600)" \; \
-          -exec exit 1 \;
-        echo "✅ SSH key permissions verified"
-      fi
-    language: system
-    pass_filenames: false
+      - id: check-ssh-key-permissions
+        name: Check SSH key permissions
+        entry: bash
+        args:
+          - -c
+          - |
+            if [[ -d ~/.ssh ]]; then
+              find ~/.ssh -type f -name "id_*" -not -name "*.pub" -not -perm 600 \
+                -exec echo "❌ SSH private key {} has incorrect permissions (should be 600)" \; \
+                -exec exit 1 \;
+              echo "✅ SSH key permissions verified"
+            fi
+        language: system
+        pass_filenames: false
 
-  - id: validate-allowed-signers
-    name: Validate allowed_signers format
-    entry: bash
-    args:
-    - -c
-    - |
-      if [[ -f ~/.ssh/allowed_signers ]]; then
-        while IFS= read -r line; do
-          [[ -z "$line" ]] && continue
-          if ! echo "$line" | grep -qE "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,} \
-            (ssh-ed25519|ssh-rsa|ecdsa-sha2-nistp256|ecdsa-sha2-nistp384|ecdsa-sha2-nistp521) \
-            [A-Za-z0-9+/]+=*$"; then
-            echo "❌ Invalid allowed_signers entry: $line"
-            exit 1
-          fi
-        done < ~/.ssh/allowed_signers
-        echo "✅ allowed_signers format validated"
-      fi
-    language: system
-    pass_filenames: false
+      - id: validate-allowed-signers
+        name: Validate allowed_signers format
+        entry: bash
+        args:
+          - -c
+          - |
+            if [[ -f ~/.ssh/allowed_signers ]]; then
+              while IFS= read -r line; do
+                [[ -z "$line" ]] && continue
+                if ! echo "$line" | grep -qE "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,} \
+                  (ssh-ed25519|ssh-rsa|ecdsa-sha2-nistp256|ecdsa-sha2-nistp384|ecdsa-sha2-nistp521) \
+                  [A-Za-z0-9+/]+=*$"; then
+                  echo "❌ Invalid allowed_signers entry: $line"
+                  exit 1
+                fi
+              done < ~/.ssh/allowed_signers
+              echo "✅ allowed_signers format validated"
+            fi
+        language: system
+        pass_filenames: false

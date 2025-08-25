@@ -1,9 +1,10 @@
+---
 # ansible-task
 - name: Ensure ~/code directory exists
   ansible.builtin.file:
     path: "{{ lookup('env', 'HOME') }}/code"
     state: directory
-    mode: '0755'
+    mode: "0755"
 
 - name: Configure git user name
   community.general.git_config:
@@ -38,14 +39,14 @@
 - name: Enable commit GPG signing
   community.general.git_config:
     name: commit.gpgsign
-    value: 'true'
+    value: "true"
     scope: global
 
 - name: Ensure .ssh directory exists
   ansible.builtin.file:
     path: "{{ lookup('env', 'HOME') }}/.ssh"
     state: directory
-    mode: '0700'
+    mode: "0700"
 
 - name: Create SSH config file with 1Password agent
   ansible.builtin.copy:
@@ -53,13 +54,13 @@
       Host *
         IdentityAgent "~/Library/Group Containers/2BUA8C4S2C.com.1password/t/agent.sock"
     dest: "{{ lookup('env', 'HOME') }}/.ssh/config"
-    mode: '0600'
+    mode: "0600"
 
 - name: Create SSH allowed signers file
   ansible.builtin.copy:
     content: david@davidsnider.org ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIKWm36FodEyxXOXxqhkCj0YLDHkori4Dzmq3hI0PsrX9
     dest: "{{ lookup('env', 'HOME') }}/.ssh/allowed_signers"
-    mode: '0644'
+    mode: "0644"
 
 - name: Configure Git allowed signers file
   community.general.git_config:
@@ -71,37 +72,37 @@
 - name: Require all commits to be signed
   community.general.git_config:
     name: commit.gpgsign
-    value: 'true'
+    value: "true"
     scope: global
 
 - name: Require all tags to be signed
   community.general.git_config:
     name: tag.gpgsign
-    value: 'true'
+    value: "true"
     scope: global
 
 - name: Enable strict SSL verification
   community.general.git_config:
     name: http.sslverify
-    value: 'true'
+    value: "true"
     scope: global
 
 - name: Enable push signature verification
   community.general.git_config:
     name: receive.fsckobjects
-    value: 'true'
+    value: "true"
     scope: global
 
 - name: Enable transfer signature verification
   community.general.git_config:
     name: transfer.fsckobjects
-    value: 'true'
+    value: "true"
     scope: global
 
 - name: Enable fetch signature verification
   community.general.git_config:
     name: fetch.fsckobjects
-    value: 'true'
+    value: "true"
     scope: global
 
 - name: Set minimum TLS version for HTTPS
@@ -121,13 +122,13 @@
   ansible.builtin.file:
     path: "{{ lookup('env', 'HOME') }}/.ssh"
     state: directory
-    mode: '0700'
+    mode: "0700"
     owner: "{{ lookup('env', 'USER') }}"
 
 - name: Validate allowed_signers file permissions
   ansible.builtin.file:
     path: "{{ lookup('env', 'HOME') }}/.ssh/allowed_signers"
-    mode: '0644'
+    mode: "0644"
     owner: "{{ lookup('env', 'USER') }}"
 
 - name: Install Homebrew if not present
@@ -152,33 +153,33 @@
 - name: Update Homebrew and install packages
   community.general.homebrew:
     name:
-    - gh
-    - htop
-    - oh-my-posh
-    - poetry
-    - pre-commit
-    - zsh-autocomplete
-    - zsh-autosuggestions
-    - zsh-fast-syntax-highlighting
-    - zsh-history-substring-search
+      - gh
+      - htop
+      - oh-my-posh
+      - poetry
+      - pre-commit
+      - zsh-autocomplete
+      - zsh-autosuggestions
+      - zsh-fast-syntax-highlighting
+      - zsh-history-substring-search
     state: present
-    update_homebrew: '{{ localhost_update_brew }}'
+    update_homebrew: "{{ localhost_update_brew }}"
 
 - name: Install Homebrew casks
   community.general.homebrew_cask:
     name:
-    - 1password
-    - 1password-cli
-    - iterm2
-    - visual-studio-code
-    - orbstack
+      - 1password
+      - 1password-cli
+      - iterm2
+      - visual-studio-code
+      - orbstack
     state: present
 
 - name: Ensure .gitignore exists in home directory
   ansible.builtin.file:
     path: "{{ lookup('env', 'HOME') }}/.gitignore"
     state: touch
-    mode: '0600'
+    mode: "0600"
   changed_when: false # This task only ensures the file exists
 
 - name: Add .dotfiles to .gitignore
@@ -191,12 +192,12 @@
   ansible.builtin.file:
     path: "{{ lookup('env', 'HOME') }}/.local/bin"
     state: directory
-    mode: '0755'
+    mode: "0755"
 
 - name: Create GPG key rotation script
   ansible.builtin.copy:
     dest: "{{ lookup('env', 'HOME') }}/.local/bin/rotate-git-keys"
-    mode: '0755'
+    mode: "0755"
     content: |
       #!/bin/bash
       # Git SSH Key Rotation Script
@@ -272,12 +273,12 @@
 
 - name: Copy zshrc file
   ansible.builtin.copy:
-    src: '{{ playbook_dir }}/../roles/localhost/files/zshrc-mac'
+    src: "{{ playbook_dir }}/../roles/localhost/files/zshrc-mac"
     dest: "{{ lookup('env', 'HOME') }}/.zshrc"
-    mode: '0644'
+    mode: "0644"
 
 - name: Copy zprofile file
   ansible.builtin.copy:
-    src: '{{ playbook_dir }}/../roles/localhost/files/zprofile-mac'
+    src: "{{ playbook_dir }}/../roles/localhost/files/zprofile-mac"
     dest: "{{ lookup('env', 'HOME') }}/.zprofile"
-    mode: '0644'
+    mode: "0644"

@@ -1,3 +1,4 @@
+---
 dependency:
   name: galaxy
 
@@ -5,11 +6,11 @@ driver:
   name: docker
 
 platforms:
-- name: localhost-ubuntu-22
-  image: ubuntu:22.04
-  pre_build_image: true
-  groups:
-  - localhost_linux
+  - name: localhost-ubuntu-22
+    image: ubuntu:22.04
+    pre_build_image: true
+    groups:
+      - localhost_linux
 
 provisioner:
   name: ansible
@@ -30,15 +31,15 @@ verifier:
 
 scenario:
   test_sequence:
-  - dependency
-  - cleanup
-  - destroy
-  - syntax
-  - create
-  - prepare
-  - converge
-  - idempotence
-  - side_effect
-  - verify
-  - cleanup
-  - destroy
+    - dependency
+    - cleanup
+    - destroy
+    - syntax
+    - create
+    - prepare
+    - converge
+    - idempotence
+    - side_effect
+    - verify
+    - cleanup
+    - destroy

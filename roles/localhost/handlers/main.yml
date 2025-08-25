@@ -1,4 +1,5 @@
-- name: Ignore untracked files for dotfiles  # noqa: command-instead-of-module
+---
+- name: Ignore untracked files for dotfiles # noqa: command-instead-of-module
   ansible.builtin.command:
     cmd: /usr/bin/git --git-dir={{ lookup('env', 'HOME') }}/.dotfiles/.git --work-tree={{ lookup('env', 'HOME') }} config --local status.showUntrackedFiles no
   changed_when: false
