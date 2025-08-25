@@ -258,10 +258,6 @@
     path: "{{ lookup('env', 'HOME') }}/.oh-my-zsh"
   register: localhost_oh_my_zsh_stat
 
-- name: Remove .zprofile if it exists
-  ansible.builtin.file:
-    path: "{{ lookup('env', 'HOME') }}/.zprofile"
-    state: absent
 
 - name: Install Oh My Zsh if not present
   ansible.builtin.shell: |
