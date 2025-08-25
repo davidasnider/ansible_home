@@ -295,13 +295,13 @@
 
 - name: Copy zshrc file
   ansible.builtin.copy:
-    src: "{{ playbook_dir }}/../roles/localhost/files/zshrc-linux"
+    src: zshrc-linux
     dest: "{{ lookup('env', 'HOME') }}/.zshrc"
     mode: "0644"
 
 - name: Copy zprofile file
   ansible.builtin.copy:
-    src: "{{ playbook_dir }}/../roles/localhost/files/zprofile-linux"
+    src: zprofile-linux
     dest: "{{ lookup('env', 'HOME') }}/.zprofile"
     mode: "0644"
 
