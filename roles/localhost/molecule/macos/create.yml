@@ -1,0 +1,13 @@
+---
+- name: Create
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  no_log: "{{ molecule_no_log }}"
+  tasks:
+    - name: Note about macOS testing
+      ansible.builtin.debug:
+        msg: |
+          macOS testing scenario uses delegated driver.
+          This should be run on a macOS system with proper setup.
+          The tests will run against the local macOS environment.

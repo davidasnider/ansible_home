@@ -1,44 +1,45 @@
+---
 # ansible-task
 - name: Ensure ~/code directory exists
   ansible.builtin.file:
     path: "{{ lookup('env', 'HOME') }}/code"
     state: directory
-    mode: '0755'
+    mode: "0755"
 
 - name: Configure git user name
   community.general.git_config:
     name: user.name
-    value: "David Snider"
+    value: David Snider
     scope: global
 
 - name: Configure git user email
   community.general.git_config:
     name: user.email
-    value: "david@davidsnider.org"
+    value: david@davidsnider.org
     scope: global
 
 - name: Configure git to use ssh.exe for SSH connections
   community.general.git_config:
     name: core.sshCommand
-    value: "ssh.exe"
+    value: ssh.exe
     scope: global
 
 - name: Configure git signing key
   community.general.git_config:
     name: user.signingkey
-    value: "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIKWm36FodEyxXOXxqhkCj0YLDHkori4Dzmq3hI0PsrX9"
+    value: ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIKWm36FodEyxXOXxqhkCj0YLDHkori4Dzmq3hI0PsrX9
     scope: global
 
 - name: Configure GPG format
   community.general.git_config:
     name: gpg.format
-    value: "ssh"
+    value: ssh
     scope: global
 
 - name: Configure GPG SSH program
   community.general.git_config:
     name: gpg.ssh.program
-    value: "/mnt/c/Users/david/AppData/Local/1Password/app/8/op-ssh-sign-wsl"
+    value: /mnt/c/Users/david/AppData/Local/1Password/app/8/op-ssh-sign-wsl
     scope: global
 
 - name: Enable commit GPG signing
@@ -51,13 +52,13 @@
   ansible.builtin.file:
     path: "{{ lookup('env', 'HOME') }}/.ssh"
     state: directory
-    mode: '0700'
+    mode: "0700"
 
 - name: Create SSH allowed signers file
   ansible.builtin.copy:
-    content: "david@davidsnider.org ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIKWm36FodEyxXOXxqhkCj0YLDHkori4Dzmq3hI0PsrX9"
+    content: david@davidsnider.org ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIKWm36FodEyxXOXxqhkCj0YLDHkori4Dzmq3hI0PsrX9
     dest: "{{ lookup('env', 'HOME') }}/.ssh/allowed_signers"
-    mode: '0644'
+    mode: "0644"
 
 - name: Configure Git allowed signers file
   community.general.git_config:
@@ -105,13 +106,13 @@
 - name: Set minimum TLS version for HTTPS
   community.general.git_config:
     name: http.sslversion
-    value: "tlsv1.2"
+    value: tlsv1.2
     scope: global
 
 - name: Configure SSH key validation
   community.general.git_config:
     name: gpg.ssh.defaultKeyCommand
-    value: "ssh-add -L"
+    value: ssh-add -L
     scope: global
 
 # SSH Key Management and Validation
@@ -119,19 +120,19 @@
   ansible.builtin.file:
     path: "{{ lookup('env', 'HOME') }}/.ssh"
     state: directory
-    mode: '0700'
+    mode: "0700"
     owner: "{{ lookup('env', 'USER') }}"
 
 - name: Validate allowed_signers file permissions
   ansible.builtin.file:
     path: "{{ lookup('env', 'HOME') }}/.ssh/allowed_signers"
-    mode: '0644'
+    mode: "0644"
     owner: "{{ lookup('env', 'USER') }}"
 
 - name: Create SSH config for enhanced security
   ansible.builtin.copy:
     dest: "{{ lookup('env', 'HOME') }}/.ssh/config"
-    mode: '0600'
+    mode: "0600"
     content: |
       # Enhanced SSH Security Configuration
       Host *
@@ -167,7 +168,7 @@
 - name: Create GPG key rotation script
   ansible.builtin.copy:
     dest: "{{ lookup('env', 'HOME') }}/.local/bin/rotate-git-keys"
-    mode: '0755'
+    mode: "0755"
     content: |
       #!/bin/bash
       # Git SSH Key Rotation Script
@@ -256,13 +257,13 @@
   ansible.builtin.file:
     path: "{{ lookup('env', 'HOME') }}/.local/bin"
     state: directory
-    mode: '0755'
+    mode: "0755"
 
 - name: Download oh-my-posh installation script
   ansible.builtin.get_url:
     url: https://ohmyposh.dev/install.sh
     dest: /tmp/oh-my-posh-install.sh
-    mode: '0755'
+    mode: "0755"
 
 - name: Install oh-my-posh if not present
   ansible.builtin.shell:
@@ -294,15 +295,15 @@
 
 - name: Copy zshrc file
   ansible.builtin.copy:
-    src: "{{ playbook_dir }}/../roles/localhost/files/zshrc-linux"
+    src: zshrc-linux
     dest: "{{ lookup('env', 'HOME') }}/.zshrc"
-    mode: '0644'
+    mode: "0644"
 
 - name: Copy zprofile file
   ansible.builtin.copy:
-    src: "{{ playbook_dir }}/../roles/localhost/files/zprofile-linux"
+    src: zprofile-linux
     dest: "{{ lookup('env', 'HOME') }}/.zprofile"
-    mode: '0644'
+    mode: "0644"
 
 - name: Install Pulumi CLI
   block:
@@ -316,7 +317,7 @@
       ansible.builtin.get_url:
         url: https://get.pulumi.com
         dest: /tmp/pulumi-install.sh
-        mode: '0755'
+        mode: "0755"
       when: localhost_pulumi_check.rc != 0
     - name: Install Pulumi CLI
       ansible.builtin.shell: |
@@ -325,20 +326,19 @@
       when: localhost_pulumi_check.rc != 0
       changed_when: true
 
-
 - name: Download and install 1Password CLI
   block:
     - name: Download 1Password GPG key
       ansible.builtin.get_url:
         url: https://downloads.1password.com/linux/keys/1password.asc
         dest: /tmp/1password.asc
-        mode: '0644'
+        mode: "0644"
 
     - name: Create 1Password keyring directory
       ansible.builtin.file:
         path: /usr/share/keyrings
         state: directory
-        mode: '0755'
+        mode: "0755"
       become: true
 
     - name: Import 1Password GPG key to system keyring
