@@ -52,7 +52,7 @@ def test_homebrew_casks_installed(host):
 
 def test_macos_ssh_config_1password(host):
     """Test macOS-specific SSH configuration with 1Password."""
-    home = host.user().home
+    home = host.run("echo $HOME").stdout.strip()
     ssh_config = host.file(f"{home}/.ssh/config")
 
     assert ssh_config.exists
@@ -81,7 +81,7 @@ def test_git_1password_signing_config(host):
 
 def test_oh_my_zsh_installation_macos(host):
     """Test Oh My Zsh installation on macOS."""
-    home = host.user().home
+    home = host.run("echo $HOME").stdout.strip()
     oh_my_zsh_dir = host.file(f"{home}/.oh-my-zsh")
 
     assert oh_my_zsh_dir.exists
@@ -95,7 +95,7 @@ def test_oh_my_zsh_installation_macos(host):
 
 def test_zsh_configuration_macos(host):
     """Test zsh configuration files on macOS."""
-    home = host.user().home
+    home = host.run("echo $HOME").stdout.strip()
 
     zshrc = host.file(f"{home}/.zshrc")
     zprofile = host.file(f"{home}/.zprofile")
@@ -111,7 +111,7 @@ def test_zsh_configuration_macos(host):
 
 def test_gitignore_dotfiles_entry(host):
     """Test that .dotfiles entry is added to .gitignore."""
-    home = host.user().home
+    home = host.run("echo $HOME").stdout.strip()
     gitignore = host.file(f"{home}/.gitignore")
 
     assert gitignore.exists
@@ -152,7 +152,7 @@ def test_homebrew_update_logic(host):
 
 def test_macos_directory_permissions(host):
     """Test macOS-specific directory permissions."""
-    home = host.user().home
+    home = host.run("echo $HOME").stdout.strip()
 
     # Test critical directories exist with correct permissions
     critical_dirs = [
