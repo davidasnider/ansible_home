@@ -158,6 +158,7 @@
       - oh-my-posh
       - poetry
       - pre-commit
+      - pulumi
       - zsh-autocomplete
       - zsh-autosuggestions
       - zsh-fast-syntax-highlighting
