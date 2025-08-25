@@ -1,0 +1,232 @@
+name: Molecule Testing
+
+on:
+  push:
+    branches: [main, develop]
+    paths:
+    - roles/**
+    - molecule/**
+    - .github/workflows/molecule.yml
+    - pyproject.toml
+  pull_request:
+    branches: [main]
+    paths:
+    - roles/**
+    - molecule/**
+    - .github/workflows/molecule.yml
+    - pyproject.toml
+  # Allow manual triggering for testing
+  workflow_dispatch:
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    name: Lint Ansible Code
+    steps:
+    - name: Check out the codebase
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+
+    - name: Install Poetry
+      uses: snok/install-poetry@v1
+      with:
+        version: latest
+        virtualenvs-create: true
+        virtualenvs-in-project: true
+        installer-parallel: true
+
+    - name: Load cached venv
+      id: cached-poetry-dependencies
+      uses: actions/cache@v4
+      with:
+        path: .venv
+        key: venv-${{ runner.os }}-${{ steps.setup-python.outputs.python-version }}-${{ hashFiles('**/poetry.lock') }}
+
+    - name: Install dependencies
+      if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
+      run: poetry install --no-interaction --no-root
+
+    - name: Run ansible-lint
+      run: |
+        source .venv/bin/activate
+        ansible-lint roles/
+
+  molecule-test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        scenario:
+        - default
+        - linux
+        - idempotence
+    name: Molecule Test - ${{ matrix.scenario }}
+    needs: lint
+    steps:
+    - name: Check out the codebase
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+
+    - name: Install Poetry
+      uses: snok/install-poetry@v1
+      with:
+        version: latest
+        virtualenvs-create: true
+        virtualenvs-in-project: true
+        installer-parallel: true
+
+    - name: Load cached venv
+      id: cached-poetry-dependencies
+      uses: actions/cache@v4
+      with:
+        path: .venv
+        key: venv-${{ runner.os }}-${{ steps.setup-python.outputs.python-version }}-${{ hashFiles('**/poetry.lock') }}
+
+    - name: Install dependencies
+      if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
+      run: poetry install --no-interaction --no-root
+
+    - name: Test with molecule
+      run: |
+        source .venv/bin/activate
+        cd roles/localhost
+        molecule test -s ${{ matrix.scenario }}
+      env:
+        PY_COLORS: '1'
+        ANSIBLE_FORCE_COLOR: '1'
+
+  molecule-test-macos:
+    runs-on: macos-latest
+    name: Molecule Test - macOS
+    needs: lint
+    steps:
+    - name: Check out the codebase
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+
+    - name: Install Poetry
+      uses: snok/install-poetry@v1
+      with:
+        version: latest
+        virtualenvs-create: true
+        virtualenvs-in-project: true
+        installer-parallel: true
+
+    - name: Load cached venv
+      id: cached-poetry-dependencies
+      uses: actions/cache@v4
+      with:
+        path: .venv
+        key: venv-${{ runner.os }}-${{ steps.setup-python.outputs.python-version }}-${{ hashFiles('**/poetry.lock') }}
+
+    - name: Install dependencies
+      if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
+      run: poetry install --no-interaction --no-root
+
+    - name: Test with molecule (macOS)
+      run: |
+        source .venv/bin/activate
+        cd roles/localhost
+        molecule test -s macos
+      env:
+        PY_COLORS: '1'
+        ANSIBLE_FORCE_COLOR: '1'
+          # Configure for GitHub Actions macOS runner
+        MOLECULE_MACOS_CONNECTION: local
+        MOLECULE_MACOS_HOST: localhost
+
+  coverage-report:
+    runs-on: ubuntu-latest
+    name: Test Coverage Report
+    needs: molecule-test
+    steps:
+    - name: Check out the codebase
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+
+    - name: Install Poetry
+      uses: snok/install-poetry@v1
+      with:
+        version: latest
+        virtualenvs-create: true
+        virtualenvs-in-project: true
+        installer-parallel: true
+
+    - name: Load cached venv
+      id: cached-poetry-dependencies
+      uses: actions/cache@v4
+      with:
+        path: .venv
+        key: venv-${{ runner.os }}-${{ steps.setup-python.outputs.python-version }}-${{ hashFiles('**/poetry.lock') }}
+
+    - name: Install dependencies
+      if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
+      run: poetry install --no-interaction --no-root
+
+    - name: Generate coverage report
+      run: |
+        source .venv/bin/activate
+        cd roles/localhost
+        molecule test --scenario-name default
+        # Generate coverage report for test files
+        python -m pytest molecule/*/tests/ --cov=molecule --cov-report=xml --cov-report=html
+      continue-on-error: true
+
+    - name: Upload coverage reports to Codecov
+      uses: codecov/codecov-action@v4
+      with:
+        file: ./coverage.xml
+        flags: molecule-tests
+        name: molecule-coverage
+        fail_ci_if_error: false
+
+  # Required status check for PR approval
+  molecule-tests-complete:
+    runs-on: ubuntu-latest
+    name: All Molecule Tests
+    needs: [lint, molecule-test, molecule-test-macos, coverage-report]
+    if: always()
+    steps:
+    - name: Check all jobs status
+      run: |
+        echo "Lint status: ${{ needs.lint.result }}"
+        echo "Molecule test status: ${{ needs.molecule-test.result }}"
+        echo "Molecule macOS test status: ${{ needs.molecule-test-macos.result }}"
+        echo "Coverage report status: ${{ needs.coverage-report.result }}"
+
+        if [[ "${{ needs.lint.result }}" == "failure" ]]; then
+          echo "❌ Lint checks failed"
+          exit 1
+        fi
+
+        if [[ "${{ needs.molecule-test.result }}" == "failure" ]]; then
+          echo "❌ Molecule tests failed"
+          exit 1
+        fi
+
+        if [[ "${{ needs.molecule-test-macos.result }}" == "failure" ]]; then
+          echo "❌ Molecule macOS tests failed"
+          exit 1
+        fi
+
+        echo "✅ All required tests passed"
+
+    - name: Tests passed
+      run: |
+        echo "🎉 All Molecule tests completed successfully!"
+        echo "This PR is ready for review and approval."

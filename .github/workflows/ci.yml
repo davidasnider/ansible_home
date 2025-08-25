@@ -1,126 +1,102 @@
 name: CI & Quality Checks
 on:
   push:
-    branches: [ "main" ]
+    branches: [main]
   pull_request:
-    branches: [ "main" ]
+    branches: [main]
 
 jobs:
   ansible-lint:
     name: Ansible Linting
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
+    - name: Checkout Code
+      uses: actions/checkout@v4
 
-      - name: Set up Python 3.11
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
+    - name: Set up Python 3.11
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
 
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install ansible ansible-lint
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install ansible ansible-lint
 
-      - name: Run ansible-lint
-        run: ansible-lint
+    - name: Run ansible-lint
+      run: ansible-lint
 
   pre-commit:
     name: Pre-commit Checks
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
+    - name: Checkout Code
+      uses: actions/checkout@v4
 
-      - name: Set up Python 3.11
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
+    - name: Set up Python 3.11
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
 
-      - name: Install pre-commit
-        run: |
-          python -m pip install --upgrade pip
-          pip install pre-commit
+    - name: Install pre-commit
+      run: |
+        python -m pip install --upgrade pip
+        pip install pre-commit
 
-      - name: Run pre-commit
-        run: pre-commit run --all-files
+    - name: Run pre-commit
+      run: pre-commit run --all-files
 
   secret-scanning:
     name: Secret Scanning
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
+    - name: Checkout Code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
 
-      - name: Set up Python 3.11
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
+    - name: Set up Python 3.11
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
 
-      - name: Install detect-secrets
-        run: |
-          python -m pip install --upgrade pip
-          pip install detect-secrets
+    - name: Install detect-secrets
+      run: |
+        python -m pip install --upgrade pip
+        pip install detect-secrets
 
-      - name: Run detect-secrets scan
-        run: |
-          detect-secrets scan --exclude-files '\.venv/.*|\.git/.*|__pycache__/.*|\.pyc$' --force-use-all-plugins --baseline .secrets.baseline
+    - name: Run detect-secrets scan
+      run: |
+        detect-secrets scan --exclude-files '\.venv/.*|\.git/.*|__pycache__/.*|\.pyc$' --force-use-all-plugins --baseline .secrets.baseline
 
-      - name: Verify baseline is up to date
-        run: |
-          if ! detect-secrets audit --report .secrets.baseline > /dev/null 2>&1; then
-            echo "❌ Baseline file contains unaudited secrets"
-            echo "Please run 'detect-secrets audit .secrets.baseline' locally and commit the results"
-            exit 1
-          fi
+    - name: Verify baseline is up to date
+      run: |
+        if ! detect-secrets audit --report .secrets.baseline > /dev/null 2>&1; then
+          echo "❌ Baseline file contains unaudited secrets"
+          echo "Please run 'detect-secrets audit .secrets.baseline' locally and commit the results"
+          exit 1
+        fi
 
   syntax-check:
     name: Ansible Syntax Check
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
+    - name: Checkout Code
+      uses: actions/checkout@v4
 
-      - name: Set up Python 3.11
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
+    - name: Set up Python 3.11
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
 
-      - name: Install Ansible
-        run: |
-          python -m pip install --upgrade pip
-          pip install ansible
+    - name: Install Ansible
+      run: |
+        python -m pip install --upgrade pip
+        pip install ansible
 
-      - name: Check playbook syntax
-        run: ansible-playbook --syntax-check -i inventory/local.yml playbooks/local-main.yml
+    - name: Check playbook syntax
+      run: ansible-playbook --syntax-check -i inventory/local.yml playbooks/local-main.yml
 
-  molecule-tests:
-    name: Molecule Tests
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
-
-      - name: Set up Python 3.11
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
-
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install ansible molecule[docker]
-
-      - name: Run Molecule Tests
-        run: |
-          for role in roles/*; do
-            if [ -d "$role/molecule" ]; then
-              cd "$role" && molecule test && cd -;
-            fi
-          done
 
   dependency-review:
     name: Dependency Review
@@ -130,26 +106,39 @@ jobs:
       pull-requests: write
     if: github.event_name == 'pull_request'
     steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v4
+    - name: Checkout Repository
+      uses: actions/checkout@v4
 
-      - name: Dependency Review
-        uses: actions/dependency-review-action@v4
+    - name: Dependency Review
+      uses: actions/dependency-review-action@v4
+
+  wait-for-molecule:
+    name: Wait for Molecule Tests
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    steps:
+    - name: Wait for Molecule Testing workflow
+      uses: fountainhead/action-wait-for-check@v1.2.0
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        checkName: All Molecule Tests
+        ref: ${{ github.event.pull_request.head.sha }}
+        timeoutSeconds: 1800 # 30 minutes timeout
 
   auto-approve:
     name: Auto Approve PR
     runs-on: ubuntu-latest
-    needs: [ansible-lint, pre-commit, secret-scanning, syntax-check, molecule-tests, dependency-review]
+    needs: [ansible-lint, pre-commit, secret-scanning, syntax-check, dependency-review, wait-for-molecule]
     permissions:
       contents: read
       pull-requests: write
     if: github.event_name == 'pull_request' && (github.actor == 'davidasnider' || github.actor == 'dependabot[bot]')
     steps:
-      - name: Auto approve PR
-        uses: hmarr/auto-approve-action@v4
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          review-message: "Auto-approved after all checks passed"
+    - name: Auto approve PR
+      uses: hmarr/auto-approve-action@v4
+      with:
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+        review-message: Auto-approved after all checks passed
 
   auto-merge:
     name: Auto Merge PR
@@ -160,9 +149,9 @@ jobs:
       pull-requests: write
     if: github.event_name == 'pull_request' && (github.actor == 'davidasnider' || github.actor == 'dependabot[bot]')
     steps:
-      - name: Enable auto-merge for PR
-        uses: peter-evans/enable-pull-request-automerge@v3
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          pull-request-number: ${{ github.event.pull_request.number }}
-          merge-method: squash
+    - name: Enable auto-merge for PR
+      uses: peter-evans/enable-pull-request-automerge@v3
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        pull-request-number: ${{ github.event.pull_request.number }}
+        merge-method: squash

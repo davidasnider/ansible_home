@@ -25,3 +25,56 @@ package-mode = false
 pre-commit = "^4.2.0"
 detect-secrets = "^1.5.0"
 ansible-lint = "^25.8.2"
+molecule = "^6.0.0"
+molecule-plugins = {extras = ["docker"], version = "^23.5.0"}
+pytest = "^8.0.0"
+pytest-testinfra = "^10.0.0"
+pytest-cov = "^6.0.0"
+pytest-html = "^4.0.0"
+
+[tool.pytest.ini_options]
+minversion = "6.0"
+testpaths = [
+    "roles/localhost/molecule",
+    "tests"
+]
+python_files = ["test_*.py", "*_test.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = [
+    "--strict-markers",
+    "--strict-config",
+    "--verbose",
+    "--cov=roles",
+    "--cov-report=term-missing",
+    "--cov-report=html:htmlcov",
+    "--cov-report=xml",
+    "--html=reports/pytest_report.html",
+    "--self-contained-html"
+]
+markers = [
+    "slow: marks tests as slow (deselect with '-m \"not slow\"')",
+    "integration: marks tests as integration tests",
+    "unit: marks tests as unit tests"
+]
+
+[tool.coverage.run]
+source = ["roles"]
+omit = [
+    "*/tests/*",
+    "*/test_*",
+    "*/__pycache__/*",
+    "*/molecule/*/tests/*"
+]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "if self.debug:",
+    "if settings.DEBUG",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if 0:",
+    "if __name__ == .__main__.:"
+]

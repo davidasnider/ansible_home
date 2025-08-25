@@ -1,11 +1,14 @@
+---
 repos:
-  - repo: https://github.com/ansible/ansible-lint
-    rev: v25.8.2
-    hooks:
-      - id: ansible-lint
-        name: ansible-lint
-        files: ^(playbooks/|roles/).+\.(yml|yaml)$
-        exclude: ^roles/.+/(files|templates)/
+  # ansible-lint is run separately via 'make test-lint' to avoid
+  # community.general collection dependency issues in pre-commit environment
+  # - repo: https://github.com/ansible/ansible-lint
+  #   rev: v25.8.2
+  #   hooks:
+  #     - id: ansible-lint
+  #       name: ansible-lint
+  #       files: ^(playbooks/|roles/).+\.(yml|yaml)$
+  #       exclude: ^roles/.+/(files|templates)/|^roles/.+/molecule/
 
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v6.0.0
@@ -21,7 +24,7 @@ repos:
     hooks:
       - id: detect-secrets
         name: detect-secrets
-        args: ['--baseline', '.secrets.baseline']
+        args: [--baseline, .secrets.baseline]
         exclude: package.lock.json
 
   # Git Security Validation Hooks
