@@ -114,10 +114,10 @@ def test_1password_config_directory_security_linux(host):
     assert config_dir_obj.is_directory
     assert config_dir_obj.mode == 0o700, "1Password config directory should have 700 permissions"
 
-    # Test config file exists with correct permissions
-    config_file = host.file(f"{config_dir}/config")
+    # Test security config file exists with correct permissions
+    config_file = host.file(f"{config_dir}/security-config")
     if config_file.exists:
-        assert config_file.mode == 0o600, "1Password config file should have 600 permissions"
+        assert config_file.mode == 0o600, "1Password security config file should have 600 permissions"
 
 
 def test_1password_apt_repository_security(host):

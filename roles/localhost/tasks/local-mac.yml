@@ -161,7 +161,7 @@
       - pulumi
       - zsh-autocomplete
       - zsh-autosuggestions
-      - zsh-fast-syntax-highlighting
+      - zsh-syntax-highlighting
       - zsh-history-substring-search
     state: present
     update_homebrew: "{{ localhost_update_brew }}"
