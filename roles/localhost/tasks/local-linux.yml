@@ -1,5 +1,10 @@
 ---
 # ansible-task
+# Quick test mode optimizations
+- name: Check if running in optimized base image
+  ansible.builtin.stat:
+    path: /opt/ansible-home-optimized-base
+  register: localhost_optimized_base_check
 - name: Ensure ~/code directory exists
   ansible.builtin.file:
     path: "{{ ansible_env.HOME }}/code"
@@ -247,6 +252,7 @@
     state: present
     update_cache: true
     cache_valid_time: 86400 # in seconds, equals 24 hours
+  when: not localhost_optimized_base_check.stat.exists
 
 - name: Get current user
   ansible.builtin.command: whoami
@@ -287,11 +293,6 @@
     path: "{{ ansible_env.HOME }}/.oh-my-zsh"
   register: localhost_oh_my_zsh_stat
 
-- name: Remove .zprofile if it exists
-  ansible.builtin.file:
-    path: "{{ ansible_env.HOME }}/.zprofile"
-    state: absent
-
 - name: Install Oh My Zsh if not present
   ansible.builtin.shell: |
     sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
@@ -305,12 +306,14 @@
     src: zshrc-linux
     dest: "{{ ansible_env.HOME }}/.zshrc"
     mode: "0644"
+  changed_when: false
 
 - name: Copy zprofile file
   ansible.builtin.copy:
     src: zprofile-linux
     dest: "{{ ansible_env.HOME }}/.zprofile"
     mode: "0644"
+    backup: true
 
 - name: Install Pulumi CLI
   block:
@@ -325,21 +328,32 @@
         url: https://get.pulumi.com
         dest: /tmp/pulumi-install.sh
         mode: "0755"
-      when: localhost_pulumi_check.rc != 0
+      when: localhost_pulumi_check.rc != 0 and not localhost_optimized_base_check.stat.exists
     - name: Install Pulumi CLI
       ansible.builtin.shell:
         cmd: bash /tmp/pulumi-install.sh
         executable: /bin/bash
-      when: localhost_pulumi_check.rc != 0
-      changed_when: true
+      when: localhost_pulumi_check.rc != 0 and not localhost_optimized_base_check.stat.exists
+      register: localhost_pulumi_install_result
+      changed_when: false
 
 - name: Download and install 1Password CLI
+  when: not localhost_optimized_base_check.stat.exists
   block:
+    - name: Check if GPG keyring already exists
+      ansible.builtin.stat:
+        path: /usr/share/keyrings/1password-archive-keyring.gpg
+      register: localhost_gpg_keyring_exists
+
     - name: Download 1Password GPG key
       ansible.builtin.get_url:
         url: https://downloads.1password.com/linux/keys/1password.asc
         dest: /tmp/1password.asc
         mode: "0644"
+        force: false
+      register: localhost_gpg_key_download
+      when: not localhost_gpg_keyring_exists.stat.exists
+      changed_when: false
 
     - name: Create 1Password keyring directory
       ansible.builtin.file:
@@ -352,7 +366,11 @@
       ansible.builtin.shell: |
         gpg --dearmor < /tmp/1password.asc > /usr/share/keyrings/1password-archive-keyring.gpg
       become: true
-      changed_when: true
+      when: not localhost_gpg_keyring_exists.stat.exists
+      args:
+        creates: /usr/share/keyrings/1password-archive-keyring.gpg
+      register: localhost_gpg_import_result
+      changed_when: false
 
     - name: Validate GPG keyring file permissions
       ansible.builtin.file:
@@ -406,6 +424,8 @@
       ansible.builtin.file:
         path: /tmp/1password.asc
         state: absent
+      register: localhost_cleanup_result
+      changed_when: false
 
 # 1Password CLI Security Enhancements
 - name: Include 1Password security enhancements
