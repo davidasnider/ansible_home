@@ -347,6 +347,14 @@
       become: true
       changed_when: true
 
+    - name: Validate GPG keyring file permissions
+      ansible.builtin.file:
+        path: /usr/share/keyrings/1password-archive-keyring.gpg
+        mode: "0644"
+        owner: root
+        group: root
+      become: true
+
     - name: Get system architecture
       ansible.builtin.command: dpkg --print-architecture
       register: localhost_system_arch
@@ -374,8 +382,30 @@
         state: present
       become: true
 
+    - name: Verify 1Password CLI installation and version
+      ansible.builtin.command: op --version
+      register: localhost_op_version_linux
+      changed_when: false
+
+    - name: Validate 1Password CLI version meets security requirements
+      ansible.builtin.fail:
+        msg: "1Password CLI version {{ localhost_op_version_linux.stdout }} does not meet minimum security requirements (2.0.0+)"
+      when:
+        - localhost_op_version_linux.stdout is defined
+        - (localhost_op_version_linux.stdout | regex_search('([0-9]+)\\.([0-9]+)\\.([0-9]+)') | split('.') | first | int) < 2
+
   always:
     - name: Clean up temporary files
       ansible.builtin.file:
         path: /tmp/1password.asc
         state: absent
+
+# 1Password CLI Security Enhancements
+- name: Include 1Password security enhancements
+  ansible.builtin.include_tasks: 1password-security.yml
+
+- name: Run 1Password CLI health check
+  ansible.builtin.command: "{{ lookup('env', 'HOME') }}/.local/bin/op-health-check"
+  register: localhost_op_health_check_linux
+  changed_when: false
+  failed_when: localhost_op_health_check_linux.rc > 1  # Allow warnings (rc=1) but fail on errors (rc=2)

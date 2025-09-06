@@ -166,15 +166,36 @@
     state: present
     update_homebrew: "{{ localhost_update_brew }}"
 
-- name: Install Homebrew casks
-  community.general.homebrew_cask:
-    name:
-      - 1password
-      - 1password-cli
-      - iterm2
-      - visual-studio-code
-      - orbstack
-    state: present
+- name: Install Homebrew casks with security verification
+  block:
+    - name: Install 1Password and 1Password CLI with security verification
+      community.general.homebrew_cask:
+        name:
+          - 1password
+          - 1password-cli
+        state: present
+
+    - name: Verify 1Password CLI installation and security
+      ansible.builtin.command: |
+        /opt/homebrew/bin/op --version
+      register: localhost_op_version_check
+      changed_when: false
+      failed_when: localhost_op_version_check.rc != 0
+
+    - name: Validate 1Password CLI version meets security requirements
+      ansible.builtin.fail:
+        msg: "1Password CLI version {{ localhost_op_version_check.stdout }} does not meet minimum security requirements (2.0.0+)"
+      when:
+        - localhost_op_version_check.stdout is defined
+        - (localhost_op_version_check.stdout | regex_search('([0-9]+)\\.([0-9]+)\\.([0-9]+)') | split('.') | first | int) < 2
+
+    - name: Install other Homebrew casks
+      community.general.homebrew_cask:
+        name:
+          - iterm2
+          - visual-studio-code
+          - orbstack
+        state: present
 
 - name: Ensure .gitignore exists in home directory
   ansible.builtin.file:
@@ -279,3 +300,13 @@
     src: zprofile-mac
     dest: "{{ lookup('env', 'HOME') }}/.zprofile"
     mode: "0644"
+
+# 1Password CLI Security Enhancements
+- name: Include 1Password security enhancements
+  ansible.builtin.include_tasks: 1password-security.yml
+
+- name: Run 1Password CLI health check
+  ansible.builtin.command: "{{ lookup('env', 'HOME') }}/.local/bin/op-health-check"
+  register: localhost_op_health_check
+  changed_when: false
+  failed_when: localhost_op_health_check.rc > 1  # Allow warnings (rc=1) but fail on errors (rc=2)
