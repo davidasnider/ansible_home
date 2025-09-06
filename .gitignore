@@ -44,6 +44,10 @@ coverage.xml
 *.cover
 .hypothesis/
 .pytest_cache/
+reports/
+*/reports/
+pytest_report.html
+**/pytest_report.html
 
 # Translations
 *.mo

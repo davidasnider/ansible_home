@@ -3,9 +3,16 @@
 import os
 import testinfra.utils.ansible_runner
 
-testinfra_hosts = testinfra.utils.ansible_runner.AnsibleRunner(
-    os.environ['MOLECULE_INVENTORY_FILE']
-).get_hosts('localhost_linux')
+# Handle case where tests are run outside of Molecule context (e.g., for coverage)
+inventory_file = os.environ.get('MOLECULE_INVENTORY_FILE')
+if inventory_file:
+    testinfra_hosts = testinfra.utils.ansible_runner.AnsibleRunner(
+        inventory_file
+    ).get_hosts('localhost_linux')
+else:
+    # When running coverage tests, we can't actually connect to hosts
+    # but we still need to define testinfra_hosts for pytest to work
+    testinfra_hosts = []
 
 
 def test_file_permissions_stability(host):
