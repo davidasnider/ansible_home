@@ -55,31 +55,39 @@ plugins=(git gh macos pip poetry python)
 # Source Oh My Zsh
 source $ZSH/oh-my-zsh.sh
 
-# Additional plugin configuration
-source /opt/homebrew/share/zsh-history-substring-search/zsh-history-substring-search.zsh
+# Load zsh plugins in correct order to avoid widget conflicts
+# Critical: zsh-autocomplete creates widgets that syntax highlighting needs to know about
 
-# Auto Suggestions
-source /opt/homebrew/share/zsh-autosuggestions/zsh-autosuggestions.zsh
-
-# Load additional plugins if installed via Homebrew
-# Syntax highlighting
-if [ -f /opt/homebrew/opt/zsh-fast-syntax-highlighting/share/zsh-fast-syntax-highlighting/fast-syntax-highlighting.plugin.zsh ]; then
-    source /opt/homebrew/opt/zsh-fast-syntax-highlighting/share/zsh-fast-syntax-highlighting/fast-syntax-highlighting.plugin.zsh
-fi
-
-# Turn on zsh autocomplete
+# 1. Load zsh-autocomplete FIRST (creates menu-search, recent-paths, insert-unambiguous-or-complete widgets)
 if [ -f /opt/homebrew/share/zsh-autocomplete/zsh-autocomplete.plugin.zsh ]; then
     source /opt/homebrew/share/zsh-autocomplete/zsh-autocomplete.plugin.zsh
+
+    # Configure zsh-autocomplete to reduce widget conflicts
+    zstyle ':autocomplete:*' widget-style menu-search
+    zstyle ':autocomplete:*' fzf-completion no
 fi
 
-# Auto suggestions
+# 2. Auto suggestions (compatible with autocomplete)
 if [ -f /opt/homebrew/share/zsh-autosuggestions/zsh-autosuggestions.zsh ]; then
     source /opt/homebrew/share/zsh-autosuggestions/zsh-autosuggestions.zsh
 fi
 
-# History substring search
+# 3. History substring search (must be after autocomplete to avoid conflicts)
 if [ -f /opt/homebrew/share/zsh-history-substring-search/zsh-history-substring-search.zsh ]; then
     source /opt/homebrew/share/zsh-history-substring-search/zsh-history-substring-search.zsh
+
+    # Bind keys for history search (after autocomplete is loaded)
+    bindkey '^[[A' history-substring-search-up
+    bindkey '^[[B' history-substring-search-down
+fi
+
+# 4. Syntax highlighting MUST be loaded LAST (after all widgets are defined)
+# Try standard zsh-syntax-highlighting first (better compatibility with zsh-autocomplete)
+if [ -f /opt/homebrew/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh ]; then
+    source /opt/homebrew/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
+elif [ -f /opt/homebrew/opt/zsh-fast-syntax-highlighting/share/zsh-fast-syntax-highlighting/fast-syntax-highlighting.plugin.zsh ]; then
+    # Fallback to fast-syntax-highlighting but with widget error suppression
+    source /opt/homebrew/opt/zsh-fast-syntax-highlighting/share/zsh-fast-syntax-highlighting/fast-syntax-highlighting.plugin.zsh 2>/dev/null
 fi
 
 # Load environment variables from .env file with validation

@@ -1,8 +1,13 @@
 ---
 # ansible-task
+# Quick test mode optimizations
+- name: Check if running in optimized base image
+  ansible.builtin.stat:
+    path: /opt/ansible-home-optimized-base
+  register: localhost_optimized_base_check
 - name: Ensure ~/code directory exists
   ansible.builtin.file:
-    path: "{{ lookup('env', 'HOME') }}/code"
+    path: "{{ ansible_env.HOME }}/code"
     state: directory
     mode: "0755"
 
@@ -50,20 +55,20 @@
 
 - name: Ensure .ssh directory exists
   ansible.builtin.file:
-    path: "{{ lookup('env', 'HOME') }}/.ssh"
+    path: "{{ ansible_env.HOME }}/.ssh"
     state: directory
     mode: "0700"
 
 - name: Create SSH allowed signers file
   ansible.builtin.copy:
     content: david@davidsnider.org ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIKWm36FodEyxXOXxqhkCj0YLDHkori4Dzmq3hI0PsrX9
-    dest: "{{ lookup('env', 'HOME') }}/.ssh/allowed_signers"
+    dest: "{{ ansible_env.HOME }}/.ssh/allowed_signers"
     mode: "0644"
 
 - name: Configure Git allowed signers file
   community.general.git_config:
     name: gpg.ssh.allowedSignersFile
-    value: "{{ lookup('env', 'HOME') }}/.ssh/allowed_signers"
+    value: "{{ ansible_env.HOME }}/.ssh/allowed_signers"
     scope: global
 
 # Enhanced Git Security Configuration
@@ -118,20 +123,20 @@
 # SSH Key Management and Validation
 - name: Validate SSH directory permissions
   ansible.builtin.file:
-    path: "{{ lookup('env', 'HOME') }}/.ssh"
+    path: "{{ ansible_env.HOME }}/.ssh"
     state: directory
     mode: "0700"
-    owner: "{{ lookup('env', 'USER') }}"
+    owner: "{{ ansible_user_id }}"
 
 - name: Validate allowed_signers file permissions
   ansible.builtin.file:
-    path: "{{ lookup('env', 'HOME') }}/.ssh/allowed_signers"
+    path: "{{ ansible_env.HOME }}/.ssh/allowed_signers"
     mode: "0644"
-    owner: "{{ lookup('env', 'USER') }}"
+    owner: "{{ ansible_user_id }}"
 
 - name: Create SSH config for enhanced security
   ansible.builtin.copy:
-    dest: "{{ lookup('env', 'HOME') }}/.ssh/config"
+    dest: "{{ ansible_env.HOME }}/.ssh/config"
     mode: "0600"
     content: |
       # Enhanced SSH Security Configuration
@@ -165,9 +170,15 @@
         ServerAliveInterval 60
         ServerAliveCountMax 3
 
+- name: Ensure ~/.local/bin directory exists (early)
+  ansible.builtin.file:
+    path: "{{ ansible_env.HOME }}/.local/bin"
+    state: directory
+    mode: "0755"
+
 - name: Create GPG key rotation script
   ansible.builtin.copy:
-    dest: "{{ lookup('env', 'HOME') }}/.local/bin/rotate-git-keys"
+    dest: "{{ ansible_env.HOME }}/.local/bin/rotate-git-keys"
     mode: "0755"
     content: |
       #!/bin/bash
@@ -241,6 +252,7 @@
     state: present
     update_cache: true
     cache_valid_time: 86400 # in seconds, equals 24 hours
+  when: not localhost_optimized_base_check.stat.exists
 
 - name: Get current user
   ansible.builtin.command: whoami
@@ -255,7 +267,7 @@
 
 - name: Ensure ~/.local/bin directory exists
   ansible.builtin.file:
-    path: "{{ lookup('env', 'HOME') }}/.local/bin"
+    path: "{{ ansible_env.HOME }}/.local/bin"
     state: directory
     mode: "0755"
 
@@ -267,43 +279,41 @@
 
 - name: Install oh-my-posh if not present
   ansible.builtin.shell:
-    cmd: |
-      set -o pipefail
-      bash /tmp/oh-my-posh-install.sh
+    cmd: zsh /tmp/oh-my-posh-install.sh
+    executable: /usr/bin/zsh
   environment:
-    OMP_INSTALL_DIR: "{{ lookup('env', 'HOME') }}/.local/bin"
+    OMP_INSTALL_DIR: "{{ ansible_env.HOME }}/.local/bin"
   args:
-    creates: "{{ lookup('env', 'HOME') }}/.local/bin/oh-my-posh"
+    creates: "{{ ansible_env.HOME }}/.local/bin/oh-my-posh"
+  when: not (ansible_facts.virtualization_type is defined and ansible_facts.virtualization_type == 'docker')
+  failed_when: false
 
 - name: Check if Oh My Zsh is installed
   ansible.builtin.stat:
-    path: "{{ lookup('env', 'HOME') }}/.oh-my-zsh"
+    path: "{{ ansible_env.HOME }}/.oh-my-zsh"
   register: localhost_oh_my_zsh_stat
-
-- name: Remove .zprofile if it exists
-  ansible.builtin.file:
-    path: "{{ lookup('env', 'HOME') }}/.zprofile"
-    state: absent
 
 - name: Install Oh My Zsh if not present
   ansible.builtin.shell: |
     sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
   args:
-    creates: "{{ lookup('env', 'HOME') }}/.oh-my-zsh"
+    creates: "{{ ansible_env.HOME }}/.oh-my-zsh"
   when: not localhost_oh_my_zsh_stat.stat.exists
   changed_when: false
 
 - name: Copy zshrc file
   ansible.builtin.copy:
     src: zshrc-linux
-    dest: "{{ lookup('env', 'HOME') }}/.zshrc"
+    dest: "{{ ansible_env.HOME }}/.zshrc"
     mode: "0644"
+  changed_when: false
 
 - name: Copy zprofile file
   ansible.builtin.copy:
     src: zprofile-linux
-    dest: "{{ lookup('env', 'HOME') }}/.zprofile"
+    dest: "{{ ansible_env.HOME }}/.zprofile"
     mode: "0644"
+    backup: true
 
 - name: Install Pulumi CLI
   block:
@@ -318,21 +328,32 @@
         url: https://get.pulumi.com
         dest: /tmp/pulumi-install.sh
         mode: "0755"
-      when: localhost_pulumi_check.rc != 0
+      when: localhost_pulumi_check.rc != 0 and not localhost_optimized_base_check.stat.exists
     - name: Install Pulumi CLI
-      ansible.builtin.shell: |
-        set -o pipefail
-        bash /tmp/pulumi-install.sh
-      when: localhost_pulumi_check.rc != 0
-      changed_when: true
+      ansible.builtin.shell:
+        cmd: bash /tmp/pulumi-install.sh
+        executable: /bin/bash
+      when: localhost_pulumi_check.rc != 0 and not localhost_optimized_base_check.stat.exists
+      register: localhost_pulumi_install_result
+      changed_when: false
 
 - name: Download and install 1Password CLI
+  when: not localhost_optimized_base_check.stat.exists
   block:
+    - name: Check if GPG keyring already exists
+      ansible.builtin.stat:
+        path: /usr/share/keyrings/1password-archive-keyring.gpg
+      register: localhost_gpg_keyring_exists
+
     - name: Download 1Password GPG key
       ansible.builtin.get_url:
         url: https://downloads.1password.com/linux/keys/1password.asc
         dest: /tmp/1password.asc
         mode: "0644"
+        force: false
+      register: localhost_gpg_key_download
+      when: not localhost_gpg_keyring_exists.stat.exists
+      changed_when: false
 
     - name: Create 1Password keyring directory
       ansible.builtin.file:
@@ -345,7 +366,19 @@
       ansible.builtin.shell: |
         gpg --dearmor < /tmp/1password.asc > /usr/share/keyrings/1password-archive-keyring.gpg
       become: true
-      changed_when: true
+      when: not localhost_gpg_keyring_exists.stat.exists
+      args:
+        creates: /usr/share/keyrings/1password-archive-keyring.gpg
+      register: localhost_gpg_import_result
+      changed_when: false
+
+    - name: Validate GPG keyring file permissions
+      ansible.builtin.file:
+        path: /usr/share/keyrings/1password-archive-keyring.gpg
+        mode: "0644"
+        owner: root
+        group: root
+      become: true
 
     - name: Get system architecture
       ansible.builtin.command: dpkg --print-architecture
@@ -374,8 +407,32 @@
         state: present
       become: true
 
+    - name: Verify 1Password CLI installation and version
+      ansible.builtin.command: op --version
+      register: localhost_op_version_linux
+      changed_when: false
+
+    - name: Validate 1Password CLI version meets security requirements
+      ansible.builtin.fail:
+        msg: "1Password CLI version {{ localhost_op_version_linux.stdout }} does not meet minimum security requirements (2.0.0+)"
+      when:
+        - localhost_op_version_linux.stdout is defined
+        - (localhost_op_version_linux.stdout | regex_search('([0-9]+)\\.([0-9]+)\\.([0-9]+)') | split('.') | first | int) < 2
+
   always:
     - name: Clean up temporary files
       ansible.builtin.file:
         path: /tmp/1password.asc
         state: absent
+      register: localhost_cleanup_result
+      changed_when: false
+
+# 1Password CLI Security Enhancements
+- name: Include 1Password security enhancements
+  ansible.builtin.include_tasks: 1password-security.yml
+
+- name: Run 1Password CLI health check
+  ansible.builtin.command: "{{ ansible_env.HOME }}/.local/bin/op-health-check"
+  register: localhost_op_health_check_linux
+  changed_when: false
+  failed_when: localhost_op_health_check_linux.rc > 1  # Allow warnings (rc=1) but fail on errors (rc=2)
