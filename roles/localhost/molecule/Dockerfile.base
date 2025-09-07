@@ -1,0 +1,69 @@
+FROM ubuntu:22.04
+
+# Prevent interactive prompts during package installation
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Install common dependencies that are used across all scenarios
+RUN apt-get update && apt-get install -y \
+    python3 \
+    python3-pip \
+    curl \
+    wget \
+    gnupg2 \
+    software-properties-common \
+    apt-transport-https \
+    ca-certificates \
+    lsb-release \
+    unzip \
+    git \
+    zsh \
+    gh \
+    htop \
+    jq \
+    python3-poetry \
+    pre-commit \
+    zsh-autosuggestions \
+    zsh-syntax-highlighting \
+    sudo \
+    && rm -rf /var/lib/apt/lists/* \
+    && apt-get clean
+
+# Pre-create common directories
+RUN mkdir -p /root/.ssh /root/.local/bin /root/code /usr/share/keyrings
+
+# Set proper permissions for directories
+RUN chmod 700 /root/.ssh && chmod 755 /root/.local/bin /root/code
+
+# Pre-download and cache 1Password GPG key
+RUN wget -O /tmp/1password.asc https://downloads.1password.com/linux/keys/1password.asc && \
+    gpg --dearmor < /tmp/1password.asc > /usr/share/keyrings/1password-archive-keyring.gpg && \
+    chmod 644 /usr/share/keyrings/1password-archive-keyring.gpg && \
+    rm /tmp/1password.asc
+
+# Pre-setup 1Password repository
+RUN echo "deb [arch=amd64 signed-by=/usr/share/keyrings/1password-archive-keyring.gpg] https://downloads.1password.com/linux/debian/amd64 stable main" > /etc/apt/sources.list.d/1password.list && \
+    apt-get update && \
+    apt-get install -y 1password-cli && \
+    rm -rf /var/lib/apt/lists/* && \
+    apt-get clean
+
+# Pre-download and install Pulumi
+RUN wget -O /tmp/pulumi-install.sh https://get.pulumi.com && \
+    chmod +x /tmp/pulumi-install.sh && \
+    bash /tmp/pulumi-install.sh && \
+    rm /tmp/pulumi-install.sh
+
+# Pre-download Oh My Posh installation script
+RUN wget -O /tmp/oh-my-posh-install.sh https://ohmyposh.dev/install.sh && \
+    chmod +x /tmp/oh-my-posh-install.sh
+
+# Set basic environment variables
+ENV HOME=/root
+ENV USER=root
+ENV PATH="/root/.local/bin:$PATH"
+
+# Create a marker file to indicate this is our optimized base image
+RUN touch /opt/ansible-home-optimized-base
+
+# Default shell
+SHELL ["/bin/bash", "-c"]
