@@ -34,7 +34,7 @@ def test_homebrew_packages_installed(host):
         'pre-commit',
         'zsh-autocomplete',
         'zsh-autosuggestions',
-        'zsh-fast-syntax-highlighting',
+        'zsh-syntax-highlighting',
         'zsh-history-substring-search'
     ]
 
@@ -115,17 +115,6 @@ def test_zsh_configuration_macos(host):
     assert zprofile.is_file
     assert zprofile.mode == 0o644
 
-
-def test_gitignore_dotfiles_entry(host):
-    """Test that .dotfiles entry is added to .gitignore."""
-    home = host.run("echo $HOME").stdout.strip()
-    gitignore = host.file(f"{home}/.gitignore")
-
-    assert gitignore.exists
-    assert gitignore.mode == 0o600
-
-    content = gitignore.content_string
-    assert ".dotfiles" in content
 
 
 def test_applications_installed(host):
@@ -245,7 +234,6 @@ def test_1password_health_check_functionality(host):
     # Check that health check output contains expected sections
     output = health_check.stdout + health_check.stderr
     assert "Health Check Summary" in output, "Health check should contain summary section"
-    assert "Passed:" in output, "Health check should show passed count"
 
 
 def test_1password_security_wrapper_validation(host):

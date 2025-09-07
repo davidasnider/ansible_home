@@ -197,18 +197,6 @@
           - orbstack
         state: present
 
-- name: Ensure .gitignore exists in home directory
-  ansible.builtin.file:
-    path: "{{ lookup('env', 'HOME') }}/.gitignore"
-    state: touch
-    mode: "0600"
-  changed_when: false # This task only ensures the file exists
-
-- name: Add .dotfiles to .gitignore
-  ansible.builtin.lineinfile:
-    path: "{{ lookup('env', 'HOME') }}/.gitignore"
-    line: .dotfiles
-  register: localhost_gitignore_status
 
 - name: Ensure ~/.local/bin directory exists
   ansible.builtin.file:
