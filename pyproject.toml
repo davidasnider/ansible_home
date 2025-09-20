@@ -11,7 +11,8 @@ dependencies = [
     "ansible (>=11.5.0,<12.0.0)",
     "hvac (>=2.3.0,<3.0.0)",
     "pulumi-github (>=6.7.3,<7.0.0)",
-    "pulumi (>=3.190.0,<4.0.0)"
+    "pulumi (>=3.190.0,<4.0.0)",
+    "python-dotenv (>=1.0.0,<2.0.0)"
 ]
 
 [build-system]
