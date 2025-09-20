@@ -40,8 +40,9 @@ RUN wget -O /tmp/1password.asc https://downloads.1password.com/linux/keys/1passw
     chmod 644 /usr/share/keyrings/1password-archive-keyring.gpg && \
     rm /tmp/1password.asc
 
-# Pre-setup 1Password repository
-RUN echo "deb [arch=amd64 signed-by=/usr/share/keyrings/1password-archive-keyring.gpg] https://downloads.1password.com/linux/debian/amd64 stable main" > /etc/apt/sources.list.d/1password.list && \
+# Pre-setup 1Password repository with dynamic architecture detection
+RUN ARCH=$(dpkg --print-architecture) && \
+    echo "deb [arch=$ARCH signed-by=/usr/share/keyrings/1password-archive-keyring.gpg] https://downloads.1password.com/linux/debian/$ARCH stable main" > /etc/apt/sources.list.d/1password.list && \
     apt-get update && \
     apt-get install -y 1password-cli && \
     rm -rf /var/lib/apt/lists/* && \
