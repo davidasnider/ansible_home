@@ -253,11 +253,30 @@
     update_cache: true
     cache_valid_time: 86400 # in seconds, equals 24 hours
   when: not localhost_optimized_base_check.stat.exists
+  retries: 3
+  delay: 5
+  timeout: 300
+
+- name: Verify apt packages installation
+  ansible.builtin.command: gh --version
+  register: localhost_gh_version_check_linux
+  changed_when: false
+  failed_when: localhost_gh_version_check_linux.rc != 0
+
+- name: Debug apt packages installation check
+  ansible.builtin.debug:
+    var: localhost_gh_version_check_linux
+    verbosity: 2
 
 - name: Get current user
   ansible.builtin.command: whoami
   register: localhost_current_user
   changed_when: false
+
+- name: Debug current user
+  ansible.builtin.debug:
+    var: localhost_current_user
+    verbosity: 2
 
 - name: Set zsh as default shell
   ansible.builtin.user:
@@ -276,6 +295,9 @@
     url: https://ohmyposh.dev/install.sh
     dest: /tmp/oh-my-posh-install.sh
     mode: "0755"
+  retries: 3
+  delay: 5
+  timeout: 300
 
 - name: Install oh-my-posh if not present
   ansible.builtin.shell:
@@ -293,13 +315,58 @@
     path: "{{ ansible_env.HOME }}/.oh-my-zsh"
   register: localhost_oh_my_zsh_stat
 
-- name: Install Oh My Zsh if not present
-  ansible.builtin.shell: |
-    sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
-  args:
-    creates: "{{ ansible_env.HOME }}/.oh-my-zsh"
-  when: not localhost_oh_my_zsh_stat.stat.exists
-  changed_when: false
+- name: Debug Oh My Zsh stat
+  ansible.builtin.debug:
+    var: localhost_oh_my_zsh_stat
+    verbosity: 2
+
+- name: Install Oh My Zsh with error handling
+  block:
+    - name: Install Oh My Zsh if not present
+      ansible.builtin.shell: |
+        sh -c "$(curl -fsSL -m 300 https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
+      args:
+        creates: "{{ ansible_env.HOME }}/.oh-my-zsh"
+      when: not localhost_oh_my_zsh_stat.stat.exists
+      changed_when: false
+      register: localhost_oh_my_zsh_install_result
+      retries: 3
+      delay: 5
+      until: localhost_oh_my_zsh_install_result.rc == 0
+
+    - name: Verify Oh My Zsh installation
+      ansible.builtin.stat:
+        path: "{{ ansible_env.HOME }}/.oh-my-zsh"
+      register: localhost_oh_my_zsh_stat_check_linux
+
+    - name: Fail if Oh My Zsh is not installed
+      ansible.builtin.fail:
+        msg: "Oh My Zsh installation failed. The directory ~/.oh-my-zsh was not found."
+      when: not localhost_oh_my_zsh_stat_check_linux.stat.exists
+  rescue:
+    - name: Fail if Oh My Zsh installation failed
+      ansible.builtin.fail:
+        msg: "Oh My Zsh installation failed. Please check the logs for more details."
+
+- name: Debug Oh My Zsh installation result
+  ansible.builtin.debug:
+    var: localhost_oh_my_zsh_install_result
+    verbosity: 2
+
+- name: Verify Oh My Zsh installation
+  ansible.builtin.stat:
+    path: "{{ ansible_env.HOME }}/.oh-my-zsh"
+  register: localhost_oh_my_zsh_stat_check_linux
+
+- name: Debug Oh My Zsh installation check
+  ansible.builtin.debug:
+    var: localhost_oh_my_zsh_stat_check_linux
+    verbosity: 2
+
+- name: Fail if Oh My Zsh is not installed
+  ansible.builtin.fail:
+    msg: "Oh My Zsh installation failed. The directory ~/.oh-my-zsh was not found."
+  when: not localhost_oh_my_zsh_stat_check_linux.stat.exists
 
 - name: Copy zshrc file
   ansible.builtin.copy:
@@ -323,12 +390,21 @@
       failed_when: false
       changed_when: false
 
+    - name: Debug Pulumi check
+      ansible.builtin.debug:
+        var: localhost_pulumi_check
+        verbosity: 2
+
     - name: Download Pulumi installation script
       ansible.builtin.get_url:
         url: https://get.pulumi.com
         dest: /tmp/pulumi-install.sh
         mode: "0755"
       when: localhost_pulumi_check.rc != 0 and not localhost_optimized_base_check.stat.exists
+      retries: 3
+      delay: 5
+      timeout: 300
+
     - name: Install Pulumi CLI
       ansible.builtin.shell:
         cmd: bash /tmp/pulumi-install.sh
@@ -336,6 +412,26 @@
       when: localhost_pulumi_check.rc != 0 and not localhost_optimized_base_check.stat.exists
       register: localhost_pulumi_install_result
       changed_when: false
+
+    - name: Verify Pulumi installation
+      ansible.builtin.command: pulumi version
+      register: localhost_pulumi_version_check
+      changed_when: false
+      failed_when: localhost_pulumi_version_check.rc != 0
+
+    - name: Debug Pulumi installation result
+      ansible.builtin.debug:
+        var: localhost_pulumi_install_result
+        verbosity: 2
+
+    - name: Debug Pulumi version check
+      ansible.builtin.debug:
+        var: localhost_pulumi_version_check
+        verbosity: 2
+  rescue:
+    - name: Fail if Pulumi installation failed
+      ansible.builtin.fail:
+        msg: "Pulumi installation failed. Please check the logs for more details."
 
 - name: Download and install 1Password CLI
   when: not localhost_optimized_base_check.stat.exists
@@ -354,6 +450,9 @@
       register: localhost_gpg_key_download
       when: not localhost_gpg_keyring_exists.stat.exists
       changed_when: false
+      retries: 3
+      delay: 5
+      timeout: 300
 
     - name: Create 1Password keyring directory
       ansible.builtin.file:
@@ -395,17 +494,23 @@
         filename: 1password
         state: present
       become: true
+      retries: 3
+      delay: 5
 
     - name: Update apt cache
       ansible.builtin.apt:
         update_cache: true
       become: true
+      retries: 3
+      delay: 5
 
     - name: Install 1Password CLI
       ansible.builtin.apt:
         name: 1password-cli
         state: present
       become: true
+      retries: 3
+      delay: 5
 
     - name: Verify 1Password CLI installation and version
       ansible.builtin.command: op --version
@@ -418,6 +523,10 @@
       when:
         - localhost_op_version_linux.stdout is defined
         - (localhost_op_version_linux.stdout | regex_search('([0-9]+)\\.([0-9]+)\\.([0-9]+)') | split('.') | first | int) < 2
+  rescue:
+    - name: Fail if 1Password CLI installation failed
+      ansible.builtin.fail:
+        msg: "1Password CLI installation failed. Please check the logs for more details."
 
   always:
     - name: Clean up temporary files
