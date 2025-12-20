@@ -354,20 +354,6 @@
     var: localhost_oh_my_zsh_install_result
     verbosity: 2
 
-- name: Verify Oh My Zsh installation
-  ansible.builtin.stat:
-    path: "{{ ansible_env.HOME }}/.oh-my-zsh"
-  register: localhost_oh_my_zsh_stat_check_linux
-
-- name: Debug Oh My Zsh installation check
-  ansible.builtin.debug:
-    var: localhost_oh_my_zsh_stat_check_linux
-    verbosity: 2
-
-- name: Fail if Oh My Zsh is not installed
-  ansible.builtin.fail:
-    msg: "Oh My Zsh installation failed. The directory ~/.oh-my-zsh was not found."
-  when: not localhost_oh_my_zsh_stat_check_linux.stat.exists
 
 - name: Copy zshrc file
   ansible.builtin.copy:

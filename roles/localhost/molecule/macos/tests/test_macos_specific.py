@@ -125,8 +125,12 @@ def test_zsh_1password_agent_config(host):
     content = zshrc.content_string
 
     # Check for the specific export line
-    expected_export = 'export SSH_AUTH_SOCK=~/Library/Group\\ Containers/2BUA8C4S2C.com.1password/t/agent.sock'
-    assert expected_export in content, "1Password SSH Agent config missing from .zshrc"
+    # Check for the SSH_AUTH_SOCK export pointing to the 1Password agent socket,
+    # without depending on a specific escaping/quoting style.
+    assert "SSH_AUTH_SOCK" in content, "SSH_AUTH_SOCK not referenced in .zshrc for 1Password SSH Agent"
+    assert "2BUA8C4S2C.com.1password/t/agent.sock" in content, (
+        "1Password SSH Agent socket path missing from .zshrc"
+    )
 
 
 
