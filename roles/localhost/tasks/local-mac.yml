@@ -153,9 +153,6 @@
       retries: 3
       delay: 5
       until: localhost_brew_version_check.rc == 0
-
-
-
   rescue:
     - name: Fail if Homebrew installation failed
       ansible.builtin.fail:
