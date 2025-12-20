@@ -28,7 +28,7 @@
     name: core.sshCommand
     value: ssh.exe
     scope: global
-  when: "'microsoft' in ansible_kernel"
+  when: "'microsoft' in ansible_facts.kernel | default('')"
 
 - name: Configure git signing key
   community.general.git_config:
