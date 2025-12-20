@@ -116,6 +116,19 @@ def test_zsh_configuration_macos(host):
     assert zprofile.mode == 0o644
 
 
+def test_zsh_1password_agent_config(host):
+    """Test that 1Password SSH Agent is configured in .zshrc."""
+    home = host.run("echo $HOME").stdout.strip()
+    zshrc = host.file(f"{home}/.zshrc")
+
+    assert zshrc.exists
+    content = zshrc.content_string
+
+    # Check for the specific export line
+    expected_export = 'export SSH_AUTH_SOCK=~/Library/Group\\ Containers/2BUA8C4S2C.com.1password/t/agent.sock'
+    assert expected_export in content, "1Password SSH Agent config missing from .zshrc"
+
+
 
 def test_applications_installed(host):
     """Test that expected macOS applications are installed."""
