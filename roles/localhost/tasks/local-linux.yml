@@ -401,7 +401,9 @@
       changed_when: false
 
     - name: Verify Pulumi installation
-      ansible.builtin.command: pulumi version
+      ansible.builtin.shell: |
+        export PATH=$HOME/.pulumi/bin:$PATH
+        pulumi version
       register: localhost_pulumi_version_check
       changed_when: false
       failed_when: localhost_pulumi_version_check.rc != 0
