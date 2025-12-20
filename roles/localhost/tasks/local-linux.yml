@@ -28,7 +28,7 @@
     name: core.sshCommand
     value: ssh.exe
     scope: global
-  when: "'microsoft' in ansible_facts['kernel'] | default('')"
+  when: "'microsoft' in (ansible_facts.kernel | default(''))"
 
 - name: Configure git signing key
   community.general.git_config:
@@ -407,8 +407,8 @@
       register: localhost_pulumi_version_check
       changed_when: false
       failed_when: localhost_pulumi_version_check.rc != 0
-      retries: 3
-      delay: 5
+      retries: 5
+      delay: 10
       until: localhost_pulumi_version_check.rc == 0
 
     - name: Debug Pulumi installation result
