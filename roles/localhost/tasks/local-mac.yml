@@ -131,13 +131,38 @@
     mode: "0644"
     owner: "{{ lookup('env', 'USER') }}"
 
-- name: Install Homebrew if not present
-  ansible.builtin.shell: |
-    /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-  args:
-    creates: /opt/homebrew/bin/brew
-  become: false
-  changed_when: false
+- name: Install Homebrew with error handling
+  block:
+    - name: Install Homebrew if not present
+      ansible.builtin.shell: |
+        /bin/bash -c "$(curl -fsSL -m 300 https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+      args:
+        creates: /opt/homebrew/bin/brew
+      become: false
+      changed_when: false
+      register: localhost_homebrew_install_result
+      retries: 3
+      delay: 5
+      until: localhost_homebrew_install_result.rc == 0
+
+    - name: Verify Homebrew installation
+      ansible.builtin.command: /opt/homebrew/bin/brew --version
+      register: localhost_brew_version_check
+      changed_when: false
+      failed_when: localhost_brew_version_check.rc != 0
+      retries: 3
+      delay: 5
+      until: localhost_brew_version_check.rc == 0
+  rescue:
+    - name: Fail if Homebrew installation failed
+      ansible.builtin.fail:
+        msg: "Homebrew installation failed. Please check the logs for more details."
+
+- name: Debug Homebrew installation result
+  ansible.builtin.debug:
+    var: localhost_homebrew_install_result
+    verbosity: 2
+
 
 - name: Check last Homebrew update time
   ansible.builtin.stat:
@@ -165,6 +190,23 @@
       - zsh-history-substring-search
     state: present
     update_homebrew: "{{ localhost_update_brew }}"
+  retries: 3
+  delay: 5
+  timeout: 300
+
+- name: Verify Homebrew packages installation
+  ansible.builtin.command: gh --version
+  register: localhost_gh_version_check
+  changed_when: false
+  failed_when: localhost_gh_version_check.rc != 0
+  retries: 3
+  delay: 5
+  until: localhost_gh_version_check.rc == 0
+
+- name: Debug Homebrew packages installation check
+  ansible.builtin.debug:
+    var: localhost_gh_version_check
+    verbosity: 2
 
 - name: Install Homebrew casks with security verification
   block:
@@ -174,6 +216,8 @@
           - 1password
           - 1password-cli
         state: present
+      retries: 3
+      delay: 5
 
     - name: Verify 1Password CLI installation and security
       ansible.builtin.command: |
@@ -181,6 +225,14 @@
       register: localhost_op_version_check
       changed_when: false
       failed_when: localhost_op_version_check.rc != 0
+      retries: 3
+      delay: 5
+      until: localhost_op_version_check.rc == 0
+
+    - name: Debug 1Password CLI version check
+      ansible.builtin.debug:
+        var: localhost_op_version_check
+        verbosity: 2
 
     - name: Validate 1Password CLI version meets security requirements
       ansible.builtin.fail:
@@ -196,6 +248,8 @@
           - visual-studio-code
           - orbstack
         state: present
+      retries: 3
+      delay: 5
 
 
 - name: Ensure ~/.local/bin directory exists
@@ -269,13 +323,39 @@
   register: localhost_oh_my_zsh_stat
 
 
-- name: Install Oh My Zsh if not present
-  ansible.builtin.shell: |
-    sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
-  args:
-    creates: "{{ lookup('env', 'HOME') }}/.oh-my-zsh"
-  when: not localhost_oh_my_zsh_stat.stat.exists
-  changed_when: false
+- name: Install Oh My Zsh with error handling
+  block:
+    - name: Install Oh My Zsh if not present
+      ansible.builtin.shell: |
+        sh -c "$(curl -fsSL -m 300 https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
+      args:
+        creates: "{{ lookup('env', 'HOME') }}/.oh-my-zsh"
+      when: not localhost_oh_my_zsh_stat.stat.exists
+      changed_when: false
+      register: localhost_oh_my_zsh_install_result
+      retries: 3
+      delay: 5
+      until: localhost_oh_my_zsh_install_result.rc == 0
+
+    - name: Verify Oh My Zsh installation
+      ansible.builtin.stat:
+        path: "{{ lookup('env', 'HOME') }}/.oh-my-zsh"
+      register: localhost_oh_my_zsh_stat_check
+
+    - name: Fail if Oh My Zsh is not installed
+      ansible.builtin.fail:
+        msg: "Oh My Zsh installation failed. The directory ~/.oh-my-zsh was not found."
+      when: not localhost_oh_my_zsh_stat_check.stat.exists
+  rescue:
+    - name: Fail if Oh My Zsh installation failed
+      ansible.builtin.fail:
+        msg: "Oh My Zsh installation failed. Please check the logs for more details."
+
+- name: Debug Oh My Zsh installation result
+  ansible.builtin.debug:
+    var: localhost_oh_my_zsh_install_result
+    verbosity: 2
+
 
 - name: Copy zshrc file
   ansible.builtin.copy:
@@ -298,3 +378,8 @@
   register: localhost_op_health_check
   changed_when: false
   failed_when: localhost_op_health_check.rc > 1  # Allow warnings (rc=1) but fail on errors (rc=2)
+
+- name: Debug 1Password CLI health check
+  ansible.builtin.debug:
+    var: localhost_op_health_check
+    verbosity: 2
