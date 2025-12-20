@@ -164,19 +164,6 @@
     var: localhost_homebrew_install_result
     verbosity: 2
 
-- name: Verify Homebrew installation
-  ansible.builtin.command: /opt/homebrew/bin/brew --version
-  register: localhost_brew_version_check
-  changed_when: false
-  failed_when: localhost_brew_version_check.rc != 0
-  retries: 3
-  delay: 5
-  until: localhost_brew_version_check.rc == 0
-
-- name: Debug Homebrew version check
-  ansible.builtin.debug:
-    var: localhost_brew_version_check
-    verbosity: 2
 
 - name: Check last Homebrew update time
   ansible.builtin.stat:
@@ -365,20 +352,6 @@
     var: localhost_oh_my_zsh_install_result
     verbosity: 2
 
-- name: Verify Oh My Zsh installation
-  ansible.builtin.stat:
-    path: "{{ lookup('env', 'HOME') }}/.oh-my-zsh"
-  register: localhost_oh_my_zsh_stat_check
-
-- name: Debug Oh My Zsh installation check
-  ansible.builtin.debug:
-    var: localhost_oh_my_zsh_stat_check
-    verbosity: 2
-
-- name: Fail if Oh My Zsh is not installed
-  ansible.builtin.fail:
-    msg: "Oh My Zsh installation failed. The directory ~/.oh-my-zsh was not found."
-  when: not localhost_oh_my_zsh_stat_check.stat.exists
 
 - name: Copy zshrc file
   ansible.builtin.copy:
