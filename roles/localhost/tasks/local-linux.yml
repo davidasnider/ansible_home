@@ -263,6 +263,9 @@
   register: localhost_gh_version_check_linux
   changed_when: false
   failed_when: localhost_gh_version_check_linux.rc != 0
+  retries: 3
+  delay: 5
+  until: localhost_gh_version_check_linux.rc == 0
 
 - name: Debug apt packages installation check
   ansible.builtin.debug:
@@ -407,6 +410,9 @@
       register: localhost_pulumi_version_check
       changed_when: false
       failed_when: localhost_pulumi_version_check.rc != 0
+      retries: 3
+      delay: 5
+      until: localhost_pulumi_version_check.rc == 0
 
     - name: Debug Pulumi installation result
       ansible.builtin.debug:

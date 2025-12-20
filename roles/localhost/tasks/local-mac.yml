@@ -154,6 +154,8 @@
       delay: 5
       until: localhost_brew_version_check.rc == 0
 
+
+
   rescue:
     - name: Fail if Homebrew installation failed
       ansible.builtin.fail:
@@ -200,6 +202,9 @@
   register: localhost_gh_version_check
   changed_when: false
   failed_when: localhost_gh_version_check.rc != 0
+  retries: 3
+  delay: 5
+  until: localhost_gh_version_check.rc == 0
 
 - name: Debug Homebrew packages installation check
   ansible.builtin.debug:
