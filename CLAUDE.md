@@ -36,11 +36,10 @@ make molecule-test-macos-utm     # UTM VM: macOS native (local only)
 
 - **While coding**: `make test-lint` (fast feedback)
 - **Before PR**: `make test-all` (recommended)
-- **Major releases**: Include UTM macOS testing if available
 
 ## Automated Testing
 
 - **Pre-commit**: Fast formatting checks (~10s)
 - **CI Pipeline**: Full matrix testing on every PR (~12min)
 - **Status checks**: Required before merge
-- NEVER copy files from this repository to the local machine. Ansible will take care of that
+- **File transfers**: Use Ansible roles/playbooks to move files from this repository to any target machine; do not copy them manually
