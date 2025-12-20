@@ -256,7 +256,6 @@
   when: not localhost_optimized_base_check.stat.exists
   retries: 3
   delay: 5
-  timeout: 300
 
 - name: Verify apt packages installation
   ansible.builtin.command: gh --version
@@ -301,7 +300,6 @@
     mode: "0755"
   retries: 3
   delay: 5
-  timeout: 300
 
 - name: Install oh-my-posh if not present
   ansible.builtin.shell:
@@ -393,7 +391,6 @@
       when: localhost_pulumi_check.rc != 0 and not localhost_optimized_base_check.stat.exists
       retries: 3
       delay: 5
-      timeout: 300
 
     - name: Install Pulumi CLI
       ansible.builtin.shell:
@@ -447,7 +444,6 @@
       changed_when: false
       retries: 3
       delay: 5
-      timeout: 300
 
     - name: Create 1Password keyring directory
       ansible.builtin.file:
