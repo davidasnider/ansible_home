@@ -4,12 +4,20 @@ Infrastructure as Code for ansible_home repository management
 
 import pulumi
 import pulumi_github as github
+from dotenv import load_dotenv
+import os
+
+# Load .env file
+load_dotenv()
 
 # Configuration
-import os
 github_token = os.getenv("GITHUB_TOKEN")
 if not github_token:
     raise ValueError("GITHUB_TOKEN environment variable is required")
+
+gemini_api_key = os.getenv("GEMINI_API_KEY")
+if not gemini_api_key or gemini_api_key == "YOUR_API_KEY":  # pragma: allowlist secret
+    raise ValueError("GEMINI_API_KEY environment variable is required and must be set in the .env file")
 
 # Import existing repository instead of creating new one
 repo = github.Repository(
@@ -70,10 +78,18 @@ branch_protection = github.BranchProtection(
     required_linear_history=True,
 )
 
+# GitHub Actions Secret for Gemini API Key
+gemini_secret = github.ActionsSecret("gemini-api-key-secret",
+    repository=repo.name,
+    secret_name="GEMINI_API_KEY",
+    plaintext_value=gemini_api_key,  # pragma: allowlist secret
+)
+
 # Export repository information
 pulumi.export("repository_name", repo.name)
 pulumi.export("repository_url", repo.html_url)
 pulumi.export("repository_clone_url", repo.git_clone_url)
+pulumi.export("gemini_secret_name", gemini_secret.secret_name)
 
 # Export branch protection information
 pulumi.export("branch_protection_enabled", True)

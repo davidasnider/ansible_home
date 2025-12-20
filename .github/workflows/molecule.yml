@@ -8,6 +8,7 @@ on:
     - molecule/**
     - .github/workflows/molecule.yml
     - pyproject.toml
+    - playbooks/**
   pull_request:
     branches: [main]
     paths:
@@ -15,6 +16,7 @@ on:
     - molecule/**
     - .github/workflows/molecule.yml
     - pyproject.toml
+    - playbooks/**
   # Allow manual triggering for testing
   workflow_dispatch:
 

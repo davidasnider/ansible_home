@@ -109,3 +109,6 @@ dmypy.json
 
 # Pulumi
 .pulumi/
+
+.gemini/
+gha-creds-*.json

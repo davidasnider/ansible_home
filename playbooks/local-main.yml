@@ -1,5 +1,5 @@
 ---
-- name: Detect OS and include the appropriate local task file
+- name: Detect OS and include the appropriate local task file  # Trigger CI
   hosts: localhost
   gather_facts: true
   vars:
