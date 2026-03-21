@@ -11,7 +11,7 @@ platforms:
     # - CI (GitHub Actions): Uses local connection on macOS runner
     # - Local dev: Can target OrbStack VM or local macOS
     groups:
-      - localhost_macos
+      - workstation_macos
 
 provisioner:
   name: ansible

@@ -1,6 +1,6 @@
 ---
 - name: Converge Linux-specific test (Fast)
-  hosts: localhost_linux
+  hosts: workstation_linux
   gather_facts: true
   tasks:
     - name: Update apt cache (Ubuntu/Debian)

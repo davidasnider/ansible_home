@@ -6,20 +6,17 @@ driver:
   name: docker
 
 platforms:
-  - name: localhost-ubuntu
+  - name: localhost-idempotence-test
     image: ubuntu:22.04
     pre_build_image: true
-    privileged: false
-    command: /bin/bash
-    tty: true
     groups:
-      - localhost_linux
+      - workstation_linux
 
 provisioner:
   name: ansible
   inventory:
     host_vars:
-      localhost-ubuntu:
+      localhost-idempotence-test:
         ansible_python_interpreter: /usr/bin/python3
   config_options:
     defaults:
@@ -27,8 +24,13 @@ provisioner:
       stdout_callback: ansible.builtin.default
       result_format: yaml
       bin_ansible_callbacks: true
+      # Enable callback plugins for better idempotency tracking
+      callback_whitelist: profile_tasks,timer
     ssh_connection:
       pipelining: false
+  # Run the playbook twice to test idempotency
+  playbooks:
+    converge: converge.yml
 
 verifier:
   name: testinfra
@@ -42,8 +44,10 @@ scenario:
     - create
     - prepare
     - converge
+    # Run converge again to test idempotency
+    - converge
+    # Custom idempotency check
     - idempotence
-    - side_effect
     - verify
     - cleanup
     - destroy

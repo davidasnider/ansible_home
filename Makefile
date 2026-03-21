@@ -36,7 +36,7 @@ test-prep: docker-build-base
 docker-build-base:
 	@if [ "$$CI" != "true" ] && [ "$$GITHUB_ACTIONS" != "true" ]; then \
 		echo "Building optimized Docker base image for local testing..."; \
-		cd roles/localhost/molecule && docker build -t ansible-home-test-base:latest -f Dockerfile.base . || echo "Docker build failed, falling back to standard images"; \
+		cd roles/workstation/molecule && docker build -t ansible-home-test-base:latest -f Dockerfile.base . || echo "Docker build failed, falling back to standard images"; \
 	else \
 		echo "Skipping Docker build in CI/CD environment"; \
 	fi
@@ -55,15 +55,15 @@ test-lint:
 
 test-molecule:
 	@echo "Running all Molecule scenarios..."
-	cd roles/localhost && poetry run molecule test --all
+	cd roles/workstation && poetry run molecule test --all
 
 test-molecule-scenario:
 	@echo "Running Molecule scenario: $(SCENARIO)"
-	cd roles/localhost && poetry run molecule test -s $(SCENARIO)
+	cd roles/workstation && poetry run molecule test -s $(SCENARIO)
 
 test-coverage:
 	@echo "Running test coverage analysis..."
-	poetry run pytest roles/localhost/molecule/*/tests/ --cov=roles --cov-report=html --cov-report=xml --cov-report=term-missing
+	poetry run pytest roles/workstation/molecule/*/tests/ --cov=roles --cov-report=html --cov-report=xml --cov-report=term-missing
 
 clean-test:
 	@echo "Cleaning up test artifacts..."
@@ -71,8 +71,8 @@ clean-test:
 	rm -rf reports/
 	rm -f coverage.xml
 	rm -f .coverage
-	cd roles/localhost && poetry run molecule cleanup --all || true
-	cd roles/localhost && poetry run molecule destroy --all || true
+	cd roles/workstation && poetry run molecule cleanup --all || true
+	cd roles/workstation && poetry run molecule destroy --all || true
 
 # Development workflow targets
 dev-test: test-prep test-lint molecule-converge-all molecule-verify-all
@@ -83,31 +83,31 @@ dev-test-quick: test-lint molecule-verify-all
 
 # Molecule specific targets
 molecule-create:
-	cd roles/localhost && poetry run molecule create
+	cd roles/workstation && poetry run molecule create
 
 molecule-converge:
-	cd roles/localhost && poetry run molecule converge
+	cd roles/workstation && poetry run molecule converge
 
 molecule-verify:
-	cd roles/localhost && poetry run molecule verify
+	cd roles/workstation && poetry run molecule verify
 
 molecule-destroy:
-	cd roles/localhost && poetry run molecule destroy
+	cd roles/workstation && poetry run molecule destroy
 
 molecule-test-default:
-	cd roles/localhost && poetry run molecule test -s default
+	cd roles/workstation && poetry run molecule test -s default
 
 molecule-test-linux:
-	cd roles/localhost && poetry run molecule test -s linux
+	cd roles/workstation && poetry run molecule test -s linux
 
 molecule-test-idempotence:
-	cd roles/localhost && poetry run molecule test -s idempotence
+	cd roles/workstation && poetry run molecule test -s idempotence
 
 molecule-test-macos:
-	cd roles/localhost && poetry run molecule test -s macos
+	cd roles/workstation && poetry run molecule test -s macos
 
 molecule-test-linux-fast:
-	cd roles/localhost && poetry run molecule test -s linux-fast
+	cd roles/workstation && poetry run molecule test -s linux-fast
 
 molecule-test-macos-utm:
 	@echo "Running Molecule macOS tests with UTM VM..."
@@ -119,13 +119,13 @@ molecule-converge-all:
 	@$(MAKE) molecule-converge-default molecule-converge-linux molecule-converge-linux-fast --jobs=3
 
 molecule-converge-default:
-	cd roles/localhost && poetry run molecule converge -s default
+	cd roles/workstation && poetry run molecule converge -s default
 
 molecule-converge-linux:
-	cd roles/localhost && poetry run molecule converge -s linux
+	cd roles/workstation && poetry run molecule converge -s linux
 
 molecule-converge-linux-fast:
-	cd roles/localhost && poetry run molecule converge -s linux-fast
+	cd roles/workstation && poetry run molecule converge -s linux-fast
 
 # Quick verify without full test cycle
 molecule-verify-all:
@@ -133,13 +133,13 @@ molecule-verify-all:
 	@$(MAKE) molecule-verify-default molecule-verify-linux molecule-verify-linux-fast --jobs=3
 
 molecule-verify-default:
-	cd roles/localhost && poetry run molecule verify -s default
+	cd roles/workstation && poetry run molecule verify -s default
 
 molecule-verify-linux:
-	cd roles/localhost && poetry run molecule verify -s linux
+	cd roles/workstation && poetry run molecule verify -s linux
 
 molecule-verify-linux-fast:
-	cd roles/localhost && poetry run molecule verify -s linux-fast
+	cd roles/workstation && poetry run molecule verify -s linux-fast
 
 # UTM VM management targets
 utm-vm-start:

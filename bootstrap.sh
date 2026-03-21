@@ -13,4 +13,4 @@ poetry install
 read -sp "Enter Sudo Password: " ANSIBLE_SUDO_PASSWORD
 echo ""
 
-ansible-playbook -i inventory/local.yml playbooks/local-main.yml
+ansible-playbook playbooks/workstations.yml

@@ -6,18 +6,25 @@ driver:
   name: docker
 
 platforms:
-  - name: localhost-ubuntu-22
-    image: ubuntu:22.04
+  - name: localhost-ubuntu-22-fast
+    image: ansible-home-test-base:latest
     pre_build_image: true
     groups:
-      - localhost_linux
+      - workstation_linux
+    # Keep container running between tests for reuse
+    keep_volumes: true
+    tmpfs:
+      - /tmp
+      - /var/tmp
 
 provisioner:
   name: ansible
   inventory:
     host_vars:
-      localhost-ubuntu-22:
+      localhost-ubuntu-22-fast:
         ansible_python_interpreter: /usr/bin/python3
+        # Skip heavy installations since they're pre-installed
+        quick_test_mode: true
   config_options:
     defaults:
       interpreter_python: auto_silent
@@ -25,7 +32,7 @@ provisioner:
       result_format: yaml
       bin_ansible_callbacks: true
     ssh_connection:
-      pipelining: false
+      pipelining: true  # Enable pipelining for faster execution
 
 verifier:
   name: testinfra
@@ -33,14 +40,9 @@ verifier:
 scenario:
   test_sequence:
     - dependency
-    - cleanup
-    - destroy
     - syntax
     - create
-    - prepare
     - converge
     - idempotence
-    - side_effect
     - verify
-    - cleanup
-    - destroy
+    # Skip cleanup and destroy for container reuse

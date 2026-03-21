@@ -1,6 +1,6 @@
 ---
 - name: Converge macOS-specific test
-  hosts: localhost_macos
+  hosts: workstation_macos
   gather_facts: true
   connection: local
 
@@ -10,4 +10,4 @@
       ansible.builtin.include_tasks: ../../tasks/local-mac.yml
       vars:
         # Override for testing to prevent actual system changes
-        localhost_test_mode: true
+        workstation_test_mode: true

@@ -1,0 +1,9 @@
+---
+- name: Configure Raspberry Pis
+  hosts: raspberry_pis
+  gather_facts: true
+  become: true
+
+  tasks:
+    - name: Ping Raspberry Pi
+      ansible.builtin.ping:

@@ -1,6 +1,6 @@
 ---
 - name: Bootstrap Python
-  hosts: localhost_linux
+  hosts: workstation_linux
   become: false
   gather_facts: false
 
@@ -9,8 +9,8 @@
       ansible.builtin.raw: apt-get update -qq && apt-get install -y python3 python3-pip sudo curl wget git
       changed_when: true
 
-- name: Prepare test environment
-  hosts: localhost_linux
+- name: Prepare Linux test environment
+  hosts: workstation_linux
   become: false
   gather_facts: true
 
