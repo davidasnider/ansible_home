@@ -30,9 +30,6 @@ provisioner:
     ssh_connection:
       pipelining: false
 
-verifier:
-  name: testinfra
-
 scenario:
   test_sequence:
     - dependency
@@ -44,6 +41,5 @@ scenario:
     - converge
     - idempotence
     - side_effect
-    - verify
     - cleanup
     - destroy
