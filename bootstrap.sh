@@ -12,5 +12,6 @@ poetry install
 
 read -sp "Enter Sudo Password: " ANSIBLE_SUDO_PASSWORD
 echo ""
+export ANSIBLE_SUDO_PASS="$ANSIBLE_SUDO_PASSWORD"
 
 ansible-playbook playbooks/workstations.yml
