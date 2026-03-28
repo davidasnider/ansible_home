@@ -1,6 +1,6 @@
 ---
 - name: Converge
-  hosts: localhost_linux
+  hosts: workstation_linux
   become: true
   gather_facts: true
 

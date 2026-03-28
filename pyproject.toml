@@ -29,14 +29,11 @@ ansible-lint = "^25.8.2"
 molecule = "^6.0.0"
 molecule-plugins = {extras = ["docker"], version = "^23.5.0"}
 pytest = "^8.0.0"
-pytest-testinfra = "^10.0.0"
-pytest-cov = "^6.0.0"
-pytest-html = "^4.0.0"
 
 [tool.pytest.ini_options]
 minversion = "6.0"
 testpaths = [
-    "roles/localhost/molecule",
+    "roles/workstation/molecule",
     "tests"
 ]
 python_files = ["test_*.py", "*_test.py"]
@@ -45,16 +42,9 @@ python_functions = ["test_*"]
 addopts = [
     "--strict-markers",
     "--strict-config",
-    "--verbose",
-    "--cov=roles",
-    "--cov-report=term-missing",
-    "--cov-report=html:htmlcov",
-    "--cov-report=xml",
-    "--html=reports/pytest_report.html",
-    "--self-contained-html"
+    "--verbose"
 ]
 markers = [
-    "slow: marks tests as slow (deselect with '-m \"not slow\"')",
     "integration: marks tests as integration tests",
     "unit: marks tests as unit tests"
 ]

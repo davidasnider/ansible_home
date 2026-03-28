@@ -140,19 +140,19 @@
         creates: /opt/homebrew/bin/brew
       become: false
       changed_when: false
-      register: localhost_homebrew_install_result
+      register: workstation_homebrew_install_result
       retries: 3
       delay: 5
-      until: localhost_homebrew_install_result.rc == 0
+      until: workstation_homebrew_install_result.rc == 0
 
     - name: Verify Homebrew installation
       ansible.builtin.command: /opt/homebrew/bin/brew --version
-      register: localhost_brew_version_check
+      register: workstation_brew_version_check
       changed_when: false
-      failed_when: localhost_brew_version_check.rc != 0
+      failed_when: workstation_brew_version_check.rc != 0
       retries: 3
       delay: 5
-      until: localhost_brew_version_check.rc == 0
+      until: workstation_brew_version_check.rc == 0
   rescue:
     - name: Fail if Homebrew installation failed
       ansible.builtin.fail:
@@ -160,20 +160,20 @@
 
 - name: Debug Homebrew installation result
   ansible.builtin.debug:
-    var: localhost_homebrew_install_result
+    var: workstation_homebrew_install_result
     verbosity: 2
 
 
 - name: Check last Homebrew update time
   ansible.builtin.stat:
     path: /opt/homebrew/.git/FETCH_HEAD
-  register: localhost_brew_update_stat
+  register: workstation_brew_update_stat
 
 - name: Set update_brew variable if last update was more than 24 hours ago
   ansible.builtin.set_fact:
-    localhost_update_brew: >-
-      {{ (localhost_brew_update_stat.stat.exists and ((ansible_date_time.epoch | int) - (localhost_brew_update_stat.stat.mtime | int) > 86400))
-         or (not localhost_brew_update_stat.stat.exists) }}
+    workstation_update_brew: >-
+      {{ (workstation_brew_update_stat.stat.exists and ((ansible_date_time.epoch | int) - (workstation_brew_update_stat.stat.mtime | int) > 86400))
+         or (not workstation_brew_update_stat.stat.exists) }}
 
 - name: Update Homebrew and install packages
   community.general.homebrew:
@@ -189,23 +189,23 @@
       - zsh-syntax-highlighting
       - zsh-history-substring-search
     state: present
-    update_homebrew: "{{ localhost_update_brew }}"
+    update_homebrew: "{{ workstation_update_brew }}"
   retries: 3
   delay: 5
   timeout: 300
 
 - name: Verify Homebrew packages installation
   ansible.builtin.command: gh --version
-  register: localhost_gh_version_check
+  register: workstation_gh_version_check
   changed_when: false
-  failed_when: localhost_gh_version_check.rc != 0
+  failed_when: workstation_gh_version_check.rc != 0
   retries: 3
   delay: 5
-  until: localhost_gh_version_check.rc == 0
+  until: workstation_gh_version_check.rc == 0
 
 - name: Debug Homebrew packages installation check
   ansible.builtin.debug:
-    var: localhost_gh_version_check
+    var: workstation_gh_version_check
     verbosity: 2
 
 - name: Install Homebrew casks with security verification
@@ -222,24 +222,24 @@
     - name: Verify 1Password CLI installation and security
       ansible.builtin.command: |
         /opt/homebrew/bin/op --version
-      register: localhost_op_version_check
+      register: workstation_op_version_check
       changed_when: false
-      failed_when: localhost_op_version_check.rc != 0
+      failed_when: workstation_op_version_check.rc != 0
       retries: 3
       delay: 5
-      until: localhost_op_version_check.rc == 0
+      until: workstation_op_version_check.rc == 0
 
     - name: Debug 1Password CLI version check
       ansible.builtin.debug:
-        var: localhost_op_version_check
+        var: workstation_op_version_check
         verbosity: 2
 
     - name: Validate 1Password CLI version meets security requirements
       ansible.builtin.fail:
-        msg: "1Password CLI version {{ localhost_op_version_check.stdout }} does not meet minimum security requirements (2.0.0+)"
+        msg: "1Password CLI version {{ workstation_op_version_check.stdout }} does not meet minimum security requirements (2.0.0+)"
       when:
-        - localhost_op_version_check.stdout is defined
-        - (localhost_op_version_check.stdout | regex_search('([0-9]+)\\.([0-9]+)\\.([0-9]+)') | split('.') | first | int) < 2
+        - workstation_op_version_check.stdout is defined
+        - (workstation_op_version_check.stdout | regex_search('([0-9]+)\\.([0-9]+)\\.([0-9]+)') | split('.') | first | int) < 2
 
     - name: Install other Homebrew casks
       community.general.homebrew_cask:
@@ -320,7 +320,7 @@
 - name: Check if Oh My Zsh is installed
   ansible.builtin.stat:
     path: "{{ lookup('env', 'HOME') }}/.oh-my-zsh"
-  register: localhost_oh_my_zsh_stat
+  register: workstation_oh_my_zsh_stat
 
 
 - name: Install Oh My Zsh with error handling
@@ -330,22 +330,22 @@
         sh -c "$(curl -fsSL -m 300 https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
       args:
         creates: "{{ lookup('env', 'HOME') }}/.oh-my-zsh"
-      when: not localhost_oh_my_zsh_stat.stat.exists
+      when: not workstation_oh_my_zsh_stat.stat.exists
       changed_when: false
-      register: localhost_oh_my_zsh_install_result
+      register: workstation_oh_my_zsh_install_result
       retries: 3
       delay: 5
-      until: localhost_oh_my_zsh_install_result.rc == 0
+      until: workstation_oh_my_zsh_install_result.rc == 0
 
     - name: Verify Oh My Zsh installation
       ansible.builtin.stat:
         path: "{{ lookup('env', 'HOME') }}/.oh-my-zsh"
-      register: localhost_oh_my_zsh_stat_check
+      register: workstation_oh_my_zsh_stat_check
 
     - name: Fail if Oh My Zsh is not installed
       ansible.builtin.fail:
         msg: "Oh My Zsh installation failed. The directory ~/.oh-my-zsh was not found."
-      when: not localhost_oh_my_zsh_stat_check.stat.exists
+      when: not workstation_oh_my_zsh_stat_check.stat.exists
   rescue:
     - name: Fail if Oh My Zsh installation failed
       ansible.builtin.fail:
@@ -353,7 +353,7 @@
 
 - name: Debug Oh My Zsh installation result
   ansible.builtin.debug:
-    var: localhost_oh_my_zsh_install_result
+    var: workstation_oh_my_zsh_install_result
     verbosity: 2
 
 
@@ -375,11 +375,11 @@
 
 - name: Run 1Password CLI health check
   ansible.builtin.command: "{{ lookup('env', 'HOME') }}/.local/bin/op-health-check"
-  register: localhost_op_health_check
+  register: workstation_op_health_check
   changed_when: false
-  failed_when: localhost_op_health_check.rc > 1  # Allow warnings (rc=1) but fail on errors (rc=2)
+  failed_when: workstation_op_health_check.rc > 1  # Allow warnings (rc=1) but fail on errors (rc=2)
 
 - name: Debug 1Password CLI health check
   ansible.builtin.debug:
-    var: localhost_op_health_check
+    var: workstation_op_health_check
     verbosity: 2

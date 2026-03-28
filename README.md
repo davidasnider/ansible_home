@@ -30,11 +30,12 @@ ansible_home/
 ├── pyproject.toml             # Python project configuration and dependencies
 ├── poetry.lock                # Locked dependency versions
 ├── inventory/
-│   └── local.yml              # Ansible inventory for localhost
+│   └── hosts.yml              # Ansible inventory structure
 ├── playbooks/
-│   └── local-main.yml         # Main playbook with OS detection
+│   ├── workstations.yml       # Workstation playbook with OS detection
+│   └── raspberry_pis.yml      # Raspberry Pi execution playbook
 ├── roles/
-│   └── localhost/
+│   └── workstation/
 │       ├── handlers/
 │       │   └── main.yml       # Event handlers (if needed)
 │       └── tasks/
@@ -83,7 +84,7 @@ git clone https://github.com/davidasnider/ansible_home.git
 cd ansible_home
 make dev-setup
 source .venv/bin/activate
-ansible-playbook -i inventory/local.yml playbooks/local-main.yml
+ansible-playbook -i inventory/hosts.yml playbooks/workstations.yml
 ```
 
 ### Linux Setup
@@ -91,6 +92,15 @@ ansible-playbook -i inventory/local.yml playbooks/local-main.yml
 git clone https://github.com/davidasnider/ansible_home.git
 cd ansible_home
 ./bootstrap.sh
+```
+
+### Raspberry Pi Setup
+```bash
+git clone https://github.com/davidasnider/ansible_home.git
+cd ansible_home
+# Ensure you have your IPs configured in inventory/hosts.yml
+poetry install
+ansible-playbook playbooks/raspberry_pis.yml
 ```
 
 ## Detailed Setup Process
@@ -122,22 +132,22 @@ cd ansible_home
 
 # Ansible Playbook Structure
 
-## Main Playbook (`playbooks/local-main.yml`)
+## Main Playbook (`playbooks/workstations.yml`)
 
 The current entry point playbook is designed for localhost setup but follows patterns that scale to remote hosts:
 
 ```yaml
 - name: Detect OS and include the appropriate local task file
-  hosts: localhost
+  hosts: workstations
   gather_facts: true
   vars:
     ansible_become_pass: "{{ lookup('ansible.builtin.env', 'ANSIBLE_SUDO_PASS') }}"
   tasks:
     - name: Include local-mac tasks if MacOS
-      ansible.builtin.include_tasks: ../roles/localhost/tasks/local-mac.yml
+      ansible.builtin.include_tasks: ../roles/workstation/tasks/local-mac.yml
       when: ansible_system == 'Darwin'
     - name: Include local-linux tasks if Linux
-      ansible.builtin.include_tasks: ../roles/localhost/tasks/local-linux.yml
+      ansible.builtin.include_tasks: ../roles/workstation/tasks/local-linux.yml
       when: ansible_system == 'Linux'
 ```
 
@@ -148,45 +158,33 @@ The current entry point playbook is designed for localhost setup but follows pat
 - **Extensible Conditions**: Pattern supports adding Windows (`ansible_system == 'Win32NT'`), FreeBSD, etc.
 - **Distribution-Specific**: Can differentiate between Ubuntu/CentOS/RHEL using `ansible_distribution`
 
-### Future Remote Host Support
-The current localhost-focused structure will extend to support:
-- **Multiple Host Groups**: Different inventory groups for workstations, servers, IoT devices
-- **OS-Specific Roles**: Dedicated roles for Windows, various Linux distributions, macOS
-- **Environment-Specific Playbooks**: Separate playbooks for development, staging, production
-
-### Variable Management
-- **Environment Lookup**: Currently uses local environment variables
-- **Future Vault Integration**: Will support HashiCorp Vault for remote host secrets
-- **Host-Specific Variables**: Pattern supports `host_vars/` and `group_vars/` directories
-
-### Current Inventory (`inventory/local.yml`)
-```yaml
-all:
-  hosts:
-    localhost:
-      ansible_connection: local
-      ansible_python_interpreter: /usr/bin/python3
-```
-
-**Future Inventory Structure** (example):
+### Current Inventory (`inventory/hosts.yml`)
 ```yaml
 all:
   children:
     workstations:
+      children:
+        local_workstations:
+          hosts:
+            localhost:
+              ansible_connection: local
+              ansible_python_interpreter: /usr/bin/python3
+        networked_workstations:
+          hosts:
+            # workstation1:
+            #   ansible_host: 192.168.1.50
+    raspberry_pis:
       hosts:
-        laptop-mac:
-          ansible_host: 192.168.1.100
-          ansible_system: Darwin
-        desktop-linux:
-          ansible_host: 192.168.1.101
-          ansible_system: Linux
-    servers:
-      hosts:
-        web-server:
-          ansible_host: 10.0.1.10
-          ansible_system: Linux
-          ansible_distribution: Ubuntu
+        # pi1:
+        #   ansible_host: 192.168.1.100
+        #   ansible_user: pi
 ```
+
+### Future Remote Host Support
+The current framework structure will extend to support:
+- **Multiple Host Groups**: Different inventory groups for workstations, servers, IoT devices
+- **OS-Specific Roles**: Dedicated roles for Windows, various Linux distributions, macOS
+- **Environment-Specific Playbooks**: Separate playbooks for development, staging, production
 
 ## Role Architecture for Multi-OS Support
 
@@ -201,7 +199,7 @@ all:
 
 # Platform-Specific Configurations
 
-## macOS Configuration (`roles/localhost/tasks/local-mac.yml`)
+## macOS Configuration (`roles/workstation/tasks/local-mac.yml`)
 
 ### Package Management
 - **Homebrew**: Primary package manager with automatic installation
@@ -224,7 +222,7 @@ all:
 - 1password, 1password-cli, iterm2, visual-studio-code
 ```
 
-## Linux Configuration (`roles/localhost/tasks/local-linux.yml`)
+## Linux Configuration (`roles/workstation/tasks/local-linux.yml`)
 
 ### Package Management
 - **APT**: Uses apt package manager for Ubuntu/Debian systems
@@ -358,7 +356,7 @@ vars:
 ```bash
 # Full setup (first time or complete refresh)
 source .venv/bin/activate
-ansible-playbook -i inventory/local.yml playbooks/local-main.yml
+ansible-playbook -i inventory/hosts.yml playbooks/workstations.yml
 
 # Quick setup with bootstrap (Linux)
 ./bootstrap.sh
@@ -380,7 +378,7 @@ echo $ANSIBLE_SUDO_PASS
 
 #### macOS (Homebrew)
 ```yaml
-# Add to roles/localhost/tasks/local-mac.yml
+# Add to roles/workstation/tasks/local-mac.yml
 - name: Update Homebrew and install packages
   community.general.homebrew:
     name:
@@ -392,7 +390,7 @@ echo $ANSIBLE_SUDO_PASS
 
 #### Linux (APT)
 ```yaml
-# Add to roles/localhost/tasks/local-linux.yml
+# Add to roles/workstation/tasks/local-linux.yml
 - name: Install packages
   ansible.builtin.apt:
     name:
@@ -405,7 +403,7 @@ echo $ANSIBLE_SUDO_PASS
 ### Modifying Shell Configuration
 
 #### Update Zsh Plugins (Linux)
-Edit `roles/localhost/tasks/zshrc-linux` template:
+Edit `roles/workstation/tasks/zshrc-linux` template:
 ```bash
 # Add new plugin to the plugins array
 plugins=(git gh pip poetry python systemd new-plugin)
@@ -422,21 +420,30 @@ block: |
 ### Testing Changes
 
 #### Syntax Validation
+The project uses automated syntax validation for all playbooks. This is the fastest way to ensure your changes are valid Ansible code.
 ```bash
-# Check playbook syntax
-ansible-playbook --syntax-check -i inventory/local.yml playbooks/local-main.yml
+# Run all syntax checks via Makefile
+make test-syntax
 
-# Dry run to see what would change
-ansible-playbook --check -i inventory/local.yml playbooks/local-main.yml
+# Or check a specific playbook manually
+ansible-playbook --syntax-check -i inventory/hosts.yml playbooks/workstations.yml
 ```
 
-#### Targeted Testing
+#### Linting
+We use `ansible-lint` to enforce best practices and security rules.
 ```bash
-# Run specific tasks using tags (when implemented)
-ansible-playbook -i inventory/local.yml playbooks/local-main.yml --tags "shell,packages"
+# Run lint checks via Makefile
+make test-lint
 
-# Test on specific host groups
-ansible-playbook -i inventory/production.yml playbooks/local-main.yml --limit "workstations"
+# Or run manually
+ansible-lint roles/
+```
+
+#### Dry Run (Mocked)
+Before applying changes to a live system, perform a dry run to see exactly what Ansible will do.
+```bash
+# Perform a dry run on the workstation playbook
+ansible-playbook --check --diff -i inventory/hosts.yml playbooks/workstations.yml
 ```
 
 ## Maintenance Workflows
@@ -481,7 +488,7 @@ git checkout -b feature/add-new-tool
 
 # Make changes to playbooks/roles
 # Test changes locally
-ansible-playbook --check -i inventory/local.yml playbooks/local-main.yml
+ansible-playbook --check -i inventory/hosts.yml playbooks/workstations.yml
 
 # Commit changes
 git add .
@@ -503,7 +510,7 @@ git pull origin main
 
 # Apply updated configuration
 source .venv/bin/activate
-ansible-playbook -i inventory/local.yml playbooks/local-main.yml
+ansible-playbook -i inventory/hosts.yml playbooks/workstations.yml
 ```
 
 ### PR Management
@@ -597,7 +604,7 @@ echo $SHELL
 chsh -s $(which zsh)
 
 # Re-run Ansible task
-ansible-playbook -i inventory/local.yml playbooks/local-main.yml --tags shell
+ansible-playbook -i inventory/hosts.yml playbooks/workstations.yml --tags shell
 ```
 
 #### Oh My Zsh Installation Problems
@@ -609,7 +616,7 @@ rm -rf ~/.oh-my-zsh
 mv ~/.zshrc ~/.zshrc.backup
 
 # Re-run playbook
-ansible-playbook -i inventory/local.yml playbooks/local-main.yml
+ansible-playbook -i inventory/hosts.yml playbooks/workstations.yml
 ```
 
 #### Plugin Loading Errors
@@ -671,22 +678,22 @@ ls -la /usr/share/keyrings/1password-archive-keyring.gpg
 ### Ansible Debugging
 ```bash
 # Verbose output
-ansible-playbook -i inventory/local.yml playbooks/local-main.yml -v
+ansible-playbook -i inventory/hosts.yml playbooks/workstations.yml -v
 
 # Very verbose (includes task details)
-ansible-playbook -i inventory/local.yml playbooks/local-main.yml -vv
+ansible-playbook -i inventory/hosts.yml playbooks/workstations.yml -vv
 
 # Extremely verbose (includes connection debugging)
-ansible-playbook -i inventory/local.yml playbooks/local-main.yml -vvv
+ansible-playbook -i inventory/hosts.yml playbooks/workstations.yml -vvv
 ```
 
 ### Dry Run Testing
 ```bash
 # Check what would change without applying
-ansible-playbook --check -i inventory/local.yml playbooks/local-main.yml
+ansible-playbook --check -i inventory/hosts.yml playbooks/workstations.yml
 
 # Check specific tasks
-ansible-playbook --check --start-at-task "Install packages" -i inventory/local.yml playbooks/local-main.yml
+ansible-playbook --check --start-at-task "Install packages" -i inventory/hosts.yml playbooks/workstations.yml
 ```
 
 ### Manual Task Testing
