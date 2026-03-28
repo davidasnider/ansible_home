@@ -95,7 +95,9 @@ jobs:
         pip install ansible
 
     - name: Check playbook syntax
-      run: ansible-playbook --syntax-check -i inventory/local.yml playbooks/local-main.yml
+      run: |
+        ansible-playbook --syntax-check -i inventory/hosts.yml playbooks/workstations.yml
+        ansible-playbook --syntax-check -i inventory/hosts.yml playbooks/raspberry_pis.yml
 
 
   dependency-review:

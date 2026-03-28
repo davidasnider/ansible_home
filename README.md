@@ -420,21 +420,30 @@ block: |
 ### Testing Changes
 
 #### Syntax Validation
+The project uses automated syntax validation for all playbooks. This is the fastest way to ensure your changes are valid Ansible code.
 ```bash
-# Check playbook syntax
-ansible-playbook --syntax-check -i inventory/hosts.yml playbooks/workstations.yml
+# Run all syntax checks via Makefile
+make test-syntax
 
-# Dry run to see what would change
-ansible-playbook --check -i inventory/hosts.yml playbooks/workstations.yml
+# Or check a specific playbook manually
+ansible-playbook --syntax-check -i inventory/hosts.yml playbooks/workstations.yml
 ```
 
-#### Targeted Testing
+#### Linting
+We use `ansible-lint` to enforce best practices and security rules.
 ```bash
-# Run specific tasks using tags (when implemented)
-ansible-playbook -i inventory/hosts.yml playbooks/workstations.yml --tags "shell,packages"
+# Run lint checks via Makefile
+make test-lint
 
-# Test on specific host groups
-ansible-playbook -i inventory/production.yml playbooks/workstations.yml --limit "workstations"
+# Or run manually
+ansible-lint roles/
+```
+
+#### Dry Run (Mocked)
+Before applying changes to a live system, perform a dry run to see exactly what Ansible will do.
+```bash
+# Perform a dry run on the workstation playbook
+ansible-playbook --check --diff -i inventory/hosts.yml playbooks/workstations.yml
 ```
 
 ## Maintenance Workflows
