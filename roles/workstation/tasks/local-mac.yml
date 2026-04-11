@@ -247,6 +247,7 @@
           - iterm2
           - visual-studio-code
           - orbstack
+          - rectangle
         state: present
       retries: 3
       delay: 5
