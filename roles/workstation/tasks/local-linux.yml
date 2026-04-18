@@ -363,6 +363,13 @@
     mode: "0644"
   changed_when: false
 
+- name: Copy zshenv file
+  ansible.builtin.copy:
+    src: zshenv-linux
+    dest: "{{ ansible_env.HOME }}/.zshenv"
+    mode: "0644"
+  changed_when: false
+
 - name: Copy zprofile file
   ansible.builtin.copy:
     src: zprofile-linux

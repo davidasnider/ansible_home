@@ -12,23 +12,10 @@ else
     OMP_THEME_CMD=""
 fi
 
-# PATH management
-if [ -d "$HOME/.local/bin" ] && [[ ":$PATH:" != *":$HOME/.local/bin:"* ]]; then
-    export PATH="$PATH:$HOME/.local/bin"
-fi
-
-# Add Pulumi to PATH if installed
-if [ -d "$HOME/.pulumi/bin" ] && [[ ":$PATH:" != *":$HOME/.pulumi/bin:"* ]]; then
-    export PATH="$PATH:$HOME/.pulumi/bin"
-fi
-
 # Apply oh-my-posh theme if available
 if [ -n "$OMP_THEME_CMD" ]; then
     eval "$OMP_THEME_CMD"
 fi
-
-# Path to Oh My Zsh installation
-export ZSH="$HOME/.oh-my-zsh"
 
 # Python virtual environment configuration
 PYTHON_VENV_NAME=".venv"

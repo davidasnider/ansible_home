@@ -1,4 +1,2 @@
-# Source .zshrc if it exists
-if [ -f "$HOME/.zshrc" ]; then
-    source "$HOME/.zshrc"
-fi
+# Pro-Lazy "Safety Net": Ensure .zshrc is sourced in interactive login shells.
+[[ -o interactive ]] && [[ -f ~/.zshrc ]] && . ~/.zshrc

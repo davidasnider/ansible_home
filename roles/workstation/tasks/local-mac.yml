@@ -363,12 +363,24 @@
     src: zshrc-mac
     dest: "{{ lookup('env', 'HOME') }}/.zshrc"
     mode: "0644"
+    backup: true
+  changed_when: false
+
+- name: Copy zshenv file
+  ansible.builtin.copy:
+    src: zshenv-mac
+    dest: "{{ lookup('env', 'HOME') }}/.zshenv"
+    mode: "0644"
+    backup: true
+  changed_when: false
 
 - name: Copy zprofile file
   ansible.builtin.copy:
     src: zprofile-mac
     dest: "{{ lookup('env', 'HOME') }}/.zprofile"
     mode: "0644"
+    backup: true
+  changed_when: false
 
 # 1Password CLI Security Enhancements
 - name: Include 1Password security enhancements

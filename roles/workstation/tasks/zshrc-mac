@@ -1,55 +1,31 @@
-# Set the oh-my-posh theme name globally
-OMP_THEME_NAME="night-owl.omp.json"
-# OMP_THEME_NAME="atomic.omp.json"
-# OMP_THEME_NAME="clean-detailed.omp.json"
-# OMP_THEME_NAME="jandedobbeleer.omp.json"
-# OMP_THEME_NAME="kushal.omp.json"
-
-# Initialize Homebrew first
-if [ -f "/opt/homebrew/bin/brew" ]; then
-    eval "$(/opt/homebrew/bin/brew shellenv)"
-elif [ -f "/usr/local/bin/brew" ]; then
-    eval "$(/usr/local/bin/brew shellenv)"
-else
-    echo "Homebrew not found" >&2
-fi
-
-# Now we can safely use brew commands
-BREW_PREFIX="$(brew --prefix)/bin"
-
 # Oh-my-posh theme setup (change OMP_THEME_NAME to switch themes)
-if command -v "${BREW_PREFIX}/oh-my-posh" >/dev/null 2>&1 && command -v "${BREW_PREFIX}/brew" >/dev/null 2>&1; then
+: "${OMP_THEME_NAME:=night-owl.omp.json}"
+
+if [[ -n "$BREW_PREFIX" ]] && command -v "${BREW_PREFIX}/oh-my-posh" >/dev/null 2>&1 && command -v "${BREW_PREFIX}/brew" >/dev/null 2>&1; then
     OMP_THEME_CMD="$(${BREW_PREFIX}/oh-my-posh init zsh --config "$(${BREW_PREFIX}/brew --prefix oh-my-posh)/themes/$OMP_THEME_NAME")"
 else
-    echo "Could not set OMP_THEME_CMD" >&2
     OMP_THEME_CMD=""
 fi
 
-# Homebrew
-if [ -x "$BREW_PREFIX/brew" ]; then
-    eval "$($BREW_PREFIX/brew shellenv)"
-fi
 
 # Setup oh-my-posh theme if defined
 if [ -n "$OMP_THEME_CMD" ]; then
     eval "$OMP_THEME_CMD"
 fi
 
-# Get all environment variables from the .env file
-eval "$(cat ~/.env | ${BREW_PREFIX}/op inject --)"
+# Get all environment variables from the .env file with guards
+if [[ -n "$BREW_PREFIX" ]] && [[ -f "$HOME/.env" ]] && command -v "${BREW_PREFIX}/op" >/dev/null 2>&1; then
+    eval "$(cat "$HOME/.env" | "${BREW_PREFIX}/op" inject --)"
+fi
 
 # Set vi mode
 set -o vi
 
 # Python auto env setup
-PYTHON_VENV_NAME=".venv"
-PYTHON_AUTO_VRUN=true
+export PYTHON_VENV_NAME=".venv"
+export PYTHON_AUTO_VRUN=true
 PYTHON_VENV_NAMES=($PYTHON_VENV_NAME venv)
 
-# Path to your Oh My Zsh installation
-export ZSH="$HOME/.oh-my-zsh"
-
-# Theme and plugins configuration
 plugins=(git gh macos pip poetry python)
 
 # Source Oh My Zsh
@@ -102,6 +78,3 @@ if [ -f "$HOME/.env" ]; then
         fi
     done
 fi
-
-# Setup 1Password SSH Agent
-export SSH_AUTH_SOCK=~/Library/Group\ Containers/2BUA8C4S2C.com.1password/t/agent.sock
