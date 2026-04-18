@@ -1,0 +1,16 @@
+# .zshenv for Linux
+# This file is loaded for EVERY instance of Zsh.
+# Use for global environment variables. No output allowed.
+
+# Path to Oh My Zsh installation
+export ZSH="$HOME/.oh-my-zsh"
+
+# Path management
+if [ -d "$HOME/.local/bin" ] && [[ ":$PATH:" != *":$HOME/.local/bin:"* ]]; then
+    export PATH="$PATH:$HOME/.local/bin"
+fi
+
+# Add Pulumi to PATH if installed
+if [ -d "$HOME/.pulumi/bin" ] && [[ ":$PATH:" != *":$HOME/.pulumi/bin:"* ]]; then
+    export PATH="$PATH:$HOME/.pulumi/bin"
+fi

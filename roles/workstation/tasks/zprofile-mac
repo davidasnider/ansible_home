@@ -1,4 +1,10 @@
-# Source .zshrc if it exists
-if [ -f "$HOME/.zshrc" ]; then
-    source "$HOME/.zshrc"
-fi
+# Set the oh-my-posh theme name globally
+OMP_THEME_NAME="night-owl.omp.json"
+# OMP_THEME_NAME="atomic.omp.json"
+# OMP_THEME_NAME="clean-detailed.omp.json"
+# OMP_THEME_NAME="jandedobbeleer.omp.json"
+# OMP_THEME_NAME="kushal.omp.json"
+
+# Pro-Lazy "Safety Net": Ensure .zshrc is always sourced, even in login shells.
+# On macOS, every new terminal window is a login shell.
+[[ -f ~/.zshrc ]] && . ~/.zshrc
