@@ -1,5 +1,6 @@
-
 # Oh-my-posh theme setup (change OMP_THEME_NAME to switch themes)
+: "${OMP_THEME_NAME:=night-owl.omp.json}"
+
 if [[ -n "$BREW_PREFIX" ]] && command -v "${BREW_PREFIX}/oh-my-posh" >/dev/null 2>&1 && command -v "${BREW_PREFIX}/brew" >/dev/null 2>&1; then
     OMP_THEME_CMD="$(${BREW_PREFIX}/oh-my-posh init zsh --config "$(${BREW_PREFIX}/brew --prefix oh-my-posh)/themes/$OMP_THEME_NAME")"
 else
@@ -21,8 +22,8 @@ fi
 set -o vi
 
 # Python auto env setup
-PYTHON_VENV_NAME=".venv"
-PYTHON_AUTO_VRUN=true
+export PYTHON_VENV_NAME=".venv"
+export PYTHON_AUTO_VRUN=true
 PYTHON_VENV_NAMES=($PYTHON_VENV_NAME venv)
 
 plugins=(git gh macos pip poetry python)

@@ -2,16 +2,28 @@
 # This file is loaded for EVERY instance of Zsh.
 # Use for global environment variables. No output allowed.
 
-# Initialize Homebrew
+# Initialize Homebrew without spawning external processes
 if [ -f "/opt/homebrew/bin/brew" ]; then
-    eval "$(/opt/homebrew/bin/brew shellenv 2>/dev/null)"
+    export BREW_PREFIX="/opt/homebrew"
 elif [ -f "/usr/local/bin/brew" ]; then
-    eval "$(/usr/local/bin/brew shellenv 2>/dev/null)"
+    export BREW_PREFIX="/usr/local"
 fi
 
-# Export BREW_PREFIX for other scripts to use
-if command -v brew >/dev/null 2>&1; then
-    export BREW_PREFIX="$(brew --prefix)/bin"
+# Add Homebrew paths if available
+if [ -n "${BREW_PREFIX:-}" ]; then
+    export HOMEBREW_PREFIX="$BREW_PREFIX"
+    export HOMEBREW_CELLAR="$BREW_PREFIX/Cellar"
+    export HOMEBREW_REPOSITORY="$BREW_PREFIX"
+
+    if [[ ":$PATH:" != *":$BREW_PREFIX/bin:"* ]]; then
+        export PATH="$BREW_PREFIX/bin:$PATH"
+    fi
+    if [[ ":$PATH:" != *":$BREW_PREFIX/sbin:"* ]]; then
+        export PATH="$BREW_PREFIX/sbin:$PATH"
+    fi
+
+    # Set BREW_PREFIX to bin path for other scripts
+    export BREW_PREFIX="$BREW_PREFIX/bin"
 fi
 
 # Path to Oh My Zsh installation
@@ -25,7 +37,3 @@ export SSH_AUTH_SOCK="$HOME/Library/Group Containers/2BUA8C4S2C.com.1password/t/
 if [ -d "$HOME/.local/bin" ] && [[ ":$PATH:" != *":$HOME/.local/bin:"* ]]; then
     export PATH="$PATH:$HOME/.local/bin"
 fi
-
-# Python environment
-export PYTHON_VENV_NAME=".venv"
-export PYTHON_AUTO_VRUN=true

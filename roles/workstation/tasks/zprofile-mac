@@ -1,5 +1,5 @@
 # Set the oh-my-posh theme name globally
-OMP_THEME_NAME="night-owl.omp.json"
+export OMP_THEME_NAME="night-owl.omp.json"
 # OMP_THEME_NAME="atomic.omp.json"
 # OMP_THEME_NAME="clean-detailed.omp.json"
 # OMP_THEME_NAME="jandedobbeleer.omp.json"
