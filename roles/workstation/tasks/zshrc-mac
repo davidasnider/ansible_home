@@ -1,9 +1,8 @@
 
 # Oh-my-posh theme setup (change OMP_THEME_NAME to switch themes)
-if command -v "${BREW_PREFIX}/oh-my-posh" >/dev/null 2>&1 && command -v "${BREW_PREFIX}/brew" >/dev/null 2>&1; then
+if [[ -n "$BREW_PREFIX" ]] && command -v "${BREW_PREFIX}/oh-my-posh" >/dev/null 2>&1 && command -v "${BREW_PREFIX}/brew" >/dev/null 2>&1; then
     OMP_THEME_CMD="$(${BREW_PREFIX}/oh-my-posh init zsh --config "$(${BREW_PREFIX}/brew --prefix oh-my-posh)/themes/$OMP_THEME_NAME")"
 else
-    echo "Could not set OMP_THEME_CMD" >&2
     OMP_THEME_CMD=""
 fi
 
@@ -13,8 +12,10 @@ if [ -n "$OMP_THEME_CMD" ]; then
     eval "$OMP_THEME_CMD"
 fi
 
-# Get all environment variables from the .env file
-eval "$(cat ~/.env | ${BREW_PREFIX}/op inject --)"
+# Get all environment variables from the .env file with guards
+if [[ -n "$BREW_PREFIX" ]] && [[ -f "$HOME/.env" ]] && command -v "${BREW_PREFIX}/op" >/dev/null 2>&1; then
+    eval "$(cat "$HOME/.env" | "${BREW_PREFIX}/op" inject --)"
+fi
 
 # Set vi mode
 set -o vi

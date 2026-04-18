@@ -5,6 +5,6 @@ OMP_THEME_NAME="night-owl.omp.json"
 # OMP_THEME_NAME="jandedobbeleer.omp.json"
 # OMP_THEME_NAME="kushal.omp.json"
 
-# Pro-Lazy "Safety Net": Ensure .zshrc is always sourced, even in login shells.
+# Pro-Lazy "Safety Net": Ensure .zshrc is sourced for interactive login shells.
 # On macOS, every new terminal window is a login shell.
-[[ -f ~/.zshrc ]] && . ~/.zshrc
+[[ -o interactive && -f ~/.zshrc ]] && . ~/.zshrc

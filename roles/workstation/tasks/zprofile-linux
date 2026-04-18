@@ -1,2 +1,2 @@
-# Pro-Lazy "Safety Net": Ensure .zshrc is always sourced, even in login shells.
-[[ -f ~/.zshrc ]] && . ~/.zshrc
+# Pro-Lazy "Safety Net": Ensure .zshrc is sourced in interactive login shells.
+[[ -o interactive ]] && [[ -f ~/.zshrc ]] && . ~/.zshrc
