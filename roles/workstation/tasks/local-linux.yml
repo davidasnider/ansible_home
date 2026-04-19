@@ -7,7 +7,7 @@
   register: workstation_optimized_base_check
 - name: Ensure ~/code directory exists
   ansible.builtin.file:
-    path: "{{ ansible_env.HOME }}/code"
+    path: "{{ lookup('env', 'HOME') }}/code"
     state: directory
     mode: "0755"
 
@@ -56,20 +56,20 @@
 
 - name: Ensure .ssh directory exists
   ansible.builtin.file:
-    path: "{{ ansible_env.HOME }}/.ssh"
+    path: "{{ lookup('env', 'HOME') }}/.ssh"
     state: directory
     mode: "0700"
 
 - name: Create SSH allowed signers file
   ansible.builtin.copy:
     content: david@davidsnider.org ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIKWm36FodEyxXOXxqhkCj0YLDHkori4Dzmq3hI0PsrX9
-    dest: "{{ ansible_env.HOME }}/.ssh/allowed_signers"
+    dest: "{{ lookup('env', 'HOME') }}/.ssh/allowed_signers"
     mode: "0644"
 
 - name: Configure Git allowed signers file
   community.general.git_config:
     name: gpg.ssh.allowedSignersFile
-    value: "{{ ansible_env.HOME }}/.ssh/allowed_signers"
+    value: "{{ lookup('env', 'HOME') }}/.ssh/allowed_signers"
     scope: global
 
 # Enhanced Git Security Configuration
@@ -124,20 +124,20 @@
 # SSH Key Management and Validation
 - name: Validate SSH directory permissions
   ansible.builtin.file:
-    path: "{{ ansible_env.HOME }}/.ssh"
+    path: "{{ lookup('env', 'HOME') }}/.ssh"
     state: directory
     mode: "0700"
-    owner: "{{ ansible_user_id }}"
+    owner: "{{ lookup('env', 'USER') }}"
 
 - name: Validate allowed_signers file permissions
   ansible.builtin.file:
-    path: "{{ ansible_env.HOME }}/.ssh/allowed_signers"
+    path: "{{ lookup('env', 'HOME') }}/.ssh/allowed_signers"
     mode: "0644"
-    owner: "{{ ansible_user_id }}"
+    owner: "{{ lookup('env', 'USER') }}"
 
 - name: Create SSH config for enhanced security
   ansible.builtin.copy:
-    dest: "{{ ansible_env.HOME }}/.ssh/config"
+    dest: "{{ lookup('env', 'HOME') }}/.ssh/config"
     mode: "0600"
     content: |
       # Enhanced SSH Security Configuration
@@ -173,13 +173,13 @@
 
 - name: Ensure ~/.local/bin directory exists (early)
   ansible.builtin.file:
-    path: "{{ ansible_env.HOME }}/.local/bin"
+    path: "{{ lookup('env', 'HOME') }}/.local/bin"
     state: directory
     mode: "0755"
 
 - name: Create GPG key rotation script
   ansible.builtin.copy:
-    dest: "{{ ansible_env.HOME }}/.local/bin/rotate-git-keys"
+    dest: "{{ lookup('env', 'HOME') }}/.local/bin/rotate-git-keys"
     mode: "0755"
     content: |
       #!/bin/bash
@@ -227,7 +227,7 @@
       echo "2. Run: echo 'david@davidsnider.org <new-key-type> <new-public-key>' >> ~/.ssh/allowed_signers"
       echo "3. Update Git configuration: git config --global user.signingkey '<new-public-key>'"
       echo ""
-      echo "⚠️  Remember to update the Ansible configuration in roles/localhost/tasks/local-linux.yml"
+      echo "⚠️  Remember to update the Ansible configuration in roles/workstation/tasks/local-linux.yml"
       echo "    with the new signing key for consistent deployment."
 
       echo ""
@@ -289,7 +289,7 @@
 
 - name: Ensure ~/.local/bin directory exists
   ansible.builtin.file:
-    path: "{{ ansible_env.HOME }}/.local/bin"
+    path: "{{ lookup('env', 'HOME') }}/.local/bin"
     state: directory
     mode: "0755"
 
@@ -306,15 +306,15 @@
     cmd: zsh /tmp/oh-my-posh-install.sh
     executable: /usr/bin/zsh
   environment:
-    OMP_INSTALL_DIR: "{{ ansible_env.HOME }}/.local/bin"
+    OMP_INSTALL_DIR: "{{ lookup('env', 'HOME') }}/.local/bin"
   args:
-    creates: "{{ ansible_env.HOME }}/.local/bin/oh-my-posh"
+    creates: "{{ lookup('env', 'HOME') }}/.local/bin/oh-my-posh"
   when: not (ansible_facts.virtualization_type is defined and ansible_facts.virtualization_type == 'docker')
   failed_when: false
 
 - name: Check if Oh My Zsh is installed
   ansible.builtin.stat:
-    path: "{{ ansible_env.HOME }}/.oh-my-zsh"
+    path: "{{ lookup('env', 'HOME') }}/.oh-my-zsh"
   register: workstation_oh_my_zsh_stat
 
 - name: Debug Oh My Zsh stat
@@ -328,7 +328,7 @@
       ansible.builtin.shell: |
         sh -c "$(curl -fsSL -m 300 https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
       args:
-        creates: "{{ ansible_env.HOME }}/.oh-my-zsh"
+        creates: "{{ lookup('env', 'HOME') }}/.oh-my-zsh"
       when: not workstation_oh_my_zsh_stat.stat.exists
       changed_when: false
       register: workstation_oh_my_zsh_install_result
@@ -338,7 +338,7 @@
 
     - name: Verify Oh My Zsh installation
       ansible.builtin.stat:
-        path: "{{ ansible_env.HOME }}/.oh-my-zsh"
+        path: "{{ lookup('env', 'HOME') }}/.oh-my-zsh"
       register: workstation_oh_my_zsh_stat_check_linux
 
     - name: Fail if Oh My Zsh is not installed
@@ -359,21 +359,21 @@
 - name: Copy zshrc file
   ansible.builtin.copy:
     src: zshrc-linux
-    dest: "{{ ansible_env.HOME }}/.zshrc"
+    dest: "{{ lookup('env', 'HOME') }}/.zshrc"
     mode: "0644"
   changed_when: false
 
 - name: Copy zshenv file
   ansible.builtin.copy:
     src: zshenv-linux
-    dest: "{{ ansible_env.HOME }}/.zshenv"
+    dest: "{{ lookup('env', 'HOME') }}/.zshenv"
     mode: "0644"
   changed_when: false
 
 - name: Copy zprofile file
   ansible.builtin.copy:
     src: zprofile-linux
-    dest: "{{ ansible_env.HOME }}/.zprofile"
+    dest: "{{ lookup('env', 'HOME') }}/.zprofile"
     mode: "0644"
     backup: true
 
@@ -539,7 +539,7 @@
   ansible.builtin.include_tasks: 1password-security.yml
 
 - name: Run 1Password CLI health check
-  ansible.builtin.command: "{{ ansible_env.HOME }}/.local/bin/op-health-check"
+  ansible.builtin.command: "{{ lookup('env', 'HOME') }}/.local/bin/op-health-check"
   register: workstation_op_health_check_linux
   changed_when: false
   failed_when: workstation_op_health_check_linux.rc > 1  # Allow warnings (rc=1) but fail on errors (rc=2)

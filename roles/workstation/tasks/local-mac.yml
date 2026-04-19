@@ -172,7 +172,7 @@
 - name: Set update_brew variable if last update was more than 24 hours ago
   ansible.builtin.set_fact:
     workstation_update_brew: >-
-      {{ (workstation_brew_update_stat.stat.exists and ((ansible_date_time.epoch | int) - (workstation_brew_update_stat.stat.mtime | int) > 86400))
+      {{ (workstation_brew_update_stat.stat.exists and ((ansible_facts['date_time']['epoch'] | int) - (workstation_brew_update_stat.stat.mtime | int) > 86400))
          or (not workstation_brew_update_stat.stat.exists) }}
 
 - name: Update Homebrew and install packages
@@ -252,6 +252,17 @@
       retries: 3
       delay: 5
 
+    - name: Check if Nerd Font is already installed natively
+      ansible.builtin.stat:
+        path: "{{ lookup('env', 'HOME') }}/Library/Fonts/MesloLGLDZNerdFont-Bold.ttf"
+      register: _workstation_nerd_font_check
+
+    - name: Install Nerd Fonts
+      community.general.homebrew_cask:
+        name: font-meslo-lg-nerd-font
+        state: present
+      when: not _workstation_nerd_font_check.stat.exists
+
 
 - name: Ensure ~/.local/bin directory exists
   ansible.builtin.file:
@@ -309,7 +320,7 @@
       echo "2. Run: echo 'david@davidsnider.org <new-key-type> <new-public-key>' >> ~/.ssh/allowed_signers"
       echo "3. Update Git configuration: git config --global user.signingkey '<new-public-key>'"
       echo ""
-      echo "⚠️  Remember to update the Ansible configuration in roles/localhost/tasks/local-mac.yml"
+      echo "⚠️  Remember to update the Ansible configuration in roles/workstation/tasks/local-mac.yml"
       echo "    with the new signing key for consistent deployment."
 
       echo ""

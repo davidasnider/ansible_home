@@ -12,9 +12,9 @@ When making changes to this repository, please adhere to the following principle
 
 - **Ansible is Authoritative**: Never make system changes or copy files manually. All changes to the environment configuration must be done through Ansible playbooks and roles.
 - **Use the Makefile**: The `Makefile` contains all necessary commands for setup, testing, and validation. Use `make` targets instead of running commands manually.
-- **Dependencies are Managed**: All Python dependencies are managed with Poetry and are defined in `pyproject.toml`. Do not use `pip` directly.
-- **Validate Before Committing**: Always run the relevant tests to ensure your changes are correct and do not break existing functionality before creating a pull request.
-- **Sign Your Commits**: All commits must be GPG signed. A pre-commit hook is in place to enforce this.
+- **Dependencies are Managed**: All Python dependencies are managed with Poetry and are defined in `pyproject.toml`. The project requires **Python 3.12+**. Do not use `pip` directly.
+- **Validate Before Committing**: Always run the relevant tests (e.g., `make test`) to ensure your changes are correct and do not break existing functionality before creating a pull request.
+- **Sign Your Commits**: All commits must be GPG signed ($SSH_SIGNING_KEY$). A pre-commit hook is in place to enforce this.
 
 ## 3. Environment Setup
 
@@ -32,10 +32,10 @@ Use the following `make` targets to test and validate your changes. The `Makefil
 | Command                               | Description                                                                                                                              | When to Use                                      |
 | ------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------ |
 | `make test-lint`                      | Runs all pre-commit hooks for formatting and static analysis, including `ansible-lint`.                                                  | Frequently, for fast feedback while coding.      |
-| `make test`                           | Runs the main test suite, including linting and all core Molecule scenarios.                                                             | Before creating a pull request.                  |
-| `make test-fast`                      | Runs an optimized, parallelized version of the test suite for quicker local validation.                                                  | For quick checks during development.             |
-| `make test-all`                       | Runs the complete test suite, including code coverage analysis.                                                                          | Before finalizing major features.                |
-| `make molecule-test-scenario SCENARIO=<name>` | Runs a specific Molecule test scenario (e.g., `default`, `linux`, `idempotence`, `macos`). | For targeted testing of a specific environment.  |
+| `make test`                           | Runs the main test suite, including linting and syntax checking.                                                                         | Before creating a pull request.                  |
+| `make test-syntax`                    | Validates Ansible playbook syntax across all core playbooks.                                                                             | When modifying playbook structure.               |
+| `make dev-setup`                      | Rebuilds the local virtual environment and synchronizes dependencies.                                                                    | When dependencies change in `pyproject.toml`.    |
+| `make cleanup`                        | Automates post-merge repository cleanup (prunes branches, syncs libs).                                                                  | After a PR is merged into `main`.                |
 
 ## 5. Agent-Specific Configuration
 

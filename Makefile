@@ -18,7 +18,7 @@ dev-setup:
 	/opt/homebrew/bin/poetry install
 
 # Testing targets
-.PHONY: test test-all test-lint test-syntax clean-test
+.PHONY: test test-all test-lint test-syntax clean-test cleanup
 
 test: test-lint test-syntax
 	@echo "All tests completed successfully"
@@ -36,6 +36,10 @@ test-syntax:
 	@echo "Checking playbook syntax..."
 	poetry run ansible-playbook --syntax-check -i inventory/hosts.yml playbooks/workstations.yml
 	poetry run ansible-playbook --syntax-check -i inventory/hosts.yml playbooks/raspberry_pis.yml
+
+cleanup:
+	@echo "Running repository cleanup..."
+	@awk '/^```bash/{flag=1;next}/^```/{flag=0}flag' .agents/skills/cleanup/SKILL.md | bash
 
 clean-test:
 	@echo "Cleaning up test artifacts..."

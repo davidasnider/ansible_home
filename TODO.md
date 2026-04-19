@@ -1,38 +1,32 @@
 # TODO List
 
-## 3. **Where we left off**
-- [ ] Add the nerd fonts for the terminal.
+## 1. **Core Workstation Setup**
+- [x] Standardize workstation role architecture (main.yml/roles syntax).
+- [x] Implement "Pro-Lazy" Zsh initialization strategy.
+- [x] Automated Nerd Font installation (Meslo LG M).
+- [x] Python 3.12+ and Ansible 13 environment upgrade.
 
-## 4. **Secrets Management**
+## 2. **Maintenance & Workflow**
+- [x] Repository cleanup automation (`make cleanup`).
+- [x] macOS workstation update skill.
 
+## 3. **Secrets Management**
 - [ ] Secure secrets management by integrating HashiCorp Vault (and optionally Ansible Vault as a fallback).
 - [ ] Integrate HashiCorp Vault for centralized secrets management.
 - [ ] Document Vault usage in the `docs/` folder.
 - [ ] Optionally, set up Ansible Vault for local fallback encryption.
 
-## 5. **CI/CD and Testing**
+## 4. **CI/CD and Testing**
+- [ ] Set up GitHub Actions workflow for **Molecule** testing.
+  - Required for branch protection compliance.
+- [ ] Implement syntax-checking as a gate for pushes.
+- [ ] Integrate Pulumi automation (CD) for infrastructure changes.
 
-- [ ] Set up GitHub Actions workflows:
-  - Linting and syntax-checking workflow (`ansible-lint` and `ansible-playbook --syntax-check`).
-  - Molecule testing workflow for roles.
-- [ ] Use GitHub secrets for secure interactions with Vault or cloud providers.
+## 5. **Documentation**
+- [x] Comprehensive README overhaul.
+- [ ] Create detailed onboarding guides in `docs/`.
+- [ ] Add Architecture Decision Records (ADRs) for Pro-Lazy shell and Role structure.
 
-## 6. **Automated Testing**
-
-- [ ] Implement Ansible linting for playbooks and roles.
-- [ ] Add syntax-checking as a preliminary step for pushes and pull requests.
-- [ ] Use Molecule to test roles in isolated environments.
-
-## 7. **Dynamic Inventories**
-
-- [ ] Consider dynamic inventory scripts/plugins for cloud resources.
-
-## 8. **Scalability and Extensibility**
-
+## 6. **Scalability**
 - [ ] Introduce subdirectories in `roles/` for logical separation (e.g., `monitoring`, `logging`).
 - [ ] Maintain `library/` and `filter_plugins/` for custom logic.
-
-## 9. **Documentation**
-
-- [ ] Create a comprehensive README.
-- [ ] Add a `docs/` directory for design decisions and onboarding guides.

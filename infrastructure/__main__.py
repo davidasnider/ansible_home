@@ -56,9 +56,6 @@ branch_protection = github.BranchProtection(
             "Secret Scanning",
             "Ansible Syntax Check",
             "Dependency Review",
-            "Wait for Molecule Tests",
-            # Molecule Testing workflow - comprehensive final status check
-            "All Molecule Tests",
         ],
     ),
     required_pull_request_reviews=github.BranchProtectionRequiredPullRequestReviewArgs(
@@ -86,9 +83,7 @@ pulumi.export("required_status_checks", [
     "Pre-commit Checks",
     "Secret Scanning",
     "Ansible Syntax Check",
-    "Dependency Review",
-    "Wait for Molecule Tests",
-    "All Molecule Tests"
+    "Dependency Review"
 ])
 pulumi.export("required_reviews", 1)
 pulumi.export("require_conversation_resolution", True)
