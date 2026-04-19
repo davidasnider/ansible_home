@@ -1,0 +1,21 @@
+---
+# ansible-task
+- name: Check for ~/.gemini directory
+  ansible.builtin.stat:
+    path: "{{ ansible_facts['env']['HOME'] }}/.gemini"
+  register: _workstation_gemini_stat
+
+- name: Check for ~/.agents/workflows directory
+  ansible.builtin.stat:
+    path: "{{ ansible_facts['env']['HOME'] }}/.agents/workflows"
+  register: _workstation_workflows_stat
+
+- name: Symlink workflows folder to Gemini agents folder
+  ansible.builtin.file:
+    src: "{{ ansible_facts['env']['HOME'] }}/.agents/workflows"
+    dest: "{{ ansible_facts['env']['HOME'] }}/.gemini/agents"
+    state: link
+    force: true
+  when:
+    - _workstation_gemini_stat.stat.exists
+    - _workstation_workflows_stat.stat.exists

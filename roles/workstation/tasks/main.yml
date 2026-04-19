@@ -6,3 +6,6 @@
 - name: Include local-linux tasks if Linux
   ansible.builtin.include_tasks: local-linux.yml
   when: ansible_facts['system'] == 'Linux'
+
+- name: Include gemini-setup tasks
+  ansible.builtin.include_tasks: gemini-setup.yml
