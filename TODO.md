@@ -18,7 +18,7 @@
 
 ## 4. **CI/CD and Testing**
 - [ ] Set up GitHub Actions workflow for **Molecule** testing.
-  - Required for branch protection compliance.
+  - Optional enhancement (branch protection no longer strictly requires this).
 - [ ] Implement syntax-checking as a gate for pushes.
 - [ ] Integrate Pulumi automation (CD) for infrastructure changes.
 

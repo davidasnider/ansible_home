@@ -28,7 +28,7 @@ detect-secrets = "^1.5.0"
 ansible-lint = "^25.8.2"
 molecule = "^6.0.0"
 molecule-plugins = {extras = ["docker"], version = "^23.5.0"}
-pytest = "^8.0.0"
+pytest = "^9.0.3"
 
 [tool.pytest.ini_options]
 minversion = "6.0"

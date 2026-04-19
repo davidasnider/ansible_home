@@ -46,7 +46,7 @@ if [ "$(git branch --show-current)" != "main" ]; then
 fi
 
 echo "📥 Pulling latest changes and pruning remotes..."
-git pull origin main --prune
+git pull --prune origin main
 
 # 5. Safety Check: Verify no unique commits on the feature branch
 echo "🔍 Verifying '$CURRENT_BRANCH' has no commits unique to main/origin-main..."
