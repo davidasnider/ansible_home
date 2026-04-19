@@ -17,5 +17,5 @@
     state: link
     force: true
   when:
-    - _workstation_gemini_stat.stat.exists
-    - _workstation_workflows_stat.stat.exists
+    - _workstation_gemini_stat.stat.isdir
+    - _workstation_workflows_stat.stat.isdir
