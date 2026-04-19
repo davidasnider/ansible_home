@@ -9,11 +9,11 @@ This is a personal development environment automation project that uses Ansible 
 - Provide reproducible development environment provisioning
 
 ## Key Technologies
-- **Ansible**: Infrastructure as code for configuration management
-- **Python 3.11+**: Runtime environment with Poetry for dependency management
-- **Zsh + Oh My Zsh**: Enhanced shell experience with plugins and themes
+- **Ansible**: Infrastructure as code for configuration management (Ansible 13+)
+- **Python 3.12+**: Runtime environment with Poetry for dependency management
+- **Zsh + Oh My Zsh**: Enhanced shell experience with "Pro-Lazy" initialization
 - **1Password CLI**: Secure secrets and environment variable management
-- **oh-my-posh**: Cross-platform prompt theming engine
+- **oh-my-posh**: Cross-platform prompt theming engine (with Nerd Fonts)
 
 ## Supported Platforms
 - macOS (using Homebrew for package management)
@@ -35,13 +35,14 @@ ansible_home/
 │   ├── workstations.yml       # Workstation playbook with OS detection
 │   └── raspberry_pis.yml      # Raspberry Pi execution playbook
 ├── roles/
-│   └── workstation/
+│   └── workstation/            # Core workstation configuration role
 │       ├── handlers/
-│       │   └── main.yml       # Event handlers (if needed)
+│       │   └── main.yml        # Event handlers
 │       └── tasks/
-│           ├── local-linux.yml    # Linux-specific tasks
-│           ├── local-mac.yml      # macOS-specific tasks
-│           └── zshrc-linux        # Linux zsh configuration template
+│           ├── main.yml        # Role entry point (OS detection)
+│           ├── local-linux.yml # Linux-specific tasks
+│           ├── local-mac.yml   # macOS-specific tasks
+│           ├── zshrc-linux     # Linux zsh configuration template
 ├── src/
 │   └── steel_mountain_ansible/    # Python package structure
 └── tests/                     # Test files
@@ -54,10 +55,10 @@ ansible_home/
 - **Platform Separation**: OS-specific tasks are separated into different files
 - **Task Organization**: Related tasks are grouped logically within each platform file
 
-### OS Detection Pattern
-The main playbook (`local-main.yml`) uses Ansible's `gather_facts` to detect the operating system and conditionally include the appropriate task file:
-- `ansible_system == 'Darwin'` → includes `local-mac.yml`
-- `ansible_system == 'Linux'` → includes `local-linux.yml`
+### OS Detection Pattern (Standard Role Architecture)
+The `workstation` role uses a standard `tasks/main.yml` entry point to detect the operating system and delegate to platform-specific logic:
+- `ansible_facts['system'] == 'Darwin'` → includes `local-mac.yml`
+- `ansible_facts['system'] == 'Linux'` → includes `local-linux.yml`
 
 ### Configuration Management
 - **Templates**: Shell configuration files (like `zshrc-linux`) are stored as templates
@@ -132,23 +133,14 @@ ansible-playbook playbooks/raspberry_pis.yml
 
 # Ansible Playbook Structure
 
-## Main Playbook (`playbooks/workstations.yml`)
-
-The current entry point playbook is designed for localhost setup but follows patterns that scale to remote hosts:
+The entry point playbook uses the standard `roles` keyword to apply the workstation configuration:
 
 ```yaml
-- name: Detect OS and include the appropriate local task file
+- name: Setup Workstations
   hosts: workstations
   gather_facts: true
-  vars:
-    ansible_become_pass: "{{ lookup('ansible.builtin.env', 'ANSIBLE_SUDO_PASS') }}"
-  tasks:
-    - name: Include local-mac tasks if MacOS
-      ansible.builtin.include_tasks: ../roles/workstation/tasks/local-mac.yml
-      when: ansible_system == 'Darwin'
-    - name: Include local-linux tasks if Linux
-      ansible.builtin.include_tasks: ../roles/workstation/tasks/local-linux.yml
-      when: ansible_system == 'Linux'
+  roles:
+    - workstation
 ```
 
 ## Scalable Design Patterns
@@ -524,11 +516,21 @@ gh pr status
 # Merge PR after approval
 gh pr merge --squash
 
-# Clean up local branch after merge
-git checkout main
-git pull origin main
-git branch -d feature/add-new-tool
+# Clean up local branch after merge using the automated target
+make cleanup
 ```
+
+## Repository Maintenance
+
+The repository includes automated tools for keeping your local environment clean and consistent.
+
+### The `make cleanup` utility
+After you have merged a Pull Request, you can run `make cleanup` to:
+1.  Switch back to the `main` branch.
+2.  Pull the latest changes from the remote.
+3.  Prune remote tracking branches.
+4.  Safely delete any local branches that have been merged.
+5.  Synchronize project dependencies using `uv sync`.
 
 # Troubleshooting Guide
 
