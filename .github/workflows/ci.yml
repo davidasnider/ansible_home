@@ -3,7 +3,7 @@ on:
   push:
     branches: [main]
   pull_request:
-    types: [opened, synchronize, reopened, labeled, unlabeled]
+    types: [opened, synchronize, reopened]
     branches: [main]
 
 jobs:
@@ -114,50 +114,3 @@ jobs:
 
     - name: Dependency Review
       uses: actions/dependency-review-action@v4
-
-  pr-gatekeeper:
-    name: PR Gatekeeper
-    runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request'
-    steps:
-      - name: Check for 'ready-to-merge' label
-        run: |
-          if [[ "${{ contains(github.event.pull_request.labels.*.name, 'ready-to-merge') }}" == "true" ]]; then
-            echo "✅ 'ready-to-merge' label found. Proceeding..."
-            exit 0
-          else
-            echo "❌ Missing 'ready-to-merge' label."
-            echo "Please review the changes and add the label once ready."
-            exit 1
-          fi
-
-  auto-approve:
-    name: Auto Approve PR
-    runs-on: ubuntu-latest
-    needs: [ansible-lint, pre-commit, secret-scanning, syntax-check, dependency-review, pr-gatekeeper]
-    permissions:
-      contents: read
-      pull-requests: write
-    if: github.event_name == 'pull_request' && (github.actor == 'davidasnider' || github.actor == 'dependabot[bot]')
-    steps:
-    - name: Auto approve PR
-      uses: hmarr/auto-approve-action@v4
-      with:
-        github-token: ${{ secrets.GITHUB_TOKEN }}
-        review-message: Auto-approved after all checks passed and 'ready-to-merge' label was added.
-
-  auto-merge:
-    name: Auto Merge PR
-    runs-on: ubuntu-latest
-    needs: auto-approve
-    permissions:
-      contents: write
-      pull-requests: write
-    if: github.event_name == 'pull_request' && (github.actor == 'davidasnider' || github.actor == 'dependabot[bot]')
-    steps:
-    - name: Enable auto-merge for PR
-      uses: peter-evans/enable-pull-request-automerge@v3
-      with:
-        token: ${{ secrets.GITHUB_TOKEN }}
-        pull-request-number: ${{ github.event.pull_request.number }}
-        merge-method: squash
