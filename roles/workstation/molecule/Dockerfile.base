@@ -20,7 +20,7 @@ RUN apt-get update && apt-get install -y \
     gh \
     htop \
     jq \
-    python3-poetry \
+    uv \
     pre-commit \
     zsh-autosuggestions \
     zsh-syntax-highlighting \

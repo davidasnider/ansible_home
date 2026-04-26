@@ -26,7 +26,7 @@ export PYTHON_VENV_NAME=".venv"
 export PYTHON_AUTO_VRUN=true
 PYTHON_VENV_NAMES=($PYTHON_VENV_NAME venv)
 
-plugins=(git gh macos pip poetry python)
+plugins=(git gh macos pip python)
 
 # Source Oh My Zsh
 source $ZSH/oh-my-zsh.sh

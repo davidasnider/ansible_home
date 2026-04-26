@@ -197,17 +197,17 @@ make test-coverage
 ### Linting Failures
 ```bash
 # Fix linting issues locally
-poetry run ansible-lint roles/
+uv run ansible-lint roles/
 ```
 
 ### Molecule Test Failures
 ```bash
 # Debug specific test scenario
 cd roles/localhost
-poetry run molecule test -s default --debug
+uv run molecule test -s default --debug
 
 # Check test logs
-poetry run molecule verify -s default
+uv run molecule verify -s default
 ```
 
 ### Coverage Issues

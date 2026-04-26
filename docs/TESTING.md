@@ -201,7 +201,7 @@ docker system prune -f
 ```bash
 # Run specific test with verbose output
 cd roles/localhost
-poetry run molecule test -s default --debug
+uv run molecule test -s default --debug
 ```
 
 ### Debugging Tests

@@ -4,7 +4,7 @@
   - Make your playbooks modular and reusable by following a role-based design.
   - Separate inventories, variables, and configurations for local and cloud targets.
   - Secure secrets management by integrating HashiCorp Vault (and optionally using Ansible Vault as a fallback or wrapper).
-  - Use Poetry for Python dependency management, ensuring that all contributors have a unified environment.
+  - Use uv for Python dependency management, ensuring that all contributors have a unified environment.
 
 - **Approach:**
   - **Modularity:** Use Ansible roles to encapsulate tasks (e.g., common, web server, database) so that changes in one area won’t affect others.
@@ -64,8 +64,8 @@ ansible-project/
 ├── tests/                        # Tests using Molecule to validate roles and playbooks
 │   └── [role_name]/              # Each role can have its own test scenario
 ├── .ansible.cfg                  # Global Ansible configuration file
-├── pyproject.toml                # Poetry configuration: dependencies, scripts, etc.
-├── poetry.lock                   # Automatically generated; locks the dependency graph
+├── pyproject.toml                # uv configuration: dependencies, scripts, etc.
+├── uv.lock                       # Automatically generated; locks the dependency graph
 ├── README.md                     # Project overview, setup instructions, and documentation
 └── .gitignore                    # Files and directories to be ignored by Git
 ```
@@ -76,20 +76,20 @@ ansible-project/
 - **Vault Integration:** The `vault/` directory is dedicated to sensitive data. Decide whether you’re encrypting on disk (Ansible Vault) or integrating with HashiCorp Vault for centralized secrets management.
 - **CI/CD:** `.github/workflows/` enables automated linting, testing, and even deployment if needed.
 
-## 3. **Python and Poetry Dependency Management**
+## 3. **Python and uv Dependency Management**
 
-- **Using Poetry:**
-  - Use `poetry init` to create your project configuration and then add dependencies:
+- **Using uv:**
+  - Use `uv init` to create your project configuration and then add dependencies:
     ```bash
-    poetry init
-    poetry add ansible
-    poetry add hvac  # if you plan on interacting with HashiCorp Vault programmatically
+    uv init
+    uv add ansible
+    uv add hvac  # if you plan on interacting with HashiCorp Vault programmatically
     ```
   - This ensures that contributors use the same versions and that dependency conflicts are minimized.
   - Add custom scripts to `pyproject.toml` for common operations (e.g., running lint tests on playbooks).
 
 - **Virtual Environments:**
-  - Poetry automatically creates a virtualenv; ensure everyone develops within it (`poetry shell`) to keep the system and project dependencies isolated.
+  - uv automatically creates a virtualenv; ensure everyone develops within it (`source .venv/bin/activate`) to keep the system and project dependencies isolated.
 
 ---
 

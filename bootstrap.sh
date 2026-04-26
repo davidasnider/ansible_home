@@ -2,16 +2,14 @@
 
 sudo apt update && sudo apt upgrade -y
 
-sudo apt install python3-venv python3-poetry -y
+sudo apt install curl -y
+curl -LsSf https://astral.sh/uv/install.sh | sh
+source $HOME/.cargo/env
 
-python3 -m venv .venv
-
-source .venv/bin/activate
-
-poetry install
+uv sync
 
 read -sp "Enter Sudo Password: " ANSIBLE_SUDO_PASSWORD
 echo ""
 export ANSIBLE_SUDO_PASS="$ANSIBLE_SUDO_PASSWORD"
 
-ansible-playbook playbooks/workstations.yml
+uv run ansible-playbook playbooks/workstations.yml

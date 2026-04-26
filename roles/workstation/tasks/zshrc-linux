@@ -23,7 +23,7 @@ PYTHON_AUTO_VRUN=true
 PYTHON_VENV_NAMES=($PYTHON_VENV_NAME venv)
 
 # Oh My Zsh plugins (Linux-appropriate)
-plugins=(git gh pip poetry python systemd history-substring-search)
+plugins=(git gh pip python systemd history-substring-search)
 
 # Source Oh My Zsh
 source $ZSH/oh-my-zsh.sh
