@@ -299,8 +299,10 @@
     dest: /tmp/opencode-install.sh
     mode: "0755"
   when: not workstation_optimized_base_check.stat.exists
+  register: workstation_opencode_download_linux
   retries: 3
   delay: 5
+  until: workstation_opencode_download_linux is succeeded
 
 - name: Install OpenCode
   ansible.builtin.shell: bash /tmp/opencode-install.sh
