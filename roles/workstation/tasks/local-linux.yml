@@ -293,6 +293,18 @@
     state: directory
     mode: "0755"
 
+- name: Install OpenCode
+  ansible.builtin.shell: |
+    set -o pipefail
+    curl -fsSL https://opencode.ai/install | bash
+  args:
+    creates: "{{ ansible_facts['env']['HOME'] }}/.local/bin/opencode"
+  when: not workstation_optimized_base_check.stat.exists
+  retries: 3
+  delay: 5
+  tags:
+    - skip_ansible_lint
+
 - name: Download oh-my-posh installation script
   ansible.builtin.get_url:
     url: https://ohmyposh.dev/install.sh
