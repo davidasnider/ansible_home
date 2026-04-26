@@ -12,10 +12,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Checkout Code
-      uses: actions/checkout@v4
+      uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
 
     - name: Set up Python 3.12
-      uses: actions/setup-python@v5
+      uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
       with:
         python-version: '3.12'
 
@@ -32,10 +32,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Checkout Code
-      uses: actions/checkout@v4
+      uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
 
     - name: Set up Python 3.12
-      uses: actions/setup-python@v5
+      uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
       with:
         python-version: '3.12'
 
@@ -52,12 +52,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Checkout Code
-      uses: actions/checkout@v4
+      uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
       with:
         fetch-depth: 0
 
     - name: Set up Python 3.12
-      uses: actions/setup-python@v5
+      uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
       with:
         python-version: '3.12'
 
@@ -83,10 +83,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Checkout Code
-      uses: actions/checkout@v4
+      uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
 
     - name: Set up Python 3.12
-      uses: actions/setup-python@v5
+      uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
       with:
         python-version: '3.12'
 
@@ -110,10 +110,10 @@ jobs:
     if: github.event_name == 'pull_request'
     steps:
     - name: Checkout Repository
-      uses: actions/checkout@v4
+      uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
 
     - name: Dependency Review
-      uses: actions/dependency-review-action@v4
+      uses: actions/dependency-review-action@2031cfc080254a8a887f58cffee85186f0e49e48 # v4
 
   pr-gatekeeper:
     name: PR Gatekeeper
@@ -141,7 +141,7 @@ jobs:
     if: github.event_name == 'pull_request' && (github.actor == 'davidasnider' || github.actor == 'dependabot[bot]')
     steps:
     - name: Auto approve PR
-      uses: hmarr/auto-approve-action@v4
+      uses: hmarr/auto-approve-action@8f929096a962e83ccdfa8afcf855f39f12d4dac7 # v4
       with:
         github-token: ${{ secrets.GITHUB_TOKEN }}
         review-message: Auto-approved after all checks passed and 'ready-to-merge' label was added.
@@ -156,7 +156,7 @@ jobs:
     if: github.event_name == 'pull_request' && (github.actor == 'davidasnider' || github.actor == 'dependabot[bot]')
     steps:
     - name: Enable auto-merge for PR
-      uses: peter-evans/enable-pull-request-automerge@v3
+      uses: peter-evans/enable-pull-request-automerge@a660677d5469627102a1c1e11409dd063606628d # v3
       with:
         token: ${{ secrets.GITHUB_TOKEN }}
         pull-request-number: ${{ github.event.pull_request.number }}
