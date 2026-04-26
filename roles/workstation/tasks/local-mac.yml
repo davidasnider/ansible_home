@@ -378,6 +378,27 @@
     var: workstation_oh_my_zsh_install_result
     verbosity: 2
 
+- name: Check if Hermes Agent is installed
+  ansible.builtin.command: which hermes
+  register: workstation_hermes_check
+  changed_when: false
+  failed_when: false
+
+- name: Install Hermes Agent
+  ansible.builtin.shell: |
+    set -o pipefail
+    curl -fsSL https://raw.githubusercontent.com/NousResearch/hermes-agent/main/scripts/install.sh | bash
+  args:
+    executable: /bin/bash
+  become: false
+  when: workstation_hermes_check.rc != 0
+  register: workstation_hermes_install_result
+  changed_when: workstation_hermes_install_result.rc == 0
+
+- name: Debug Hermes Agent installation result
+  ansible.builtin.debug:
+    var: workstation_hermes_install_result
+    verbosity: 2
 
 - name: Copy zshrc file
   ansible.builtin.copy:
