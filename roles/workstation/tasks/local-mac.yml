@@ -404,7 +404,7 @@
   until: workstation_hermes_download_result is succeeded
 
 - name: Install Hermes Agent
-  ansible.builtin.shell: "{{ workstation_hermes_tmpdir.path }}/install.sh"
+  ansible.builtin.shell: "{{ workstation_hermes_tmpdir.path }}/install.sh --skip-setup"
   args:
     executable: /bin/bash
   become: false
