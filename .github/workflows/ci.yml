@@ -141,10 +141,9 @@ jobs:
     if: github.event_name == 'pull_request' && (github.actor == 'davidasnider' || github.actor == 'dependabot[bot]')
     steps:
     - name: Auto approve PR
-      uses: hmarr/auto-approve-action@8f929096a962e83ccdfa8afcf855f39f12d4dac7 # v4
-      with:
-        github-token: ${{ secrets.GITHUB_TOKEN }}
-        review-message: Auto-approved after all checks passed and 'ready-to-merge' label was added.
+      run: gh pr review ${{ github.event.pull_request.number }} --approve --body "Auto-approved after all checks passed and 'ready-to-merge' label was added." --repo ${{ github.repository }}
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   auto-merge:
     name: Auto Merge PR
@@ -156,8 +155,6 @@ jobs:
     if: github.event_name == 'pull_request' && (github.actor == 'davidasnider' || github.actor == 'dependabot[bot]')
     steps:
     - name: Enable auto-merge for PR
-      uses: peter-evans/enable-pull-request-automerge@a660677d5469627102a1c1e11409dd063606628d # v3
-      with:
-        token: ${{ secrets.GITHUB_TOKEN }}
-        pull-request-number: ${{ github.event.pull_request.number }}
-        merge-method: squash
+      run: gh pr merge ${{ github.event.pull_request.number }} --auto --squash --repo ${{ github.repository }}
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
