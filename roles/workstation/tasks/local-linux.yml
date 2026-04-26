@@ -293,26 +293,43 @@
     state: directory
     mode: "0755"
 
+- name: Check if OpenCode is installed
+  ansible.builtin.stat:
+    path: "{{ ansible_facts['env']['HOME'] }}/.local/bin/opencode"
+  register: workstation_opencode_check_linux
+
 - name: Download OpenCode installation script
   ansible.builtin.get_url:
     url: https://opencode.ai/install
-    dest: /tmp/opencode-install.sh
+    dest: "{{ ansible_facts['env']['HOME'] }}/.opencode-install.sh"
     mode: "0755"
-  when: not workstation_optimized_base_check.stat.exists
+  when:
+    - not workstation_optimized_base_check.stat.exists
+    - not workstation_opencode_check_linux.stat.exists
   register: workstation_opencode_download_linux
   retries: 3
   delay: 5
   until: workstation_opencode_download_linux is succeeded
 
 - name: Install OpenCode
-  ansible.builtin.command: bash /tmp/opencode-install.sh
+  ansible.builtin.command: bash "{{ ansible_facts['env']['HOME'] }}/.opencode-install.sh"
   args:
     creates: "{{ ansible_facts['env']['HOME'] }}/.local/bin/opencode"
   register: workstation_opencode_install_linux
-  when: not workstation_optimized_base_check.stat.exists
+  when:
+    - not workstation_optimized_base_check.stat.exists
+    - not workstation_opencode_check_linux.stat.exists
   retries: 3
   delay: 5
   until: workstation_opencode_install_linux is succeeded
+
+- name: Clean up OpenCode installation script
+  ansible.builtin.file:
+    path: "{{ ansible_facts['env']['HOME'] }}/.opencode-install.sh"
+    state: absent
+  when:
+    - not workstation_optimized_base_check.stat.exists
+    - not workstation_opencode_check_linux.stat.exists
 
 - name: Download oh-my-posh installation script
   ansible.builtin.get_url:
