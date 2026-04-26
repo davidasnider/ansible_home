@@ -9,13 +9,11 @@ dev-setup:
 		/opt/homebrew/bin/brew install python@3; \
 		/opt/homebrew/bin/brew link python@3; \
 	fi
-	@if ! command -v poetry >/dev/null 2>&1; then \
-		/opt/homebrew/bin/brew install poetry; \
+	@if ! command -v uv >/dev/null 2>&1; then \
+		/opt/homebrew/bin/brew install uv; \
 	fi
-	/opt/homebrew/bin/poetry env remove --all || true
 	rm -rf .venv
-	/opt/homebrew/bin/python3 -m venv .venv
-	/opt/homebrew/bin/poetry install
+	uv sync
 
 # Testing targets
 .PHONY: test test-all test-lint test-syntax clean-test cleanup
@@ -28,14 +26,14 @@ test-all: test
 
 test-lint:
 	@echo "Running pre-commit formatting checks..."
-	poetry run pre-commit run --all-files
+	uv run pre-commit run --all-files
 	@echo "Running ansible-lint..."
-	poetry run ansible-lint roles/
+	uv run ansible-lint roles/
 
 test-syntax:
 	@echo "Checking playbook syntax..."
-	poetry run ansible-playbook --syntax-check -i inventory/hosts.yml playbooks/workstations.yml
-	poetry run ansible-playbook --syntax-check -i inventory/hosts.yml playbooks/raspberry_pis.yml
+	uv run ansible-playbook --syntax-check -i inventory/hosts.yml playbooks/workstations.yml
+	uv run ansible-playbook --syntax-check -i inventory/hosts.yml playbooks/raspberry_pis.yml
 
 cleanup:
 	@echo "Running repository cleanup..."
