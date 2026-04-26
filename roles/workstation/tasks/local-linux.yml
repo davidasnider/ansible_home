@@ -305,17 +305,14 @@
   until: workstation_opencode_download_linux is succeeded
 
 - name: Install OpenCode
-  ansible.builtin.shell: bash /tmp/opencode-install.sh
+  ansible.builtin.command: bash /tmp/opencode-install.sh
   args:
-    executable: /bin/bash
     creates: "{{ ansible_facts['env']['HOME'] }}/.local/bin/opencode"
   register: workstation_opencode_install_linux
   when: not workstation_optimized_base_check.stat.exists
   retries: 3
   delay: 5
   until: workstation_opencode_install_linux is succeeded
-  tags:
-    - skip_ansible_lint
 
 - name: Download oh-my-posh installation script
   ansible.builtin.get_url:
