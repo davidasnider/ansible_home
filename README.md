@@ -10,7 +10,7 @@ This is a personal development environment automation project that uses Ansible 
 
 ## Key Technologies
 - **Ansible**: Infrastructure as code for configuration management (Ansible 13+)
-- **Python 3.12+**: Runtime environment with Poetry for dependency management
+- **Python 3.12+**: Runtime environment with uv for dependency management
 - **Zsh + Oh My Zsh**: Enhanced shell experience with "Pro-Lazy" initialization
 - **1Password CLI**: Secure secrets and environment variable management
 - **oh-my-posh**: Cross-platform prompt theming engine (with Nerd Fonts)
@@ -28,7 +28,7 @@ ansible_home/
 ├── Makefile                    # macOS development setup automation
 ├── bootstrap.sh               # Linux bootstrap script
 ├── pyproject.toml             # Python project configuration and dependencies
-├── poetry.lock                # Locked dependency versions
+├── uv.lock                # Locked dependency versions
 ├── inventory/
 │   └── hosts.yml              # Ansible inventory structure
 ├── playbooks/
@@ -100,7 +100,7 @@ cd ansible_home
 git clone https://github.com/davidasnider/ansible_home.git
 cd ansible_home
 # Ensure you have your IPs configured in inventory/hosts.yml
-poetry install
+uv sync
 ansible-playbook playbooks/raspberry_pis.yml
 ```
 
@@ -109,26 +109,26 @@ ansible-playbook playbooks/raspberry_pis.yml
 ### macOS (`make dev-setup`)
 1. **Homebrew Installation**: Installs Homebrew if not present
 2. **Python 3.11+**: Ensures compatible Python version via Homebrew
-3. **Poetry Installation**: Installs Poetry for dependency management
+3. **uv Installation**: Installs uv for dependency management
 4. **Virtual Environment**: Creates `.venv` directory and installs dependencies
 
 ### Linux (`bootstrap.sh`)
 1. **System Update**: Updates package cache and upgrades existing packages
-2. **Dependencies**: Installs `python3-venv` and `python3-poetry`
+2. **Dependencies**: Installs `python3-venv` and `uv`
 3. **Virtual Environment**: Creates `.venv` and activates it
-4. **Poetry Install**: Installs project dependencies
+4. **uv Install**: Installs project dependencies
 5. **Sudo Password**: Prompts for sudo password and runs the main playbook
 
 ## Python Environment Management
 
-### Poetry Configuration
+### uv Configuration
 - **Package Mode**: Disabled (`package-mode = false`) as this is a configuration project
 - **Dependencies**: Ansible 11.5+ and hvac for Vault integration
 - **Dev Dependencies**: pre-commit for code quality
 
 ### Virtual Environment
 - **Location**: `.venv/` in project root
-- **Activation**: `source .venv/bin/activate` (manual) or automatic via poetry
+- **Activation**: `source .venv/bin/activate` (manual) or automatic via uv
 - **Isolation**: Ensures consistent Ansible and Python versions across runs
 
 # Ansible Playbook Structure
@@ -195,7 +195,7 @@ The current framework structure will extend to support:
 
 ### Package Management
 - **Homebrew**: Primary package manager with automatic installation
-- **Formulae**: Command-line tools (gh, htop, oh-my-posh, poetry, pre-commit)
+- **Formulae**: Command-line tools (gh, htop, oh-my-posh, uv, pre-commit)
 - **Casks**: GUI applications (1Password, 1Password CLI, iTerm2, VS Code)
 - **Update Strategy**: Checks last update time, only updates if >24 hours old
 
@@ -207,7 +207,7 @@ The current framework structure will extend to support:
 ### macOS-Specific Tools
 ```yaml
 # Homebrew packages
-- gh, htop, oh-my-posh, poetry, pre-commit
+- gh, htop, oh-my-posh, uv, pre-commit
 - zsh-autocomplete, zsh-autosuggestions, zsh-fast-syntax-highlighting
 
 # Homebrew casks
@@ -229,7 +229,7 @@ The current framework structure will extend to support:
 ### Linux-Specific Packages
 ```yaml
 # APT packages
-- gh, htop, jq, python3-poetry, pre-commit, zsh
+- gh, htop, jq, uv, pre-commit, zsh
 - zsh-autosuggestions, zsh-syntax-highlighting, unzip
 - 1password-cli (via custom repository)
 ```
@@ -398,7 +398,7 @@ echo $ANSIBLE_SUDO_PASS
 Edit `roles/workstation/tasks/zshrc-linux` template:
 ```bash
 # Add new plugin to the plugins array
-plugins=(git gh pip poetry python systemd new-plugin)
+plugins=(git gh pip python systemd new-plugin)
 ```
 
 #### Update Zsh Configuration (macOS)
@@ -442,8 +442,8 @@ ansible-playbook --check --diff -i inventory/hosts.yml playbooks/workstations.ym
 
 ### Updating Dependencies
 ```bash
-# Update Poetry dependencies
-poetry update
+# Update uv dependencies
+uv lock --upgrade
 
 # Update Homebrew packages (macOS)
 brew update && brew upgrade
@@ -455,8 +455,8 @@ sudo apt update && sudo apt upgrade
 ### Environment Refresh
 ```bash
 # Clean and rebuild Python environment
-poetry env remove --all
-poetry install
+rm -rf .venv
+uv sync
 
 # Or use make target (macOS)
 make dev-setup
@@ -538,25 +538,25 @@ After you have merged a Pull Request, you can run `make cleanup` to:
 
 ### Environment Setup Problems
 
-#### Poetry Installation Fails
+#### uv Installation Fails
 ```bash
 # macOS: Ensure Homebrew is properly installed
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 eval "$(/opt/homebrew/bin/brew shellenv)"
 
 # Linux: Install via system package manager
-sudo apt update && sudo apt install python3-poetry
+sudo apt update && sudo apt install uv
 ```
 
 #### Python Virtual Environment Issues
 ```bash
 # Remove corrupted virtual environment
-poetry env remove --all
+rm -rf .venv
 rm -rf .venv
 
 # Recreate environment
 python3 -m venv .venv
-poetry install
+uv sync
 ```
 
 ### Ansible Execution Problems
@@ -703,7 +703,7 @@ ansible-playbook --check --start-at-task "Install packages" -i inventory/hosts.y
 # Test individual commands
 which zsh
 python3 --version
-poetry --version
+uv --version
 
 # Test 1Password CLI
 op whoami

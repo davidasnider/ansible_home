@@ -190,7 +190,7 @@
       - gh
       - htop
       - oh-my-posh
-      - poetry
+      - uv
       - pre-commit
       - pulumi
       - opencode

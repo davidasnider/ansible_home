@@ -12,7 +12,7 @@ When making changes to this repository, please adhere to the following principle
 
 - **Ansible is Authoritative**: Never make system changes or copy files manually. All changes to the environment configuration must be done through Ansible playbooks and roles.
 - **Use the Makefile**: The `Makefile` contains all necessary commands for setup, testing, and validation. Use `make` targets instead of running commands manually.
-- **Dependencies are Managed**: All Python dependencies are managed with Poetry and are defined in `pyproject.toml`. The project requires **Python 3.12+**. Do not use `pip` directly.
+- **Dependencies are Managed**: All Python dependencies are managed with uv and are defined in `pyproject.toml`. The project requires **Python 3.12+**. Do not use `pip` directly.
 - **Validate Before Committing**: Always run the relevant tests (e.g., `make test`) to ensure your changes are correct and do not break existing functionality before creating a pull request.
 - **Sign Your Commits**: All commits must be GPG signed ($SSH_SIGNING_KEY$). A pre-commit hook is in place to enforce this.
 
@@ -57,7 +57,7 @@ To enable GitHub integration with the Claude agent, you may need to set up the G
 ## 6. Key Files & Directories
 
 - **`Makefile`**: The entry point for all development and testing tasks.
-- **`pyproject.toml`**: Defines Python project dependencies for Poetry.
+- **`pyproject.toml`**: Defines Python project dependencies for uv.
 - **`ansible.cfg`**: Main configuration file for Ansible.
 - **`inventory/`**: Contains the Ansible inventory files.
 - **`playbooks/`**: Contains the main Ansible playbooks.
