@@ -6,6 +6,9 @@ on:
     types: [opened, synchronize, reopened, labeled, unlabeled]
     branches: [main]
 
+permissions:
+  contents: read
+
 jobs:
   ansible-lint:
     name: Ansible Linting
