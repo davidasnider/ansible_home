@@ -293,15 +293,25 @@
     state: directory
     mode: "0755"
 
-- name: Install OpenCode
-  ansible.builtin.shell: |
-    set -o pipefail
-    curl -fsSL https://opencode.ai/install | bash
-  args:
-    creates: "{{ ansible_facts['env']['HOME'] }}/.local/bin/opencode"
+- name: Download OpenCode installation script
+  ansible.builtin.get_url:
+    url: https://opencode.ai/install
+    dest: /tmp/opencode-install.sh
+    mode: "0755"
   when: not workstation_optimized_base_check.stat.exists
   retries: 3
   delay: 5
+
+- name: Install OpenCode
+  ansible.builtin.shell: bash /tmp/opencode-install.sh
+  args:
+    executable: /bin/bash
+    creates: "{{ ansible_facts['env']['HOME'] }}/.local/bin/opencode"
+  register: workstation_opencode_install_linux
+  when: not workstation_optimized_base_check.stat.exists
+  retries: 3
+  delay: 5
+  until: workstation_opencode_install_linux is succeeded
   tags:
     - skip_ansible_lint
 

@@ -179,8 +179,10 @@
   community.general.homebrew_tap:
     name: anomalyco/tap
     state: present
+  register: workstation_opencode_tap_result
   retries: 3
   delay: 5
+  until: workstation_opencode_tap_result is succeeded
 
 - name: Update Homebrew and install packages
   community.general.homebrew:
