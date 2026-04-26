@@ -121,6 +121,7 @@ jobs:
   pr-gatekeeper:
     name: PR Gatekeeper
     runs-on: ubuntu-latest
+    permissions: {}
     if: github.event_name == 'pull_request'
     steps:
       - name: Check for 'ready-to-merge' label
