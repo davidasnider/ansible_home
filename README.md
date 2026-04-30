@@ -207,11 +207,14 @@ The current framework structure will extend to support:
 ### macOS-Specific Tools
 ```yaml
 # Homebrew packages
-- gh, htop, oh-my-posh, uv, pre-commit
+- gh, htop, oh-my-posh, uv, pre-commit, opencode
 - zsh-autocomplete, zsh-autosuggestions, zsh-fast-syntax-highlighting
 
 # Homebrew casks
 - 1password, 1password-cli, iterm2, visual-studio-code
+
+# Custom Agents
+- Hermes Agent (via install script)
 ```
 
 ## Linux Configuration (`roles/workstation/tasks/local-linux.yml`)
