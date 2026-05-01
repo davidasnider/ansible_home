@@ -72,10 +72,8 @@ git branch -d -- "$CURRENT_BRANCH"
 echo "🔄 Syncing dependencies..."
 if command -v uv >/dev/null 2>&1; then
     uv sync
-elif command -v poetry >/dev/null 2>&1; then
-    poetry install
 else
-    echo "⚠️ Neither 'uv' nor 'poetry' found, skipping sync."
+    echo "⚠️ 'uv' not found, skipping sync."
 fi
 
 echo "✅ Successfully cleaned up repository and synced main."
