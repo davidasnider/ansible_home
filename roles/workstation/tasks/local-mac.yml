@@ -175,14 +175,17 @@
       {{ (workstation_brew_update_stat.stat.exists and ((ansible_facts['date_time']['epoch'] | int) - (workstation_brew_update_stat.stat.mtime | int) > 86400))
          or (not workstation_brew_update_stat.stat.exists) }}
 
-- name: Add OpenCode tap
+- name: Add Homebrew taps
   community.general.homebrew_tap:
-    name: anomalyco/tap
+    name: "{{ item }}"
     state: present
-  register: workstation_opencode_tap_result
+  loop:
+    - anomalyco/tap
+    - steipete/tap
+  register: workstation_homebrew_tap_result
   retries: 3
   delay: 5
-  until: workstation_opencode_tap_result is succeeded
+  until: workstation_homebrew_tap_result is succeeded
 
 - name: Update Homebrew and install packages
   community.general.homebrew:
@@ -194,6 +197,7 @@
       - pre-commit
       - pulumi
       - opencode
+      - imsg
       - zsh-autocomplete
       - zsh-autosuggestions
       - zsh-syntax-highlighting
