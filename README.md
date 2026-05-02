@@ -213,8 +213,8 @@ The current framework structure will extend to support:
 # Homebrew casks
 - 1password, 1password-cli, iterm2, visual-studio-code
 
-# Custom Agents
-- Hermes Agent (via install script)
+# Custom scripts/binaries
+- hermes-agent
 ```
 
 ## Linux Configuration (`roles/workstation/tasks/local-linux.yml`)
