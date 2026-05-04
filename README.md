@@ -207,7 +207,7 @@ The current framework structure will extend to support:
 ### macOS-Specific Tools
 ```yaml
 # Homebrew packages
-- gh, htop, oh-my-posh, uv, pre-commit, opencode
+- gh, htop, oh-my-posh, uv, pre-commit, opencode, imsg
 - zsh-autocomplete, zsh-autosuggestions, zsh-fast-syntax-highlighting
 
 # Homebrew casks
