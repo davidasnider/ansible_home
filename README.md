@@ -195,8 +195,8 @@ The current framework structure will extend to support:
 
 ### Package Management
 - **Homebrew**: Primary package manager with automatic installation
-- **Formulae**: Command-line tools (gh, htop, oh-my-posh, uv, pre-commit)
-- **Casks**: GUI applications (1Password, 1Password CLI, iTerm2, VS Code)
+- **Formulae**: Command-line tools (gh, htop, oh-my-posh, uv, pre-commit, pulumi, opencode, imsg)
+- **Casks**: GUI applications (1Password, 1Password CLI, iTerm2, VS Code, OrbStack, Rectangle)
 - **Update Strategy**: Checks last update time, only updates if >24 hours old
 
 ### Key Features
@@ -207,11 +207,26 @@ The current framework structure will extend to support:
 ### macOS-Specific Tools
 ```yaml
 # Homebrew packages
-- gh, htop, oh-my-posh, uv, pre-commit, opencode, imsg
-- zsh-autocomplete, zsh-autosuggestions, zsh-fast-syntax-highlighting
+- gh
+- htop
+- oh-my-posh
+- uv
+- pre-commit
+- pulumi
+- opencode
+- imsg
+- zsh-autocomplete
+- zsh-autosuggestions
+- zsh-syntax-highlighting
+- zsh-history-substring-search
 
 # Homebrew casks
-- 1password, 1password-cli, iterm2, visual-studio-code
+- 1password
+- 1password-cli
+- iterm2
+- visual-studio-code
+- orbstack
+- rectangle
 
 # Custom scripts/binaries
 - hermes-agent
@@ -232,9 +247,21 @@ The current framework structure will extend to support:
 ### Linux-Specific Packages
 ```yaml
 # APT packages
-- gh, htop, jq, uv, pre-commit, zsh
-- zsh-autosuggestions, zsh-syntax-highlighting, unzip
+- gh
+- htop
+- jq
+- uv
+- pre-commit
+- zsh
+- zsh-autosuggestions
+- zsh-syntax-highlighting
+- unzip
 - 1password-cli (via custom repository)
+
+# Custom scripts/binaries
+- oh-my-posh
+- opencode
+- pulumi
 ```
 
 ## Platform Differences
