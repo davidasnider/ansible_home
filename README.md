@@ -196,7 +196,7 @@ The current framework structure will extend to support:
 ### Package Management
 - **Homebrew**: Primary package manager with automatic installation
 - **Formulae**: Command-line tools (gh, htop, oh-my-posh, uv, pre-commit, pulumi, opencode, imsg, zsh-autocomplete, zsh-autosuggestions, zsh-syntax-highlighting, zsh-history-substring-search)
-- **Casks**: GUI applications (1Password, 1Password CLI, iTerm2, VS Code, OrbStack, Rectangle)
+- **Casks**: GUI applications (1Password, 1Password CLI, iTerm2, VS Code, OrbStack, Rectangle, Meslo Nerd Font)
 - **Update Strategy**: Checks last update time, only updates if >24 hours old
 
 ### Key Features
@@ -226,6 +226,7 @@ homebrew_casks:
   - visual-studio-code
   - orbstack
   - rectangle
+  - font-meslo-lg-nerd-font
 custom_scripts:
   - hermes-agent
 ```
