@@ -196,7 +196,7 @@ The current framework structure will extend to support:
 ### Package Management
 - **Homebrew**: Primary package manager with automatic installation
 - **Formulae**: Command-line tools (gh, htop, oh-my-posh, uv, pre-commit, pulumi, opencode, imsg)
-- **Casks**: GUI applications (1Password, 1Password CLI, iTerm2, VS Code, OrbStack, Rectangle)
+- **Casks**: GUI applications and fonts (1Password, 1Password CLI, iTerm2, VS Code, OrbStack, Rectangle, font-meslo-lg-nerd-font)
 - **Update Strategy**: Checks last update time, only updates if >24 hours old
 
 ### Key Features
@@ -227,6 +227,7 @@ The current framework structure will extend to support:
 - visual-studio-code
 - orbstack
 - rectangle
+- font-meslo-lg-nerd-font
 
 # Custom scripts/binaries
 - hermes-agent
