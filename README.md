@@ -208,7 +208,7 @@ The current framework structure will extend to support:
 ```yaml
 # Homebrew packages
 - gh, htop, macmon, oh-my-posh, uv, pre-commit, opencode
-- zsh-autocomplete, zsh-autosuggestions, zsh-fast-syntax-highlighting
+- zsh-autocomplete, zsh-autosuggestions, zsh-syntax-highlighting
 
 # Homebrew casks
 - 1password, 1password-cli, iterm2, visual-studio-code
