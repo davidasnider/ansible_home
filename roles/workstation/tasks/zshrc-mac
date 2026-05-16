@@ -13,11 +13,6 @@ if [ -n "$OMP_THEME_CMD" ]; then
     eval "$OMP_THEME_CMD"
 fi
 
-# Get all environment variables from the .env file with guards
-if [[ -n "$BREW_PREFIX" ]] && [[ -f "$HOME/.env" ]] && command -v "${BREW_PREFIX}/op" >/dev/null 2>&1; then
-    eval "$(cat "$HOME/.env" | "${BREW_PREFIX}/op" inject --)"
-fi
-
 # Set vi mode
 set -o vi
 
@@ -66,6 +61,9 @@ elif [ -f /opt/homebrew/opt/zsh-fast-syntax-highlighting/share/zsh-fast-syntax-h
     source /opt/homebrew/opt/zsh-fast-syntax-highlighting/share/zsh-fast-syntax-highlighting/fast-syntax-highlighting.plugin.zsh 2>/dev/null
 fi
 
+# 1Password login and environment variable loading alias
+alias opload='eval $(op signin) && eval $(cat ~/.env | op inject --)'
+
 # Load environment variables from .env file with validation
 REQUIRED_VARS=(GITHUB_TOKEN ANSIBLE_SUDO_PASS)
 if [ -f "$HOME/.env" ]; then
@@ -76,5 +74,22 @@ if [ -f "$HOME/.env" ]; then
         if ! grep -q "$var" "$HOME/.env"; then
             MISSING_VARS+=($var)
         fi
+    done
+
+    if [ ${#MISSING_VARS[@]} -eq 0 ]; then
+        # Check if user is already authenticated to 1Password
+        if ! op whoami >/dev/null 2>&1; then
+            echo "Use opload to load environment variables from .env"
+        fi
+    else
+        echo "Warning: Missing required variables in .env file:"
+        printf '%s\n' "${MISSING_VARS[@]}"
+    fi
+else
+    echo "Warning: .env file not found in $HOME"
+    # Provide instructions to create it using the REQUIRED_VARS array above
+    echo "Please create a .env file in your home directory with the following content:"
+    for var in ${REQUIRED_VARS[@]}; do
+        echo "export $var="
     done
 fi

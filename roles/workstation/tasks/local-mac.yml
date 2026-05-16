@@ -192,6 +192,7 @@
     name:
       - gh
       - htop
+      - macmon
       - oh-my-posh
       - uv
       - pre-commit
