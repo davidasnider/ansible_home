@@ -1,3 +1,9 @@
+# Prevent double sourcing
+if [[ -n "$_ZSHRC_SOURCED" ]]; then
+    return
+fi
+export _ZSHRC_SOURCED=1
+
 # Oh-my-posh theme setup (change OMP_THEME_NAME to switch themes)
 : "${OMP_THEME_NAME:=night-owl.omp.json}"
 
