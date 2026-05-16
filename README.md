@@ -209,6 +209,7 @@ The current framework structure will extend to support:
 # Homebrew packages
 - gh
 - htop
+- macmon
 - oh-my-posh
 - uv
 - pre-commit
@@ -219,7 +220,7 @@ The current framework structure will extend to support:
 - zsh-autosuggestions
 - zsh-syntax-highlighting
 - zsh-history-substring-search
-
+```
 # Homebrew casks
 - 1password
 - 1password-cli

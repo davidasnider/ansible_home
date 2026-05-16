@@ -1,3 +1,9 @@
+# Prevent double sourcing
+if [[ -n "$_ZSHRC_SOURCED" ]]; then
+    return
+fi
+export _ZSHRC_SOURCED=1
+
 # Set the oh-my-posh theme name globally
 OMP_THEME_NAME="night-owl.omp.json"
 # OMP_THEME_NAME="atomic.omp.json"
@@ -54,34 +60,15 @@ if grep -q microsoft /proc/version 2>/dev/null; then
 fi
 
 # 1Password login and environment variable loading alias
-alias opload='eval $(op signin) && eval $(cat ~/.env | op inject --)'
+alias opload='eval "$(op signin)" && eval "$(cat ~/.env | op inject)"'
 
 # Load environment variables from .env file with validation
-REQUIRED_VARS=(GITHUB_TOKEN ANSIBLE_SUDO_PASS)
 if [ -f "$HOME/.env" ]; then
-    # Check if required variables are referenced in .env
-    MISSING_VARS=()
-
-    for var in ${REQUIRED_VARS[@]}; do
-        if ! grep -q "$var" "$HOME/.env"; then
-            MISSING_VARS+=($var)
-        fi
-    done
-
-    if [ ${#MISSING_VARS[@]} -eq 0 ]; then
-        # Check if user is already authenticated to 1Password
-        if ! op whoami >/dev/null 2>&1; then
-            echo "Use opload to load environment variables from .env"
-        fi
-    else
-        echo "Warning: Missing required variables in .env file:"
-        printf '%s\n' "${MISSING_VARS[@]}"
+    # Check if user is already authenticated to 1Password (guard with command check)
+    if command -v op >/dev/null 2>&1 && ! op whoami >/dev/null 2>&1; then
+        echo "Use opload to load environment variables from .env"
     fi
 else
     echo "Warning: .env file not found in $HOME"
-    # Provide instructions to create it using the REQUIRED_VARS array above
-    echo "Please create a .env file in your home directory with the following content:"
-    for var in ${REQUIRED_VARS[@]}; do
-        echo "export $var="
-    done
+    echo "Please create a .env file in your home directory with your 1Password secret references."
 fi
