@@ -301,7 +301,7 @@ The project uses 1Password CLI for secure secrets management with a streamlined 
 
 ```bash
 # Login and load environment variables in one command
-alias opload='eval $(op signin) && eval $(cat ~/.env | op inject --)'
+alias opload='eval "$(op signin)" && eval "$(cat ~/.env | op inject)"'
 ```
 
 ### Environment Variables
