@@ -268,6 +268,9 @@ The current framework structure will extend to support:
 
 ## Platform Differences
 
+### Global Features
+- **Gemini Agent Integration**: Automatically links local agent workflows (`~/.agents/workflows`) to the Gemini configuration directory (`~/.gemini/agents`) if both directories are present on the system.
+
 ### Package Managers
 - **macOS**: Homebrew formulae and casks
 - **Linux**: APT packages with custom repositories for specialized tools
