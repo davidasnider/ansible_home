@@ -1,11 +1,49 @@
+import os
+import subprocess
+import sysconfig
+import tempfile
+from pathlib import Path
+
 import pytest
-import runpy
+
+_TEST_DIR = Path(__file__).resolve().parent
+_PROJECT_ROOT = _TEST_DIR.parent
+_VENV_PYTHON = _PROJECT_ROOT / ".venv" / "bin" / "python"
+
 
 @pytest.mark.unit
 def test_missing_github_token_raises_error():
-    """Test that missing GITHUB_TOKEN environment variable raises a ValueError."""
-    with pytest.MonkeyPatch.context() as m:
-        m.delenv("GITHUB_TOKEN", raising=False)
+    """Test that missing GITHUB_TOKEN environment variable raises a ValueError.
 
-        with pytest.raises(ValueError, match="GITHUB_TOKEN environment variable is required"):
-            runpy.run_path("infrastructure/__main__.py")
+    Uses a subprocess so the test is fully isolated:
+    - No local .env file is discovered (the script runs in a temp dir).
+    - The GITHUB_TOKEN is explicitly unset in the subprocess env.
+    """
+    main_module = _PROJECT_ROOT / "infrastructure" / "__main__.py"
+
+    # Get the site-packages dir from the venv's Python so deps (pulumi, dotenv)
+    # are importable in the subprocess.
+    site_packages = (
+        subprocess.check_output(
+            [str(_VENV_PYTHON), "-c", "import sysconfig; print(sysconfig.get_path('purelib'))"],
+            text=True,
+        ).strip()
+    )
+
+    # Start from a clean env (no GITHUB_TOKEN, no dotenv leakage).
+    clean_env = {k: v for k, v in os.environ.items() if k != "GITHUB_TOKEN"}
+    clean_env["PYTHONPATH"] = str(_PROJECT_ROOT) + ":" + site_packages
+
+    with tempfile.TemporaryDirectory() as tmp_dir:
+        result = subprocess.run(
+            [str(_VENV_PYTHON), str(main_module)],
+            capture_output=True,
+            text=True,
+            env=clean_env,
+            cwd=tmp_dir,
+        )
+
+        assert result.returncode != 0, (
+            f"Expected ValueError but script succeeded. stderr: {result.stderr}"
+        )
+        assert "GITHUB_TOKEN environment variable is required" in result.stderr
