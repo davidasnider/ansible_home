@@ -1,6 +1,5 @@
 import os
 import subprocess
-import sysconfig
 import tempfile
 from pathlib import Path
 
