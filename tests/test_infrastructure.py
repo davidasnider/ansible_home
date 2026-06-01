@@ -1,25 +1,41 @@
 import os
-import pytest
-import runpy
+import subprocess
+import sys
+import tempfile
 from pathlib import Path
-import dotenv
+
+import pytest
+
+_TEST_DIR = Path(__file__).resolve().parent
+_PROJECT_ROOT = _TEST_DIR.parent
+
 
 @pytest.mark.unit
-def test_missing_github_token_raises_error(tmp_path, monkeypatch):
-    """Test that missing GITHUB_TOKEN environment variable raises a ValueError."""
-    # 1. Absolute path to the script
-    repo_root = Path(__file__).resolve().parent.parent
-    main_file = repo_root / "infrastructure" / "__main__.py"
+def test_missing_github_token_raises_error():
+    """Test that missing GITHUB_TOKEN environment variable raises a ValueError.
 
-    # 2. CWD isolation: ensure execution happens from a clean temporary directory
-    monkeypatch.chdir(tmp_path)
+    Uses a subprocess so the test is fully isolated:
+    - No local .env file is discovered (the script runs in a temp dir).
+    - The GITHUB_TOKEN is explicitly unset in the subprocess env.
+    """
+    main_module = _PROJECT_ROOT / "infrastructure" / "__main__.py"
 
-    # Remove GITHUB_TOKEN from environment if it exists
-    monkeypatch.delenv("GITHUB_TOKEN", raising=False)
+    # Start from a clean env (no GITHUB_TOKEN).
+    clean_env = {k: v for k, v in os.environ.items() if k != "GITHUB_TOKEN"}
+    # Explicitly set GITHUB_TOKEN to empty string to ensure python-dotenv doesn't load it
+    # from a local .env file when load_dotenv() is called in infrastructure/__main__.py
+    clean_env["GITHUB_TOKEN"] = ""
 
-    # 3. .env isolation: patch load_dotenv so it's a no-op, preventing any .env file from repopulating
-    monkeypatch.setattr(dotenv, "load_dotenv", lambda *args, **kwargs: None)
+    with tempfile.TemporaryDirectory() as tmp_dir:
+        result = subprocess.run(
+            [sys.executable, str(main_module)],
+            capture_output=True,
+            text=True,
+            env=clean_env,
+            cwd=tmp_dir,
+        )
 
-    # Execute the file and expect ValueError
-    with pytest.raises(ValueError, match="GITHUB_TOKEN environment variable is required"):
-        runpy.run_path(str(main_file))
+        assert result.returncode != 0, (
+            f"Expected ValueError but script succeeded. stderr: {result.stderr}"
+        )
+        assert "GITHUB_TOKEN environment variable is required" in result.stderr
