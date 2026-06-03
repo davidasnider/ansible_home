@@ -106,6 +106,12 @@ roles/localhost/molecule/
 - Service status and configuration
 - Package installation verification
 
+### Infrastructure Unit Tests
+- Validation of required environment variables (e.g., `GITHUB_TOKEN`)
+- Pulumi infrastructure-as-code validation
+- Execution environment isolation testing (`tmp_path` and `monkeypatch.chdir`)
+- Environment variable isolation (`monkeypatch.delenv` and patching `dotenv.load_dotenv`)
+
 ### Security Tests
 - SSH configuration validation
 - Git security settings verification
