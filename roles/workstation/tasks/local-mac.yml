@@ -190,7 +190,6 @@
 - name: Update Homebrew and install packages
   community.general.homebrew:
     name:
-      - antigravity-cli
       - gh
       - htop
       - macmon
@@ -295,6 +294,7 @@
     - name: Install other Homebrew casks
       community.general.homebrew_cask:
         name:
+          - antigravity-cli
           - iterm2
           - visual-studio-code
           - orbstack
