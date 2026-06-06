@@ -259,6 +259,7 @@
     - name: Install other Homebrew casks
       community.general.homebrew_cask:
         name:
+          - antigravity-cli
           - iterm2
           - visual-studio-code
           - orbstack
