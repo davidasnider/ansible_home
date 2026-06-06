@@ -130,9 +130,9 @@ jobs:
             echo "✅ 'ready-to-merge' label found. Proceeding..."
             exit 0
           else
-            echo "❌ Missing 'ready-to-merge' label. Warning only."
+            echo "❌ Missing 'ready-to-merge' label."
             echo "Please review the changes and add the label once ready."
-            exit 0
+            exit 1
           fi
 
   auto-approve:
