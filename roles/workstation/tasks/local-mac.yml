@@ -190,6 +190,7 @@
 - name: Update Homebrew and install packages
   community.general.homebrew:
     name:
+      - antigravity-cli
       - gh
       - htop
       - macmon
@@ -209,6 +210,30 @@
   delay: 5
   timeout: 300
 
+- name: Setup omlx
+  block:
+    - name: Add omlx Homebrew tap
+      community.general.homebrew_tap:
+        name: jundot/omlx
+        url: https://github.com/jundot/omlx
+        state: present
+
+    - name: Install and upgrade omlx
+      community.general.homebrew:
+        name: omlx
+        state: latest
+        update_homebrew: "{{ workstation_update_brew }}"
+
+    - name: Ensure omlx service is started
+      community.general.homebrew_services:
+        name: omlx
+        state: present
+
+    - name: Install MCP support for omlx
+      ansible.builtin.pip:
+        name: mcp
+        executable: /opt/homebrew/opt/omlx/libexec/bin/pip
+
 - name: Verify Homebrew packages installation
   ansible.builtin.command: gh --version
   register: workstation_gh_version_check
@@ -218,9 +243,20 @@
   delay: 5
   until: workstation_gh_version_check.rc == 0
 
+- name: Verify omlx installation
+  ansible.builtin.command: /opt/homebrew/bin/omlx -h
+  register: workstation_omlx_version_check
+  changed_when: false
+  failed_when: workstation_omlx_version_check.rc != 0
+  retries: 3
+  delay: 5
+  until: workstation_omlx_version_check.rc == 0
+
 - name: Debug Homebrew packages installation check
   ansible.builtin.debug:
-    var: workstation_gh_version_check
+    msg:
+      - "gh version: {{ workstation_gh_version_check.stdout }}"
+      - "omlx help output: {{ workstation_omlx_version_check.stdout | default('N/A') }}"
     verbosity: 2
 
 - name: Install Homebrew casks with security verification
