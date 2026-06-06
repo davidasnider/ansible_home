@@ -1,7 +1,7 @@
-import runpy
 import pytest
+import runpy
 from pathlib import Path
-
+import dotenv
 
 @pytest.mark.unit
 def test_missing_github_token_raises_error(tmp_path, monkeypatch):
@@ -12,7 +12,12 @@ def test_missing_github_token_raises_error(tmp_path, monkeypatch):
     # Run from a temp directory so load_dotenv() won't discover a local .env
     # in the repo root, and the absolute script path ensures CWD doesn't matter.
     monkeypatch.chdir(tmp_path)
+
+    # Remove GITHUB_TOKEN from environment if it exists
     monkeypatch.delenv("GITHUB_TOKEN", raising=False)
+
+    # .env isolation: patch load_dotenv so it's a no-op, preventing any .env file from repopulating
+    monkeypatch.setattr(dotenv, "load_dotenv", lambda *args, **kwargs: None)
 
     with pytest.raises(ValueError, match="GITHUB_TOKEN environment variable is required"):
         runpy.run_path(str(script_path), run_name="__main__")
