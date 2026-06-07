@@ -126,8 +126,8 @@ jobs:
     steps:
       - name: Check for 'ready-to-merge' label
         run: |
-          # Skip check for bots (like google-labs-jules[bot])
-          if [[ "${{ endsWith(github.actor, '[bot]') }}" == "true" ]]; then
+          # Skip check for bots (like google-labs-jules)
+          if [[ "${{ contains(github.actor, 'bot') || contains(github.actor, 'jules') || github.actor == 'dependabot[bot]' }}" == "true" ]]; then
             echo "🤖 Bot actor detected. Bypassing 'ready-to-merge' requirement."
             exit 0
           fi
