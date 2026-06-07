@@ -222,6 +222,7 @@ The current framework structure will extend to support:
 - zsh-history-substring-search
 ```
 # Homebrew casks
+- antigravity-cli
 - 1password
 - 1password-cli
 - iterm2
