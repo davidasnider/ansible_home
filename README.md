@@ -220,7 +220,6 @@ The current framework structure will extend to support:
 - zsh-autosuggestions
 - zsh-syntax-highlighting
 - zsh-history-substring-search
-```
 # Homebrew casks
 - antigravity-cli
 - 1password
