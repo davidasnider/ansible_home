@@ -31,7 +31,9 @@ def test_missing_github_token_raises_error():
 
     # Start from a clean env (no GITHUB_TOKEN, no dotenv leakage).
     clean_env = {k: v for k, v in os.environ.items() if k != "GITHUB_TOKEN"}
-    clean_env["PYTHONPATH"] = str(_PROJECT_ROOT) + ":" + site_packages
+    existing = clean_env.get("PYTHONPATH", "")
+    new_entries = str(_PROJECT_ROOT) + os.pathsep + site_packages
+    clean_env["PYTHONPATH"] = new_entries if not existing else existing + os.pathsep + new_entries
 
     with tempfile.TemporaryDirectory() as tmp_dir:
         result = subprocess.run(
