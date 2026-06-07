@@ -264,6 +264,7 @@
           - visual-studio-code
           - orbstack
           - rectangle
+          - obsidian
         state: present
       retries: 3
       delay: 5
