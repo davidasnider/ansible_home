@@ -224,6 +224,7 @@ The current framework structure will extend to support:
 # Homebrew casks
 - 1password
 - 1password-cli
+- antigravity-cli
 - iterm2
 - visual-studio-code
 - orbstack
