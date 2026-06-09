@@ -168,26 +168,32 @@ For infrastructure as code and Python utilities, tests are placed in the `tests/
 """Test cases for infrastructure scripts."""
 
 import pytest
-import runpy
-import dotenv
+import subprocess
+import sys
 from pathlib import Path
 
 @pytest.mark.unit
 def test_missing_env_raises_error(tmp_path, monkeypatch):
     """Test that missing required environment variables raise errors."""
-    repo_root = Path(__file__).resolve().parent.parent
-    main_file = repo_root / "infrastructure" / "__main__.py"
+    script_path = Path(__file__).resolve().parent.parent / "infrastructure/__main__.py"
 
-    # Isolate current working directory
-    monkeypatch.chdir(tmp_path)
-
-    # Remove variables and patch dotenv to prevent loading from local .env files
+    # Remove GITHUB_TOKEN from environment if it exists
     monkeypatch.delenv("GITHUB_TOKEN", raising=False)
-    monkeypatch.setattr(dotenv, "load_dotenv", lambda *args, **kwargs: None)
 
-    # Execute the script
-    with pytest.raises(ValueError, match="GITHUB_TOKEN environment variable is required"):
-        runpy.run_path(str(main_file))
+    import os
+    env = os.environ.copy()
+
+    # Execute the file as a subprocess from a temporary directory for strict environment isolation
+    result = subprocess.run(
+        [sys.executable, str(script_path)],
+        cwd=tmp_path,
+        env=env,
+        capture_output=True,
+        text=True
+    )
+
+    assert result.returncode != 0
+    assert "GITHUB_TOKEN environment variable is required" in result.stderr
 ```
 
 ### Molecule Test File Structure (`roles/*/molecule/`)
