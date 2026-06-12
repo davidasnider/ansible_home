@@ -20,6 +20,9 @@ All of the following automated checks must pass before a PR can be approved:
 #### Coverage & Quality
 - ✅ **Test Coverage Report** - Test coverage analysis and reporting
 
+#### PR Label Checks
+- ✅ **ready-to-merge label** - The CI pipeline checks for the `ready-to-merge` label and will exit with status code 1 if it is missing. This label is required to proceed with merge.
+
 #### Legacy Checks (if configured)
 - 📝 Ansible Linting
 - 🔒 Pre-commit Checks
@@ -124,6 +127,7 @@ After approval and all checks passing:
 ## 🚫 What Prevents PR Approval
 
 ### Automated Blocks
+- Missing `ready-to-merge` label
 - Any failing status check
 - Unsigned commits (if signed commits required)
 - Unresolved security alerts
