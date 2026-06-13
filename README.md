@@ -221,7 +221,6 @@ The current framework structure will extend to support:
 - zsh-syntax-highlighting
 - zsh-history-substring-search
 # Homebrew casks
-- antigravity-cli
 - 1password
 - 1password-cli
 - antigravity-cli
