@@ -224,6 +224,7 @@ The current framework structure will extend to support:
 - antigravity-cli
 - 1password
 - 1password-cli
+- antigravity-cli
 - iterm2
 - visual-studio-code
 - orbstack
@@ -445,6 +446,9 @@ block: |
 ```
 
 ### Testing Changes
+
+#### Infrastructure Testing
+The `tests/` directory contains tests for Pulumi infrastructure code to ensure correctness and stability of AWS/GitHub resources.
 
 #### Syntax Validation
 The project uses automated syntax validation for all playbooks. This is the fastest way to ensure your changes are valid Ansible code.
