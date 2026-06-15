@@ -196,7 +196,7 @@ The current framework structure will extend to support:
 ### Package Management
 - **Homebrew**: Primary package manager with automatic installation
 - **Formulae**: Command-line tools (gh, htop, oh-my-posh, uv, pre-commit, pulumi, opencode, imsg)
-- **Casks**: GUI applications and fonts (1Password, 1Password CLI, iTerm2, VS Code, OrbStack, Rectangle, font-meslo-lg-nerd-font)
+- **Casks**: GUI applications and fonts (Antigravity CLI, 1Password, 1Password CLI, iTerm2, VS Code, OrbStack, Rectangle, font-meslo-lg-nerd-font)
 - **Update Strategy**: Checks last update time, only updates if >24 hours old
 
 ### Key Features
@@ -220,10 +220,10 @@ The current framework structure will extend to support:
 - zsh-autosuggestions
 - zsh-syntax-highlighting
 - zsh-history-substring-search
-```
 # Homebrew casks
 - 1password
 - 1password-cli
+- antigravity-cli
 - iterm2
 - visual-studio-code
 - orbstack
@@ -442,6 +442,9 @@ block: |
 ```
 
 ### Testing Changes
+
+#### Infrastructure Testing
+The `tests/` directory contains tests for Pulumi infrastructure code to ensure correctness and stability of AWS/GitHub resources.
 
 #### Syntax Validation
 The project uses automated syntax validation for all playbooks. This is the fastest way to ensure your changes are valid Ansible code.

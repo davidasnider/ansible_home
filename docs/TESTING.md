@@ -106,6 +106,11 @@ roles/localhost/molecule/
 - Service status and configuration
 - Package installation verification
 
+### Infrastructure as Code (Pulumi) Tests
+- Validation of Pulumi infrastructure code using `pytest`
+- Testing required environment variables (e.g., `GITHUB_TOKEN` validation)
+- Environment isolation using `subprocess`, `tempfile` and `dotenv` patching for strict environment separation (avoiding local `.env` loading or state bleeding)
+
 ### Security Tests
 - SSH configuration validation
 - Git security settings verification
@@ -155,7 +160,43 @@ addopts = [
 
 ## Writing New Tests
 
-### Test File Structure
+### Python Test File Structure (`tests/`)
+
+For infrastructure as code and Python utilities, tests are placed in the `tests/` directory and use pytest:
+
+```python
+"""Test cases for infrastructure scripts."""
+
+import pytest
+import subprocess
+import sys
+from pathlib import Path
+
+@pytest.mark.unit
+def test_missing_env_raises_error(tmp_path, monkeypatch):
+    """Test that missing required environment variables raise errors."""
+    script_path = Path(__file__).resolve().parent.parent / "infrastructure/__main__.py"
+
+    # Remove GITHUB_TOKEN from environment if it exists
+    monkeypatch.delenv("GITHUB_TOKEN", raising=False)
+
+    import os
+    env = os.environ.copy()
+
+    # Execute the file as a subprocess from a temporary directory for strict environment isolation
+    result = subprocess.run(
+        [sys.executable, str(script_path)],
+        cwd=tmp_path,
+        env=env,
+        capture_output=True,
+        text=True
+    )
+
+    assert result.returncode != 0
+    assert "GITHUB_TOKEN environment variable is required" in result.stderr
+```
+
+### Molecule Test File Structure (`roles/*/molecule/`)
 ```python
 """Test cases for specific functionality."""
 
