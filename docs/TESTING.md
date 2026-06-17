@@ -111,6 +111,7 @@ roles/workstation/molecule/
 - Git security settings verification
 - File permission checks
 - Cryptographic key validation
+- Subprocess isolation testing (e.g., verifying `GITHUB_TOKEN` requirement)
 
 ### Idempotency Tests
 - Configuration stability across runs
