@@ -196,7 +196,7 @@ The current framework structure will extend to support:
 ### Package Management
 - **Homebrew**: Primary package manager with automatic installation
 - **Formulae**: Command-line tools (gh, htop, oh-my-posh, uv, pre-commit, pulumi, opencode, imsg)
-- **Casks**: GUI applications and fonts (Antigravity CLI, 1Password, 1Password CLI, iTerm2, VS Code, OrbStack, Rectangle, font-meslo-lg-nerd-font)
+- **Casks**: GUI applications and fonts (1Password, 1Password CLI, iTerm2, VS Code, OrbStack, Rectangle, font-meslo-lg-nerd-font)
 - **Update Strategy**: Checks last update time, only updates if >24 hours old
 
 ### Key Features
@@ -223,7 +223,6 @@ The current framework structure will extend to support:
 # Homebrew casks
 - 1password
 - 1password-cli
-- antigravity-cli
 - iterm2
 - visual-studio-code
 - orbstack
@@ -317,14 +316,11 @@ export ANSIBLE_SUDO_PASS="op://vault/sudo-password/password"
 ```
 
 ### Validation System
-The zsh configuration includes automatic validation of required environment variables:
+The zsh configuration checks for the presence of the .env file and verifies 1Password authentication:
 
 ```bash
-# Required variables checked at shell startup
-REQUIRED_VARS=(GITHUB_TOKEN ANSIBLE_SUDO_PASS)
-
-# Warns user if variables are missing from .env file
-# Provides instructions for creating missing entries
+# Warns user if .env file is missing and provides instructions to create it
+# Checks if 1Password CLI is authenticated, and if not, prompts to use opload
 ```
 
 ## Security Features
@@ -445,9 +441,6 @@ block: |
 ```
 
 ### Testing Changes
-
-#### Infrastructure Testing
-The `tests/` directory contains tests for Pulumi infrastructure code to ensure correctness and stability of AWS/GitHub resources.
 
 #### Syntax Validation
 The project uses automated syntax validation for all playbooks. This is the fastest way to ensure your changes are valid Ansible code.

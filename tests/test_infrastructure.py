@@ -1,27 +1,23 @@
 import pytest
-import subprocess
-import sys
+import runpy
 from pathlib import Path
+import dotenv
 
 @pytest.mark.unit
 def test_missing_github_token_raises_error(tmp_path, monkeypatch):
-    """Test that missing GITHUB_TOKEN environment variable raises an error."""
+    """Test that missing GITHUB_TOKEN environment variable raises a ValueError."""
+    # Derive the absolute path to infrastructure/__main__.py from this file's location
     script_path = Path(__file__).resolve().parent.parent / "infrastructure/__main__.py"
+
+    # Run from a temp directory so load_dotenv() won't discover a local .env
+    # in the repo root, and the absolute script path ensures CWD doesn't matter.
+    monkeypatch.chdir(tmp_path)
 
     # Remove GITHUB_TOKEN from environment if it exists
     monkeypatch.delenv("GITHUB_TOKEN", raising=False)
 
-    import os
-    env = os.environ.copy()
+    # .env isolation: patch load_dotenv so it's a no-op, preventing any .env file from repopulating
+    monkeypatch.setattr(dotenv, "load_dotenv", lambda *args, **kwargs: None)
 
-    # Execute the file as a subprocess from a temporary directory for strict environment isolation
-    result = subprocess.run(
-        [sys.executable, str(script_path)],
-        cwd=tmp_path,
-        env=env,
-        capture_output=True,
-        text=True
-    )
-
-    assert result.returncode != 0
-    assert "GITHUB_TOKEN environment variable is required" in result.stderr
+    with pytest.raises(ValueError, match="GITHUB_TOKEN environment variable is required"):
+        runpy.run_path(str(script_path), run_name="__main__")
