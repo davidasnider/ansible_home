@@ -220,7 +220,6 @@ The current framework structure will extend to support:
 - zsh-autosuggestions
 - zsh-syntax-highlighting
 - zsh-history-substring-search
-```
 # Homebrew casks
 - 1password
 - 1password-cli
@@ -317,14 +316,11 @@ export ANSIBLE_SUDO_PASS="op://vault/sudo-password/password"
 ```
 
 ### Validation System
-The zsh configuration includes automatic validation of required environment variables:
+The zsh configuration checks for the presence of the .env file and verifies 1Password authentication:
 
 ```bash
-# Required variables checked at shell startup
-REQUIRED_VARS=(GITHUB_TOKEN ANSIBLE_SUDO_PASS)
-
-# Warns user if variables are missing from .env file
-# Provides instructions for creating missing entries
+# Warns user if .env file is missing and provides instructions to create it
+# Checks if 1Password CLI is authenticated, and if not, prompts to use opload
 ```
 
 ## Security Features

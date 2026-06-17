@@ -187,6 +187,14 @@
   delay: 5
   until: workstation_homebrew_tap_result is succeeded
 
+- name: Trust Homebrew taps
+  ansible.builtin.command: /opt/homebrew/bin/brew trust "{{ item }}"
+  loop:
+    - anomalyco/tap
+    - steipete/tap
+  changed_when: false
+  failed_when: false
+
 - name: Update Homebrew and install packages
   community.general.homebrew:
     name:
@@ -203,6 +211,7 @@
       - zsh-autosuggestions
       - zsh-syntax-highlighting
       - zsh-history-substring-search
+      - pi-coding-agent
     state: present
     update_homebrew: "{{ workstation_update_brew }}"
   retries: 3

@@ -203,7 +203,7 @@ uv run ansible-lint roles/
 ### Molecule Test Failures
 ```bash
 # Debug specific test scenario
-cd roles/localhost
+cd roles/workstation
 uv run molecule test -s default --debug
 
 # Check test logs
