@@ -213,13 +213,13 @@ grep "ERROR\|WARN" ~/.config/op/op-secure.log
 The security enhancements are implemented across several components:
 
 ### Ansible Tasks
-- `roles/localhost/tasks/1password-security.yml`: Core security module
-- `roles/localhost/tasks/local-mac.yml`: macOS-specific integration
-- `roles/localhost/tasks/local-linux.yml`: Linux-specific integration
+- `roles/workstation/tasks/1password-security.yml`: Core security module
+- `roles/workstation/tasks/local-mac.yml`: macOS-specific integration
+- `roles/workstation/tasks/local-linux.yml`: Linux-specific integration
 
 ### Test Coverage
-- `roles/localhost/molecule/macos/tests/test_macos_specific.py`: macOS security tests
-- `roles/localhost/molecule/linux/tests/test_linux_specific.py`: Linux security tests
+- `roles/workstation/molecule/macos/tests/test_macos_specific.py`: macOS security tests
+- `roles/workstation/molecule/linux/tests/test_linux_specific.py`: Linux security tests
 
 ### Security Scripts
 - `~/.local/bin/op-secure`: Enhanced CLI wrapper
