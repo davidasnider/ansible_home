@@ -90,7 +90,7 @@ This script will:
    ```
 
 4. **Update Ansible configuration**:
-   - Modify `roles/localhost/tasks/local-linux.yml`
+   - Modify `roles/workstation/tasks/local-linux.yml`
    - Update the signing key in both the Git config and allowed_signers tasks
 
 5. **Remove old key** (after verification):

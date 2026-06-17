@@ -86,7 +86,7 @@ open htmlcov/index.html
 ## Test Structure
 
 ```
-roles/localhost/molecule/
+roles/workstation/molecule/
 ├── default/                 # Default test scenario
 │   ├── molecule.yml        # Molecule configuration
 │   ├── converge.yml        # Test playbook
@@ -140,7 +140,7 @@ The `.github/workflows/molecule.yml` workflow:
 ### pytest Configuration (`pyproject.toml`)
 ```toml
 [tool.pytest.ini_options]
-testpaths = ["roles/localhost/molecule", "tests"]
+testpaths = ["roles/workstation/molecule", "tests"]
 addopts = [
     "--cov=roles",
     "--cov-report=html",
@@ -201,7 +201,7 @@ docker system prune -f
 #### Test Failures
 ```bash
 # Run specific test with verbose output
-cd roles/localhost
+cd roles/workstation
 uv run molecule test -s default --debug
 ```
 
