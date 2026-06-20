@@ -200,7 +200,6 @@ The current framework structure will extend to support:
 - **Update Strategy**: Checks last update time, only updates if >24 hours old
 
 ### Key Features
-- **Dotfiles Integration**: Clones and manages dotfiles repository from GitHub
 - **Oh My Zsh**: Automated installation with custom plugin configuration
 - **Shell Customization**: Comprehensive zsh configuration with syntax highlighting and autocomplete
 
