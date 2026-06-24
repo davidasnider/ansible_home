@@ -179,6 +179,7 @@ def test_functionality(host):
 3. **Error Messages**: Provide meaningful assertion messages
 4. **Platform Awareness**: Consider platform differences in tests
 5. **Idempotency**: Ensure tests can run multiple times safely
+6. **Environment Isolation**: Use idiomatic `pytest` fixtures like `tmp_path` and `monkeypatch.delenv` for strict environment isolation in subprocess execution, rather than manual `tempfile` handling or `runpy`.
 
 ## Troubleshooting
 
