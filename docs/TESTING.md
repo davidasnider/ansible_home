@@ -125,7 +125,7 @@ roles/workstation/molecule/
 ## CI/CD Integration
 
 ### GitHub Actions Workflow
-The `.github/workflows/molecule.yml` workflow:
+The `.github/workflows/ci.yml` workflow:
 1. **Lint Stage**: Runs ansible-lint on all roles
 2. **Test Matrix**: Executes multiple scenarios in parallel
 3. **Coverage**: Generates and uploads coverage reports
