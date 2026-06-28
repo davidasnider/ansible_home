@@ -232,6 +232,8 @@ The current framework structure will extend to support:
 - font-meslo-lg-nerd-font
 
 # Custom scripts/binaries
+- pulumi
+- opencode
 - hermes-agent
 ```
 
