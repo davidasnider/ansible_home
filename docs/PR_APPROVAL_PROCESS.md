@@ -34,6 +34,7 @@ All of the following automated checks must pass before a PR can be approved:
 - **Conversation Resolution**: All PR conversations must be resolved before merge
 
 ### Additional Protections
+- **Require 'ready-to-merge' Label**: The PR Gatekeeper CI check requires the `ready-to-merge` label to pass.
 - **Require Signed Commits**: `true` - All commits must be GPG signed
 - **Require Linear History**: `true` - No merge commits, only squash/rebase
 - **Allow Force Pushes**: `false` - Force pushes to main branch are blocked
