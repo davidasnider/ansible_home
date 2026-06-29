@@ -200,7 +200,6 @@ The current framework structure will extend to support:
 - **Update Strategy**: Checks last update time, only updates if >24 hours old
 
 ### Key Features
-- **Dotfiles Integration**: Clones and manages dotfiles repository from GitHub
 - **Oh My Zsh**: Automated installation with custom plugin configuration
 - **Shell Customization**: Comprehensive zsh configuration with syntax highlighting and autocomplete
 
@@ -233,6 +232,8 @@ The current framework structure will extend to support:
 - font-meslo-lg-nerd-font
 
 # Custom scripts/binaries
+- pulumi
+- opencode
 - hermes-agent
 ```
 
@@ -292,7 +293,7 @@ The current framework structure will extend to support:
 ## Common Tasks Across Platforms
 - Git user configuration (name and email)
 - `~/code` directory creation
-- Oh My Zsh installation and configuration
+- Oh My Zsh installation and configuration (extracted to `roles/workstation/tasks/install-oh-my-zsh.yml`)
 - Zsh plugin management (syntax highlighting, autosuggestions)
 - oh-my-posh theme engine setup
 - Python virtual environment detection and auto-activation
