@@ -18,16 +18,21 @@ class PulumiMocks(pulumi.runtime.Mocks):
                 "git_clone_url": "https://github.com/test/ansible_home.git",
                 "node_id": "test_node_id"
             }
-            if "securityAndAnalysis" in outputs and isinstance(outputs["securityAndAnalysis"], dict):
-                outputs["security_and_analysis"] = [outputs.pop("securityAndAnalysis")]
-            elif "security_and_analysis" in outputs and isinstance(outputs["security_and_analysis"], dict):
-                outputs["security_and_analysis"] = [outputs["security_and_analysis"]]
+            # Normalize securityAndAnalysis/security_and_analysis to a list containing the dict
+            sec_analysis = outputs.pop("securityAndAnalysis", None) or outputs.get("security_and_analysis")
+            if sec_analysis and isinstance(sec_analysis, dict):
+                outputs["security_and_analysis"] = [sec_analysis]
 
         elif args.typ == "github:index/branchProtection:BranchProtection":
-            for list_prop in ["requiredStatusChecks", "requiredPullRequestReviews", "required_status_checks", "required_pull_request_reviews"]:
-                if list_prop in outputs and isinstance(outputs[list_prop], dict):
-                    prop_name = "required_status_checks" if "StatusChecks" in list_prop or "status_checks" in list_prop else "required_pull_request_reviews"
-                    outputs[prop_name] = [outputs.pop(list_prop) if list_prop != prop_name else outputs[list_prop]]
+            # Normalize requiredStatusChecks/required_status_checks to a list containing the dict
+            status_checks = outputs.pop("requiredStatusChecks", None) or outputs.get("required_status_checks")
+            if status_checks and isinstance(status_checks, dict):
+                outputs["required_status_checks"] = [status_checks]
+
+            # Normalize requiredPullRequestReviews/required_pull_request_reviews to a list containing the dict
+            pr_reviews = outputs.pop("requiredPullRequestReviews", None) or outputs.get("required_pull_request_reviews")
+            if pr_reviews and isinstance(pr_reviews, dict):
+                outputs["required_pull_request_reviews"] = [pr_reviews]
 
         return [args.name + '_id', outputs]
 
@@ -79,7 +84,7 @@ def test_repository_configuration(infra):
 def test_branch_protection_configuration(infra):
     """Test branch protection resource properties."""
     def check(args):
-        pattern, enforce_admins, req_reviews, linear_history = args
+        pattern, enforce_admins, req_reviews, linear_history, req_status_checks = args
         assert pattern == "main"
         assert enforce_admins is True
 
@@ -90,9 +95,23 @@ def test_branch_protection_configuration(infra):
 
         assert linear_history is True
 
+        if isinstance(req_status_checks, list) and len(req_status_checks) > 0:
+            sc = req_status_checks[0]
+            assert sc.get("strict") is True
+            contexts = sc.get("contexts")
+            expected_contexts = [
+                "Ansible Linting",
+                "Pre-commit Checks",
+                "Secret Scanning",
+                "Ansible Syntax Check",
+                "Dependency Review",
+            ]
+            assert contexts == expected_contexts
+
     return pulumi.Output.all(
         infra.branch_protection.pattern,
         infra.branch_protection.enforce_admins,
         infra.branch_protection.required_pull_request_reviews,
-        infra.branch_protection.required_linear_history
+        infra.branch_protection.required_linear_history,
+        infra.branch_protection.required_status_checks
     ).apply(check)
