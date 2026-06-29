@@ -1,0 +1,18 @@
+---
+# defaults file for raspberry_pi
+
+# SSH configuration
+raspberry_pi_ssh_port: 22
+raspberry_pi_permit_root_login: "no"
+raspberry_pi_password_authentication: "no"
+
+# SSH Authorized Keys to add to the remote user (should be overridden in group_vars or Ansible Vault)
+raspberry_pi_authorized_keys: []
+
+# Firewall configuration
+raspberry_pi_ufw_enabled: true
+# You can list additional TCP ports you want to allow (e.g. 80, 443, etc.)
+raspberry_pi_allowed_ports: []
+
+# Automatic upgrades configuration
+raspberry_pi_unattended_upgrades_enabled: true
