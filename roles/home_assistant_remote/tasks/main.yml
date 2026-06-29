@@ -101,7 +101,7 @@
 - name: Deploy Home Assistant Docker container
   community.docker.docker_container:
     name: homeassistant
-    image: homeassistant/home-assistant:stable
+    image: "{{ home_assistant_remote_ha_image }}"
     state: started
     restart_policy: unless-stopped
     network_mode: host

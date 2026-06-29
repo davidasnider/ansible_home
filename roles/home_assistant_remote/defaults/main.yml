@@ -5,3 +5,5 @@ home_assistant_remote_user: "{{ ansible_user | default(lookup('env', 'USER')) }}
 home_assistant_remote_config_dir: "/home/{{ home_assistant_remote_user }}/homeassistant"
 home_assistant_remote_version: "4.6"
 home_assistant_remote_zip_url: "https://github.com/custom-components/remote_homeassistant/archive/refs/tags/{{ home_assistant_remote_version }}.zip"
+home_assistant_remote_ha_version: "2026.6.4"
+home_assistant_remote_ha_image: "homeassistant/home-assistant:{{ home_assistant_remote_ha_version }}"
