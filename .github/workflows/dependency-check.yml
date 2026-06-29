@@ -1,0 +1,33 @@
+name: Dependency Update Check
+
+on:
+  schedule:
+    # Run weekly every Sunday at 00:00 UTC
+    - cron: '0 0 * * 0'
+  workflow_dispatch: # Allow manual trigger from the GitHub Actions UI
+
+permissions:
+  contents: read
+
+jobs:
+  check-updates:
+    name: Check for remote_homeassistant updates
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
+        with:
+          python-version: '3.12'
+
+      - name: Install PyYAML
+        run: |
+          python -m pip install --upgrade pip
+          pip install PyYAML
+
+      - name: Run update check
+        # Exiting with code 1 here will fail the workflow and automatically
+        # trigger GitHub's native email notification for scheduled run failures.
+        run: python scripts/check_updates.py
