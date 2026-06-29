@@ -1,0 +1,8 @@
+---
+# group_vars for raspberry_pis
+
+# SSH Authorized Keys to add to the remote user
+# Retrieved dynamically at runtime from 1Password to avoid checking keys into git
+raspberry_pi_authorized_keys:
+  - "{{ lookup('community.general.onepassword', 'Giro SSH Key', field='public key') }}"
+  - "{{ lookup('community.general.onepassword', 'Git Commit SSH Key', field='public key') }}"

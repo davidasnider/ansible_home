@@ -355,44 +355,9 @@
       echo "GPG format: $(git config --global gpg.format || echo 'Not set')"
       echo "Commit signing enabled: $(git config --global commit.gpgsign || echo 'Not set')"
 
-- name: Check if Oh My Zsh is installed
-  ansible.builtin.stat:
-    path: "{{ ansible_facts['env']['HOME'] }}/.oh-my-zsh"
-  register: workstation_oh_my_zsh_stat
-
-
-- name: Install Oh My Zsh with error handling
-  block:
-    - name: Install Oh My Zsh if not present
-      ansible.builtin.shell: |
-        sh -c "$(curl -fsSL -m 300 https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
-      args:
-        creates: "{{ ansible_facts['env']['HOME'] }}/.oh-my-zsh"
-      when: not workstation_oh_my_zsh_stat.stat.exists
-      changed_when: false
-      register: workstation_oh_my_zsh_install_result
-      retries: 3
-      delay: 5
-      until: workstation_oh_my_zsh_install_result.rc == 0
-
-    - name: Verify Oh My Zsh installation
-      ansible.builtin.stat:
-        path: "{{ ansible_facts['env']['HOME'] }}/.oh-my-zsh"
-      register: workstation_oh_my_zsh_stat_check
-
-    - name: Fail if Oh My Zsh is not installed
-      ansible.builtin.fail:
-        msg: "Oh My Zsh installation failed. The directory ~/.oh-my-zsh was not found."
-      when: not workstation_oh_my_zsh_stat_check.stat.exists
-  rescue:
-    - name: Fail if Oh My Zsh installation failed
-      ansible.builtin.fail:
-        msg: "Oh My Zsh installation failed. Please check the logs for more details."
-
-- name: Debug Oh My Zsh installation result
-  ansible.builtin.debug:
-    var: workstation_oh_my_zsh_install_result
-    verbosity: 2
+- name: Include Oh My Zsh installation tasks
+  ansible.builtin.include_tasks:
+    file: install-oh-my-zsh.yml
 
 - name: Check if Hermes Agent is installed
   ansible.builtin.command: which hermes
