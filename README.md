@@ -293,7 +293,7 @@ The current framework structure will extend to support:
 ## Common Tasks Across Platforms
 - Git user configuration (name and email)
 - `~/code` directory creation
-- Oh My Zsh installation and configuration
+- Oh My Zsh installation and configuration (extracted to `roles/workstation/tasks/install-oh-my-zsh.yml`)
 - Zsh plugin management (syntax highlighting, autosuggestions)
 - oh-my-posh theme engine setup
 - Python virtual environment detection and auto-activation
