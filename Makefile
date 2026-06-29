@@ -14,9 +14,10 @@ dev-setup:
 	fi
 	rm -rf .venv
 	uv sync
+	uv run pre-commit install --hook-type pre-commit --hook-type commit-msg --overwrite
 
 # Testing targets
-.PHONY: test test-all test-lint test-syntax clean-test cleanup
+.PHONY: test test-all test-lint test-syntax clean-test cleanup check-updates
 
 test: test-lint test-syntax
 	@echo "All tests completed successfully"
@@ -32,8 +33,11 @@ test-lint:
 
 test-syntax:
 	@echo "Checking playbook syntax..."
-	uv run ansible-playbook --syntax-check -i inventory/hosts.yml playbooks/workstations.yml
-	uv run ansible-playbook --syntax-check -i inventory/hosts.yml playbooks/raspberry_pis.yml
+	uv run ansible-playbook --syntax-check -i inventory/hosts.yml site.yml
+
+check-updates:
+	@echo "Checking for remote_homeassistant updates..."
+	uv run python scripts/check_updates.py
 
 cleanup:
 	@echo "Running repository cleanup..."

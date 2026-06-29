@@ -1,9 +1,17 @@
 ---
-- name: Configure Raspberry Pis
+- name: Configure All Raspberry Pis
   hosts: raspberry_pis
   gather_facts: true
   become: true
 
-  tasks:
-    - name: Ping Raspberry Pi
-      ansible.builtin.ping:
+  roles:
+    - raspberry_pi
+
+- name: Setup Home Assistant Remote Nodes
+  hosts: home_assistant_nodes
+  gather_facts: true
+  become: true
+
+  roles:
+    - docker
+    - home_assistant_remote
