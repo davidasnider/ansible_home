@@ -105,6 +105,7 @@ def test_branch_protection_configuration(infra):
                 "Secret Scanning",
                 "Ansible Syntax Check",
                 "Dependency Review",
+                "PR Gatekeeper",
             ]
             assert contexts == expected_contexts
 
