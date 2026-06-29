@@ -1,0 +1,20 @@
+---
+# defaults file for raspberry_pi
+
+# SSH configuration
+raspberry_pi_ssh_port: 22
+raspberry_pi_permit_root_login: "no"
+raspberry_pi_password_authentication: "no"
+
+# SSH Authorized Keys to add to the remote user
+raspberry_pi_authorized_keys:
+  - "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIC+xMm3fgZ4vOCgSj8Wi0g/rzOj2hD/Zfar0PN7km56+ Giro SSH Key"
+  - "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIKWm36FodEyxXOXxqhkCj0YLDHkori4Dzmq3hI0PsrX9 Git Commit SSH Key"
+
+# Firewall configuration
+raspberry_pi_ufw_enabled: true
+# You can list additional TCP ports you want to allow (e.g. 80, 443, etc.)
+raspberry_pi_allowed_ports: []
+
+# Automatic upgrades configuration
+raspberry_pi_unattended_upgrades_enabled: true
