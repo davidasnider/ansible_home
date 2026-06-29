@@ -13,6 +13,9 @@ def test_missing_github_token_raises_error(tmp_path, monkeypatch):
     monkeypatch.delenv("GITHUB_TOKEN", raising=False)
 
     env = os.environ.copy()
+    # Explicitly set to empty string so load_dotenv() won't populate it from .env files
+    # (load_dotenv does not overwrite existing environment variables by default)
+    env["GITHUB_TOKEN"] = ""
 
     # Execute the file as a subprocess from a temporary directory for strict environment isolation
     result = subprocess.run(
