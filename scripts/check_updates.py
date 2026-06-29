@@ -36,12 +36,12 @@ def main():
     if not current:
         print("Could not find 'home_assistant_remote_version' in defaults.", file=sys.stderr)
         sys.exit(2)
-        
+
     latest = get_latest_version()
-    
+
     print(f"Current pinned version: {current}")
     print(f"Latest available version: {latest}")
-    
+
     if current != latest:
         print(f"🚨 UPDATE AVAILABLE: A new version ({latest}) of remote_homeassistant is available!")
         # Exit with code 1 to indicate an update is available (triggers CI failure/email notification)
