@@ -1,6 +1,7 @@
 ---
 # defaults file for home_assistant_remote
 
-home_assistant_remote_user: "{{ ansible_user | default(ansible_facts['env']['USER']) }}"
+home_assistant_remote_user: "{{ ansible_user | default(lookup('env', 'USER')) }}"
 home_assistant_remote_config_dir: "/home/{{ home_assistant_remote_user }}/homeassistant"
-home_assistant_remote_zip_url: "https://github.com/custom-components/remote_homeassistant/archive/refs/heads/master.zip"
+home_assistant_remote_version: "4.6"
+home_assistant_remote_zip_url: "https://github.com/custom-components/remote_homeassistant/archive/refs/tags/{{ home_assistant_remote_version }}.zip"

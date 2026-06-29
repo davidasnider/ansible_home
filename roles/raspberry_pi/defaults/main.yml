@@ -6,10 +6,8 @@ raspberry_pi_ssh_port: 22
 raspberry_pi_permit_root_login: "no"
 raspberry_pi_password_authentication: "no"
 
-# SSH Authorized Keys to add to the remote user
-raspberry_pi_authorized_keys:
-  - "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIC+xMm3fgZ4vOCgSj8Wi0g/rzOj2hD/Zfar0PN7km56+ Giro SSH Key"
-  - "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIKWm36FodEyxXOXxqhkCj0YLDHkori4Dzmq3hI0PsrX9 Git Commit SSH Key"
+# SSH Authorized Keys to add to the remote user (should be overridden in group_vars or Ansible Vault)
+raspberry_pi_authorized_keys: []
 
 # Firewall configuration
 raspberry_pi_ufw_enabled: true

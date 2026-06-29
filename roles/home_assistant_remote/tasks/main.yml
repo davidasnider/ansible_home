@@ -31,6 +31,11 @@
     - "{{ home_assistant_remote_config_dir }}"
     - "{{ home_assistant_remote_config_dir }}/custom_components"
 
+- name: Check if Home Assistant configuration.yaml exists
+  ansible.builtin.stat:
+    path: "{{ home_assistant_remote_config_dir }}/configuration.yaml"
+  register: home_assistant_remote_config_file
+
 - name: Seed baseline configuration.yaml
   ansible.builtin.copy:
     content: |
@@ -42,6 +47,7 @@
     owner: "{{ home_assistant_remote_user }}"
     group: "{{ home_assistant_remote_user }}"
     mode: "0644"
+  when: not home_assistant_remote_config_file.stat.exists
 
 - name: Check if remote_homeassistant custom component is installed
   ansible.builtin.stat:
@@ -64,7 +70,7 @@
 
 - name: Install remote_homeassistant custom component
   ansible.builtin.copy:
-    src: "{{ home_assistant_remote_temp_dir.path }}/remote_homeassistant-master/custom_components/remote_homeassistant"
+    src: "{{ home_assistant_remote_temp_dir.path }}/remote_homeassistant-{{ home_assistant_remote_version }}/custom_components/remote_homeassistant"
     dest: "{{ home_assistant_remote_config_dir }}/custom_components/"
     remote_src: true
     owner: "{{ home_assistant_remote_user }}"
@@ -86,6 +92,12 @@
     recurse: true
   when: not home_assistant_remote_dir.stat.exists
 
+# Deploy Home Assistant Docker container.
+# NOTE on security and network isolation trade-offs:
+# - network_mode: host is required for UPnP, mDNS, SSDP, and DHCP discovery to find smart home devices on the local subnet.
+# - capabilities (NET_ADMIN, NET_RAW) are required to allow Home Assistant to perform low-level network operations (e.g. bluetooth/network monitoring).
+# - /run/dbus mapping is required to allow Home Assistant to communicate with the host's BlueZ bluetooth stack.
+# Alternatives like macvlan would improve network isolation, but complicate mDNS repeater configuration and host-to-container communication.
 - name: Deploy Home Assistant Docker container
   community.docker.docker_container:
     name: homeassistant
