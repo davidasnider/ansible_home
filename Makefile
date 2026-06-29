@@ -32,7 +32,8 @@ test-lint:
 
 test-syntax:
 	@echo "Checking playbook syntax..."
-	uv run ansible-playbook --syntax-check -i inventory/hosts.yml site.yml
+	uv run ansible-playbook --syntax-check -i inventory/hosts.yml playbooks/workstations.yml
+	uv run ansible-playbook --syntax-check -i inventory/hosts.yml playbooks/raspberry_pis.yml
 
 cleanup:
 	@echo "Running repository cleanup..."
