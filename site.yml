@@ -1,3 +1,0 @@
----
-- import_playbook: playbooks/workstations.yml
-- import_playbook: playbooks/raspberry_pis.yml

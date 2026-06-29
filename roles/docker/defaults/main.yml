@@ -1,3 +1,0 @@
----
-# defaults file for docker
-docker_user: "{{ ansible_user | default(ansible_facts['env']['USER']) }}"
