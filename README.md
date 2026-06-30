@@ -27,6 +27,9 @@ This is a personal development environment automation project that uses Ansible 
 ansible_home/
 ├── Makefile                    # macOS development setup automation
 ├── bootstrap.sh               # Linux bootstrap script
+├── site.yml                   # Master execution playbook
+├── scripts/
+│   └── check_updates.py       # Update checker script
 ├── pyproject.toml             # Python project configuration and dependencies
 ├── uv.lock                # Locked dependency versions
 ├── inventory/
@@ -35,6 +38,9 @@ ansible_home/
 │   ├── workstations.yml       # Workstation playbook with OS detection
 │   └── raspberry_pis.yml      # Raspberry Pi execution playbook
 ├── roles/
+│   ├── docker/                # Docker installation role
+│   ├── home_assistant_remote/ # Home Assistant remote node configuration
+│   ├── raspberry_pi/          # Raspberry Pi baseline configuration
 │   └── workstation/            # Core workstation configuration role
 │       ├── handlers/
 │       │   └── main.yml        # Event handlers
@@ -383,7 +389,7 @@ vars:
 ```bash
 # Full setup (first time or complete refresh)
 source .venv/bin/activate
-ansible-playbook -i inventory/hosts.yml playbooks/workstations.yml
+ansible-playbook -i inventory/hosts.yml site.yml
 
 # Quick setup with bootstrap (Linux)
 ./bootstrap.sh
