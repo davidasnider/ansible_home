@@ -39,7 +39,7 @@ ansible_home/
 │   └── raspberry_pis.yml      # Raspberry Pi execution playbook
 ├── roles/
 │   ├── docker/                # Docker installation role
-│   ├── home_assistant_remote/ # Home Assistant remote node configuration
+│   ├── home_assistant_remote/ # Home Assistant remote config
 │   ├── raspberry_pi/          # Raspberry Pi baseline configuration
 │   └── workstation/            # Core workstation configuration role
 │       ├── handlers/
