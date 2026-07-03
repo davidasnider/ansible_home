@@ -461,7 +461,7 @@ The project uses automated syntax validation for all playbooks. This is the fast
 # Run all syntax checks via Makefile
 make test-syntax
 
-# Or check a specific playbook manually
+# Or check the workstations playbook
 ansible-playbook --syntax-check -i inventory/hosts.yml playbooks/workstations.yml
 ```
 
@@ -473,6 +473,13 @@ make test-lint
 
 # Or run manually
 ansible-lint roles/
+```
+
+#### Updates Checking
+We use a script to check for updates to third-party dependencies (like `remote_homeassistant` for Home Assistant).
+```bash
+# Run update checks via Makefile
+make check-updates
 ```
 
 #### Dry Run (Mocked)
