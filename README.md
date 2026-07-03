@@ -508,7 +508,8 @@ make dev-setup
 
 ### Checking Application Updates
 ```bash
-# Check for updates to remote node applications (e.g., `remote_homeassistant` and `home-assistant/core`)
+# Check for updates to remote node applications (e.g., `remote_homeassistant` and `home-assistant/core`). 
+# Note: `make check-updates` runs `scripts/check_updates.py` to compare pinned versions against GitHub releases.
 make check-updates
 ```
 
