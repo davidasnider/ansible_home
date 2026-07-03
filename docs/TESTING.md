@@ -106,6 +106,12 @@ roles/workstation/molecule/
 - Service status and configuration
 - Package installation verification
 
+### Infrastructure as Code (Pulumi) Tests
+- Validation of Pulumi infrastructure code using `pytest` and `pulumi.runtime.Mocks`
+- Testing required environment variables (e.g., `GITHUB_TOKEN` validation)
+- Environment isolation using `subprocess`, `tempfile` and `dotenv` patching for strict environment separation (avoiding local `.env` loading or state bleeding)
+- Property tests verify resource attributes (e.g., Repository and BranchProtection settings) without performing actual deployments
+
 ### Security Tests
 - SSH configuration validation
 - Git security settings verification
