@@ -107,7 +107,7 @@ git clone https://github.com/davidasnider/ansible_home.git
 cd ansible_home
 # Ensure you have your IPs configured in inventory/hosts.yml
 uv sync
-ansible-playbook playbooks/raspberry_pis.yml
+uv run ansible-playbook -i inventory/hosts.yml --limit raspberry_pis site.yml
 ```
 
 ## Detailed Setup Process
@@ -461,7 +461,7 @@ The project uses automated syntax validation for all playbooks. This is the fast
 # Run all syntax checks via Makefile
 make test-syntax
 
-# Or check a specific playbook manually
+# Or check the workstations playbook
 ansible-playbook --syntax-check -i inventory/hosts.yml playbooks/workstations.yml
 ```
 
@@ -473,6 +473,13 @@ make test-lint
 
 # Or run manually
 ansible-lint roles/
+```
+
+#### Updates Checking
+We use a script to check for updates to third-party dependencies (like `remote_homeassistant` for Home Assistant).
+```bash
+# Run update checks via Makefile
+make check-updates
 ```
 
 #### Dry Run (Mocked)
@@ -509,6 +516,13 @@ uv sync
 
 # Or use make target (macOS)
 make dev-setup
+```
+
+### Checking Application Updates
+```bash
+# Check for updates to remote node applications (e.g., `remote_homeassistant` and `home-assistant/core`).
+# Note: `make check-updates` runs `scripts/check_updates.py` to compare pinned versions against GitHub releases.
+make check-updates
 ```
 
 ### Secret Rotation

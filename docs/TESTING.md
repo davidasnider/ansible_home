@@ -105,6 +105,8 @@ roles/workstation/molecule/
 - File existence and content verification
 - Service status and configuration
 - Package installation verification
+- Pulumi infrastructure code unit testing using `pulumi.runtime.Mocks` (`tests/test_infrastructure_pulumi.py`)
+
 
 ### Infrastructure as Code (Pulumi) Tests
 - Validation of Pulumi infrastructure code using `pytest` and `pulumi.runtime.Mocks`
@@ -128,16 +130,21 @@ roles/workstation/molecule/
 
 ## CI/CD Integration
 
-### GitHub Actions Workflow
+### GitHub Actions Workflows
+
 The `.github/workflows/ci.yml` workflow:
-1. **Lint Stage**: Runs ansible-lint on all roles
-2. **Test Matrix**: Executes multiple scenarios in parallel
-3. **Coverage**: Generates and uploads coverage reports
+1. **Lint Stage**: Runs ansible-lint and pre-commit on all roles and files.
+2. **Security**: Runs secret scanning via `detect-secrets`.
+3. **Syntax**: Executes playbook syntax checking (`ansible-playbook --syntax-check`).
+4. **Dependencies**: Automated dependency review and optional automated approvals.
+
+The `.github/workflows/dependency-check.yml` workflow:
+1. Scheduled weekly to run `scripts/check_updates.py`.
+2. Validates whether `remote_homeassistant` and `home_assistant` dependencies are out of date and alerts if they are.
 
 ### Workflow Triggers
-- Push to `main` or `develop` branches
-- Pull requests to `main`
-- Changes to role files, molecule configurations, or workflows
+- `ci.yml`: Push to `main` branch, pull requests to `main` branch.
+- `dependency-check.yml`: Weekly schedules and `workflow_dispatch`.
 
 ## Test Configuration
 
