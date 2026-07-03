@@ -476,7 +476,7 @@ ansible-lint roles/
 ```
 
 #### Updates Checking
-We use a script to check for updates for third-party dependencies (like `remote_homeassistant` for Home Assistant).
+We use a script to check for updates to third-party dependencies (like `remote_homeassistant` for Home Assistant).
 ```bash
 # Run update checks via Makefile
 make check-updates

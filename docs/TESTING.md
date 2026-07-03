@@ -105,7 +105,7 @@ roles/workstation/molecule/
 - File existence and content verification
 - Service status and configuration
 - Package installation verification
-- Pulumi infrastructure code unit testing using `pulumi.runtime.Mocks` (`test_infrastructure_pulumi.py`)
+- Pulumi infrastructure code unit testing using `pulumi.runtime.Mocks` (`tests/test_infrastructure_pulumi.py`)
 
 ### Security Tests
 - SSH configuration validation
