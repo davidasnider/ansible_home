@@ -461,8 +461,8 @@ The project uses automated syntax validation for all playbooks. This is the fast
 # Run all syntax checks via Makefile
 make test-syntax
 
-# Or check a specific playbook manually
-ansible-playbook --syntax-check -i inventory/hosts.yml site.yml
+# Or check the master playbook
+ansible-playbook --syntax-check -i inventory/hosts.yml playbooks/workstations.yml
 ```
 
 #### Linting

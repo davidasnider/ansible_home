@@ -138,9 +138,8 @@ The `.github/workflows/dependency-check.yml` workflow:
 2. Validates whether `remote_homeassistant` and `home_assistant` dependencies are out of date and alerts if they are.
 
 ### Workflow Triggers
-- Push to `main` branch.
-- Pull requests to `main` branch.
-- Weekly schedules.
+- `ci.yml`: Push to `main` branch, pull requests to `main` branch.
+- `dependency-check.yml`: Weekly schedules and `workflow_dispatch`.
 
 ## Test Configuration
 
