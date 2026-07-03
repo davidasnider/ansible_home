@@ -508,7 +508,7 @@ make dev-setup
 
 ### Checking Application Updates
 ```bash
-# Check for updates to remote node applications (e.g., Home Assistant Docker image)
+# Check for updates to remote node applications (e.g., `remote_homeassistant` and `home-assistant/core`)
 make check-updates
 ```
 
