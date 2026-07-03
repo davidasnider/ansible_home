@@ -491,6 +491,11 @@ ansible-playbook --check --diff -i inventory/hosts.yml playbooks/workstations.ym
 
 ## Maintenance Workflows
 
+### Dependency Checks
+The project includes automated dependency update checking.
+- **GitHub Actions Workflow**: `.github/workflows/dependency-check.yml` runs weekly to check for updates.
+- **Local Check**: Run `make check-updates` to execute `scripts/check_updates.py`, which monitors pinned versions in `roles/home_assistant_remote/defaults/main.yml` against the latest GitHub Releases for `custom-components/remote_homeassistant` and `home-assistant/core`.
+
 ### Updating Dependencies
 ```bash
 # Update uv dependencies

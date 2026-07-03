@@ -108,6 +108,10 @@ roles/workstation/molecule/
 - Pulumi infrastructure code unit testing using `pulumi.runtime.Mocks` (`tests/test_infrastructure_pulumi.py`)
 
 
+### Infrastructure as Code (Pulumi) Tests
+- Validation of Pulumi infrastructure code using `pytest` and `pulumi.runtime.Mocks`
+- Property tests verify resource attributes (e.g., Repository and BranchProtection settings) without performing actual deployments
+
 ### Security Tests
 - SSH configuration validation
 - Git security settings verification
