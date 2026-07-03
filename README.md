@@ -107,7 +107,7 @@ git clone https://github.com/davidasnider/ansible_home.git
 cd ansible_home
 # Ensure you have your IPs configured in inventory/hosts.yml
 uv sync
-ansible-playbook playbooks/raspberry_pis.yml
+uv run ansible-playbook -i inventory/hosts.yml --limit raspberry_pis site.yml
 ```
 
 ## Detailed Setup Process
@@ -511,6 +511,13 @@ uv sync
 
 # Or use make target (macOS)
 make dev-setup
+```
+
+### Checking Application Updates
+```bash
+# Check for updates to remote node applications (e.g., `remote_homeassistant` and `home-assistant/core`).
+# Note: `make check-updates` runs `scripts/check_updates.py` to compare pinned versions against GitHub releases.
+make check-updates
 ```
 
 ### Secret Rotation
