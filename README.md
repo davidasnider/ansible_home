@@ -461,7 +461,7 @@ The project uses automated syntax validation for all playbooks. This is the fast
 # Run all syntax checks via Makefile
 make test-syntax
 
-# Or check the master playbook
+# Or check the workstations playbook
 ansible-playbook --syntax-check -i inventory/hosts.yml playbooks/workstations.yml
 ```
 
