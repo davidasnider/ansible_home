@@ -28,3 +28,19 @@ def test_missing_github_token_raises_error(tmp_path, monkeypatch):
 
     assert result.returncode != 0
     assert "GITHUB_TOKEN environment variable is required" in result.stderr
+
+@pytest.mark.unit
+def test_missing_github_token_raises_value_error_in_process(monkeypatch):
+    """Test that missing GITHUB_TOKEN environment variable raises an error during import."""
+    # Ensure the module is reloaded if already imported, using monkeypatch for cleanup
+    monkeypatch.delitem(sys.modules, "infrastructure.__main__", raising=False)
+
+    # Remove GITHUB_TOKEN from environment if it exists
+    monkeypatch.delenv("GITHUB_TOKEN", raising=False)
+
+    # Add root dir to sys.path to resolve infrastructure module safely using monkeypatch
+    root_dir = str(Path(__file__).resolve().parent.parent)
+    monkeypatch.syspath_prepend(root_dir)
+
+    with pytest.raises(ValueError, match="GITHUB_TOKEN environment variable is required"):
+        import infrastructure.__main__
