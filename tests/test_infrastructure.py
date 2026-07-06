@@ -36,9 +36,8 @@ def test_missing_github_token_raises_value_error_in_process(tmp_path, monkeypatc
     monkeypatch.delitem(sys.modules, "infrastructure", raising=False)
     monkeypatch.delitem(sys.modules, "infrastructure.__main__", raising=False)
 
-    # Set to empty string so load_dotenv() won't populate it from .env files
-    # The code treats an empty string as missing (if not github_token)
-    monkeypatch.setenv("GITHUB_TOKEN", "")
+    # Remove GITHUB_TOKEN from environment if it exists
+    monkeypatch.delenv("GITHUB_TOKEN", raising=False)
 
     # Run the import from tmp_path to prevent accidental .env discovery in working directory
     monkeypatch.chdir(tmp_path)
