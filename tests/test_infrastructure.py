@@ -50,6 +50,5 @@ def test_missing_github_token_raises_value_error_in_process(tmp_path, monkeypatc
     with pytest.raises(ValueError, match="GITHUB_TOKEN environment variable is required"):
         import infrastructure.__main__
 
-    # Clean up module entries after the pytest.raises block to avoid leaking import state
-    monkeypatch.delitem(sys.modules, "infrastructure", raising=False)
-    monkeypatch.delitem(sys.modules, "infrastructure.__main__", raising=False)
+    # We deliberately do not clean up here to prevent side effects in the test teardown,
+    # but the use of pytest isolation for this test is sufficient.
