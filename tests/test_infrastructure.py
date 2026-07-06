@@ -36,7 +36,7 @@ def test_missing_github_token_raises_value_error_in_process(monkeypatch):
     monkeypatch.delitem(sys.modules, "infrastructure.__main__", raising=False)
 
     # Remove GITHUB_TOKEN from environment if it exists
-    monkeypatch.delenv("GITHUB_TOKEN", raising=False)
+    monkeypatch.setenv("GITHUB_TOKEN", "")
 
     # Add root dir to sys.path to resolve infrastructure module safely using monkeypatch
     root_dir = str(Path(__file__).resolve().parent.parent)
