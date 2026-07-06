@@ -33,6 +33,7 @@ def test_missing_github_token_raises_error(tmp_path, monkeypatch):
 def test_missing_github_token_raises_value_error_in_process(monkeypatch):
     """Test that missing GITHUB_TOKEN environment variable raises an error during import."""
     # Ensure the module is reloaded if already imported, using monkeypatch for cleanup
+    monkeypatch.delitem(sys.modules, "infrastructure", raising=False)
     monkeypatch.delitem(sys.modules, "infrastructure.__main__", raising=False)
 
     # Set to empty string so load_dotenv() won't populate it from .env files
