@@ -37,6 +37,7 @@ def test_missing_github_token_raises_value_error_in_process(monkeypatch):
     monkeypatch.delitem(sys.modules, "infrastructure.__main__", raising=False)
 
     # Set to empty string so load_dotenv() won't populate it from .env files
+    # The code treats an empty string as missing (if not github_token)
     monkeypatch.setenv("GITHUB_TOKEN", "")
 
     # Add root dir to sys.path to resolve infrastructure module safely using monkeypatch
@@ -45,3 +46,7 @@ def test_missing_github_token_raises_value_error_in_process(monkeypatch):
 
     with pytest.raises(ValueError, match="GITHUB_TOKEN environment variable is required"):
         import infrastructure.__main__
+
+    # Clean up module entries after the pytest.raises block to avoid leaking import state
+    monkeypatch.delitem(sys.modules, "infrastructure", raising=False)
+    monkeypatch.delitem(sys.modules, "infrastructure.__main__", raising=False)
