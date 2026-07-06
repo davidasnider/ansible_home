@@ -32,9 +32,8 @@ def test_missing_github_token_raises_error(tmp_path, monkeypatch):
 @pytest.mark.unit
 def test_missing_github_token_raises_value_error_in_process(tmp_path, monkeypatch):
     """Test that missing GITHUB_TOKEN environment variable raises an error during import."""
-    # Ensure the module is reloaded if already imported, using monkeypatch for cleanup
-    monkeypatch.delitem(sys.modules, "infrastructure", raising=False)
-    monkeypatch.delitem(sys.modules, "infrastructure.__main__", raising=False)
+    # Ensure the module is reloaded if already imported
+    # (Removed monkeypatch.delitem to prevent auto-restoration of old module states)
 
     # Remove GITHUB_TOKEN from environment if it exists
     monkeypatch.delenv("GITHUB_TOKEN", raising=False)
