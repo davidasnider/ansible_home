@@ -45,6 +45,10 @@ def test_missing_github_token_raises_value_error_in_process(tmp_path, monkeypatc
     root_dir = str(Path(__file__).resolve().parent.parent)
     monkeypatch.syspath_prepend(root_dir)
 
+    # Cleanup existing module state to avoid cache-related test order dependency
+    sys.modules.pop("infrastructure.__main__", None)
+    sys.modules.pop("infrastructure", None)
+
     # Import and assert in try/finally to ensure module cleanup
     try:
         with pytest.raises(ValueError, match="GITHUB_TOKEN environment variable is required"):
