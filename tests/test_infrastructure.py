@@ -48,9 +48,9 @@ def test_missing_github_token_raises_value_error_in_process(tmp_path, monkeypatc
     monkeypatch.syspath_prepend(root_dir)
 
     with pytest.raises(ValueError, match="GITHUB_TOKEN environment variable is required"):
-        monkeypatch.setattr('dotenv.load_dotenv', lambda: None)
+        monkeypatch.setattr('dotenv.load_dotenv', lambda *args, **kwargs: None)
         import infrastructure.__main__
 
     # Explicitly remove the module from sys.modules to prevent partial import leakage
-    monkeypatch.delitem(sys.modules, "infrastructure.__main__", raising=False)
-    monkeypatch.delitem(sys.modules, "infrastructure", raising=False)
+    sys.modules.pop("infrastructure.__main__", None)
+    sys.modules.pop("infrastructure", None)
