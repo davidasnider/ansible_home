@@ -45,16 +45,21 @@ def test_missing_github_token_raises_value_error_in_process(tmp_path, monkeypatc
     root_dir = str(Path(__file__).resolve().parent.parent)
     monkeypatch.syspath_prepend(root_dir)
 
-    # Cleanup existing module state to avoid cache-related test order dependency
-    sys.modules.pop("infrastructure.__main__", None)
-    sys.modules.pop("infrastructure", None)
+    # Capture initial state of sys.modules for restoration
+    initial_modules = {k: v for k, v in sys.modules.items() if k.startswith("infrastructure")}
 
-    # Import and assert in try/finally to ensure module cleanup
-    monkeypatch.setattr('dotenv.load_dotenv', lambda *args, **kwargs: None)
-    from importlib import import_module
-    with pytest.raises(ValueError, match="GITHUB_TOKEN environment variable is required"):
-        import_module("infrastructure.__main__")
-
-    # Cleanup modules to prevent leakage to subsequent tests
-    sys.modules.pop("infrastructure.__main__", None)
-    sys.modules.pop("infrastructure", None)
+    try:
+        # Import and assert
+        monkeypatch.setattr('dotenv.load_dotenv', lambda *args, **kwargs: None)
+        from importlib import import_module
+        with pytest.raises(ValueError, match="GITHUB_TOKEN environment variable is required"):
+            import_module("infrastructure.__main__")
+    finally:
+        # Restore sys.modules state
+        # Remove any infrastructure modules added during the test
+        for mod in list(sys.modules.keys()):
+            if mod.startswith("infrastructure") and mod not in initial_modules:
+                sys.modules.pop(mod, None)
+        # Restore original modules
+        for k, v in initial_modules.items():
+            sys.modules[k] = v
