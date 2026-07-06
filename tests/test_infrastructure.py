@@ -49,7 +49,8 @@ def test_missing_github_token_raises_value_error_in_process(tmp_path, monkeypatc
     try:
         with pytest.raises(ValueError, match="GITHUB_TOKEN environment variable is required"):
             monkeypatch.setattr('dotenv.load_dotenv', lambda *args, **kwargs: None)
-            import infrastructure.__main__
+            from importlib import import_module
+            import_module("infrastructure.__main__")
     finally:
         # Cleanup modules to prevent leakage to subsequent tests
         sys.modules.pop("infrastructure.__main__", None)
