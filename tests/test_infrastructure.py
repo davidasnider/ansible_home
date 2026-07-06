@@ -52,6 +52,6 @@ def test_missing_github_token_raises_value_error_in_process(tmp_path, monkeypatc
             m.setattr('dotenv.load_dotenv', lambda: None)
             import infrastructure.__main__
 
-    # We perform no manual module cleanup here; pytest isolation provides a clean
-    # state per test via monkeypatch for sys.path and environment variables.
-    # The module is imported for this test session only.
+    # Explicitly remove the module from sys.modules to prevent partial import leakage
+    monkeypatch.delitem(sys.modules, "infrastructure.__main__", raising=False)
+    monkeypatch.delitem(sys.modules, "infrastructure", raising=False)
