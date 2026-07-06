@@ -35,7 +35,7 @@ def test_missing_github_token_raises_value_error_in_process(monkeypatch):
     # Ensure the module is reloaded if already imported, using monkeypatch for cleanup
     monkeypatch.delitem(sys.modules, "infrastructure.__main__", raising=False)
 
-    # Remove GITHUB_TOKEN from environment if it exists
+    # Set to empty string so load_dotenv() won't populate it from .env files
     monkeypatch.setenv("GITHUB_TOKEN", "")
 
     # Add root dir to sys.path to resolve infrastructure module safely using monkeypatch
