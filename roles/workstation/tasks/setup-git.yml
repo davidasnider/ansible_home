@@ -1,0 +1,111 @@
+---
+# Global Git and SSH configurations
+
+- name: Ensure .ssh directory exists
+  ansible.builtin.file:
+    path: "{{ ansible_facts['env']['HOME'] }}/.ssh"
+    state: directory
+    mode: "0700"
+
+- name: Create SSH allowed signers file
+  ansible.builtin.copy:
+    content: david@davidsnider.org ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIKWm36FodEyxXOXxqhkCj0YLDHkori4Dzmq3hI0PsrX9
+    dest: "{{ ansible_facts['env']['HOME'] }}/.ssh/allowed_signers"
+    mode: "0644"
+
+- name: Configure global Git settings
+  community.general.git_config:
+    name: "{{ item.name }}"
+    value: "{{ item.value }}"
+    scope: global
+  loop:
+    - { name: "user.name", value: "David Snider" }
+    - { name: "user.email", value: "david@davidsnider.org" }
+    - { name: "user.signingkey", value: "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIKWm36FodEyxXOXxqhkCj0YLDHkori4Dzmq3hI0PsrX9" }
+    - { name: "gpg.format", value: "ssh" }
+    - { name: "commit.gpgsign", value: "true" }
+    - { name: "gpg.ssh.allowedSignersFile", value: "{{ ansible_facts['env']['HOME'] }}/.ssh/allowed_signers" }
+    - { name: "tag.gpgsign", value: "true" }
+    - { name: "http.sslverify", value: "true" }
+    - { name: "receive.fsckobjects", value: "true" }
+    - { name: "transfer.fsckobjects", value: "true" }
+    - { name: "fetch.fsckobjects", value: "true" }
+    - { name: "http.sslversion", value: "tlsv1.2" }
+    - { name: "gpg.ssh.defaultKeyCommand", value: "ssh-add -L" }
+
+- name: Validate SSH directory permissions
+  ansible.builtin.file:
+    path: "{{ ansible_facts['env']['HOME'] }}/.ssh"
+    state: directory
+    mode: "0700"
+    owner: "{{ ansible_facts['user_id'] }}"
+
+- name: Validate allowed_signers file permissions
+  ansible.builtin.file:
+    path: "{{ ansible_facts['env']['HOME'] }}/.ssh/allowed_signers"
+    mode: "0644"
+    owner: "{{ ansible_facts['user_id'] }}"
+
+- name: Ensure ~/.local/bin directory exists for scripts
+  ansible.builtin.file:
+    path: "{{ ansible_facts['env']['HOME'] }}/.local/bin"
+    state: directory
+    mode: "0755"
+
+- name: Create GPG key rotation script
+  ansible.builtin.copy:
+    dest: "{{ ansible_facts['env']['HOME'] }}/.local/bin/rotate-git-keys"
+    mode: "0755"
+    content: |
+      #!/bin/bash
+      # Git SSH Key Rotation Script
+      # This script helps rotate SSH keys used for Git signing
+
+      set -euo pipefail
+
+      SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+      SSH_DIR="$HOME/.ssh"
+      ALLOWED_SIGNERS="$SSH_DIR/allowed_signers"
+      BACKUP_DIR="$SSH_DIR/backups/$(date +%Y%m%d_%H%M%S)"
+
+      echo "🔐 Git SSH Key Rotation Script"
+      echo "=============================="
+
+      # Create backup directory
+      mkdir -p "$BACKUP_DIR"
+
+      # Backup current allowed_signers
+      if [[ -f "$ALLOWED_SIGNERS" ]]; then
+          cp "$ALLOWED_SIGNERS" "$BACKUP_DIR/allowed_signers.backup"
+          echo "✅ Backed up current allowed_signers to $BACKUP_DIR"
+      fi
+
+      echo ""
+      echo "Current signing keys in allowed_signers:"
+      if [[ -f "$ALLOWED_SIGNERS" ]]; then
+          cat "$ALLOWED_SIGNERS" | nl
+      else
+          echo "No allowed_signers file found"
+      fi
+
+      echo ""
+      echo "Available SSH keys in agent:"
+      if command -v ssh-add >/dev/null 2>&1; then
+          ssh-add -L 2>/dev/null || echo "No keys in SSH agent"
+      else
+          echo "ssh-add not available"
+      fi
+
+      echo ""
+      echo "To add a new key to allowed_signers:"
+      echo "1. Ensure your new key is loaded in 1Password SSH agent"
+      echo "2. Run: echo 'david@davidsnider.org <new-key-type> <new-public-key>' >> ~/.ssh/allowed_signers"
+      echo "3. Update Git configuration: git config --global user.signingkey '<new-public-key>'"
+      echo ""
+      echo "⚠️  Remember to update the Ansible configuration with the new signing key for consistent deployment."
+
+      echo ""
+      echo "🔍 Verifying current Git configuration..."
+      echo "Current signing key: $(git config --global user.signingkey || echo 'Not set')"
+      echo "GPG format: $(git config --global gpg.format || echo 'Not set')"
+      echo "Commit signing enabled: $(git config --global commit.gpgsign || echo 'Not set')"
