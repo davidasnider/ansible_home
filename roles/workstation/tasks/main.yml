@@ -1,5 +1,5 @@
 ---
-- name: Include global git configurations
+- name: Include shared global Git configuration
   ansible.builtin.include_tasks: setup-git.yml
 
 - name: Include local-mac tasks if MacOS

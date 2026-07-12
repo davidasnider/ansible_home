@@ -1,19 +1,19 @@
 ---
-# Global Git and SSH configurations
-
 - name: Ensure .ssh directory exists
   ansible.builtin.file:
     path: "{{ ansible_facts['env']['HOME'] }}/.ssh"
     state: directory
     mode: "0700"
+    owner: "{{ ansible_facts['user_id'] }}"
 
 - name: Create SSH allowed signers file
   ansible.builtin.copy:
     content: david@davidsnider.org ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIKWm36FodEyxXOXxqhkCj0YLDHkori4Dzmq3hI0PsrX9
     dest: "{{ ansible_facts['env']['HOME'] }}/.ssh/allowed_signers"
     mode: "0644"
+    owner: "{{ ansible_facts['user_id'] }}"
 
-- name: Configure global Git settings
+- name: Configure global git settings
   community.general.git_config:
     name: "{{ item.name }}"
     value: "{{ item.value }}"
@@ -54,7 +54,7 @@
     mode: "0644"
     owner: "{{ ansible_facts['user_id'] }}"
 
-- name: Ensure ~/.local/bin directory exists for scripts
+- name: Ensure ~/.local/bin directory exists
   ansible.builtin.file:
     path: "{{ ansible_facts['env']['HOME'] }}/.local/bin"
     state: directory
@@ -110,7 +110,8 @@
       echo "2. Run: echo 'david@davidsnider.org <new-key-type> <new-public-key>' >> ~/.ssh/allowed_signers"
       echo "3. Update Git configuration: git config --global user.signingkey '<new-public-key>'"
       echo ""
-      echo "⚠️  Remember to update the Ansible configuration with the new signing key for consistent deployment."
+      echo "⚠️  Remember to update the Ansible configuration in roles/workstation/tasks/setup-git.yml"
+      echo "    with the new signing key for consistent deployment."
 
       echo ""
       echo "🔍 Verifying current Git configuration..."
