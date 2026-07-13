@@ -191,6 +191,7 @@ def test_functionality(host):
 4. **Platform Awareness**: Consider platform differences in tests
 5. **Idempotency**: Ensure tests can run multiple times safely
 6. **Environment Isolation**: Use idiomatic `pytest` fixtures like `tmp_path` and `monkeypatch.delenv` for strict environment isolation in subprocess execution, rather than manual `tempfile` handling or `runpy`.
+7. **Module-level Coverage**: While subprocess tests ensure strict environment isolation, they do not automatically register line coverage in `pytest-cov`. To capture test coverage for module-level load-time logic (e.g., environment variable checks executed on import), use in-process testing by combining `monkeypatch` (to mock dependencies like `os.getenv`) and manipulating `sys.modules` to force a clean module reload.
 
 ## Troubleshooting
 
