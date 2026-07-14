@@ -118,6 +118,7 @@ roles/workstation/molecule/
 - File permission checks
 - Cryptographic key validation
 - Subprocess isolation testing (e.g., verifying `GITHUB_TOKEN` requirement)
+- In-process testing for complete code coverage of module-level load-time logic
 
 ### Idempotency Tests
 - Configuration stability across runs
@@ -190,7 +191,7 @@ def test_functionality(host):
 3. **Error Messages**: Provide meaningful assertion messages
 4. **Platform Awareness**: Consider platform differences in tests
 5. **Idempotency**: Ensure tests can run multiple times safely
-6. **Environment Isolation**: Use idiomatic `pytest` fixtures like `tmp_path` and `monkeypatch.delenv` for strict environment isolation in subprocess execution, rather than manual `tempfile` handling or `runpy`.
+6. **Environment Isolation**: Use idiomatic `pytest` fixtures like `tmp_path` and `monkeypatch.delenv` for strict environment isolation in subprocess execution, rather than manual `tempfile` handling or `runpy`. For testing module-level load-time logic (e.g., environment variable checks executed on import), use in-process testing by combining `monkeypatch` (to mock dependencies like `dotenv.load_dotenv`) and manipulating `sys.modules` to force a clean module reload and capture test coverage.
 
 ## Troubleshooting
 
