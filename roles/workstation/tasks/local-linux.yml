@@ -60,6 +60,7 @@
     name: gpg.ssh.program
     value: /mnt/c/Users/david/AppData/Local/1Password/app/8/op-ssh-sign-wsl
     scope: global
+  when: "'microsoft' in (ansible_facts.kernel | default(''))"
 
 - name: Include Linux package installations
   ansible.builtin.include_tasks: local-linux-packages.yml
