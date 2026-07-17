@@ -78,6 +78,7 @@
   ansible.builtin.debug:
     var: workstation_oh_my_zsh_install_result
     verbosity: 2
+  when: workstation_oh_my_zsh_install_result is defined
 
 - name: Copy zshrc file
   ansible.builtin.copy:
