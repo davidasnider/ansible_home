@@ -22,6 +22,7 @@
     url: https://ohmyposh.dev/install.sh
     dest: /tmp/oh-my-posh-install.sh
     mode: "0755"
+  when: not workstation_optimized_base_check.stat.exists
   retries: 3
   delay: 5
 
