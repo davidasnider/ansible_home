@@ -406,7 +406,7 @@ echo $ANSIBLE_SUDO_PASS
 ```
 
 ### GitHub Token Requirement
-The `GITHUB_TOKEN` environment variable is required for certain infrastructure automation scripts (e.g., in `infrastructure/__main__.py`). Ensure it is loaded into your environment. Tests verify that an error is correctly raised if it is missing, using fully isolated subprocess environments.
+The `GITHUB_TOKEN` environment variable is required for certain infrastructure automation scripts (e.g., in `infrastructure/__main__.py`). Ensure it is loaded into your environment. Tests verify that an error is correctly raised if it is missing, utilizing in-process testing methods with `monkeypatch` and `sys.modules` for robust coverage, alongside subprocess isolation tests.
 
 ## Development Workflows
 

@@ -117,7 +117,8 @@ roles/workstation/molecule/
 - Git security settings verification
 - File permission checks
 - Cryptographic key validation
-- Subprocess isolation testing (e.g., verifying `GITHUB_TOKEN` requirement)
+- In-process coverage testing (e.g., verifying `GITHUB_TOKEN` logic using `sys.modules` and `monkeypatch`)
+- Subprocess isolation testing (e.g., verifying `GITHUB_TOKEN` requirement without leakage)
 
 ### Idempotency Tests
 - Configuration stability across runs
@@ -190,7 +191,7 @@ def test_functionality(host):
 3. **Error Messages**: Provide meaningful assertion messages
 4. **Platform Awareness**: Consider platform differences in tests
 5. **Idempotency**: Ensure tests can run multiple times safely
-6. **Environment Isolation**: Use idiomatic `pytest` fixtures like `tmp_path` and `monkeypatch.delenv` for strict environment isolation in subprocess execution, rather than manual `tempfile` handling or `runpy`.
+6. **Environment Isolation**: Use idiomatic `pytest` fixtures like `tmp_path` and `monkeypatch.delenv` for strict environment isolation in subprocess execution, rather than manual `tempfile` handling or `runpy`. For load-time logic requiring in-process test coverage, combine `monkeypatch` with `sys.modules` reloading.
 
 ## Troubleshooting
 
