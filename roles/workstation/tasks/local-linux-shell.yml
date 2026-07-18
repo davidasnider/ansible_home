@@ -34,7 +34,9 @@
     OMP_INSTALL_DIR: "{{ ansible_facts['env']['HOME'] }}/.local/bin"
   args:
     creates: "{{ ansible_facts['env']['HOME'] }}/.local/bin/oh-my-posh"
-  when: not (ansible_facts.virtualization_type is defined and ansible_facts.virtualization_type == 'docker')
+  when:
+    - not workstation_optimized_base_check.stat.exists
+    - not (ansible_facts.virtualization_type is defined and ansible_facts.virtualization_type == 'docker')
   failed_when: false
 
 - name: Check if Oh My Zsh is installed
