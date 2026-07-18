@@ -30,11 +30,6 @@
   delay: 5
   until: workstation_gh_version_check_linux.rc == 0
 
-- name: Debug apt packages installation check
-  ansible.builtin.debug:
-    var: workstation_gh_version_check_linux
-    verbosity: 2
-
 - name: Check if OpenCode is installed
   ansible.builtin.stat:
     path: "{{ ansible_facts['env']['HOME'] }}/.local/bin/opencode"
@@ -81,11 +76,6 @@
       failed_when: false
       changed_when: false
 
-    - name: Debug Pulumi check
-      ansible.builtin.debug:
-        var: workstation_pulumi_check
-        verbosity: 2
-
     - name: Download Pulumi installation script
       ansible.builtin.get_url:
         url: https://get.pulumi.com
@@ -114,15 +104,6 @@
       delay: 10
       until: workstation_pulumi_version_check.rc == 0
 
-    - name: Debug Pulumi installation result
-      ansible.builtin.debug:
-        var: workstation_pulumi_install_result
-        verbosity: 2
-
-    - name: Debug Pulumi version check
-      ansible.builtin.debug:
-        var: workstation_pulumi_version_check
-        verbosity: 2
   rescue:
     - name: Fail if Pulumi installation failed
       ansible.builtin.fail:

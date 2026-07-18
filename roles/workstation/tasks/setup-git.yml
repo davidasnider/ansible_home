@@ -33,6 +33,21 @@
     - { name: "http.sslversion", value: "tlsv1.2" }
     - { name: "gpg.ssh.defaultKeyCommand", value: "ssh-add -L" }
 
+- name: Configure WSL-specific Git settings
+  when: "'microsoft' in (ansible_facts.kernel | default(''))"
+  block:
+    - name: Configure git to use ssh.exe for SSH connections
+      community.general.git_config:
+        name: core.sshCommand
+        value: ssh.exe
+        scope: global
+
+    - name: Configure GPG SSH program for WSL
+      community.general.git_config:
+        name: gpg.ssh.program
+        value: /mnt/c/Users/david/AppData/Local/1Password/app/8/op-ssh-sign-wsl
+        scope: global
+
 - name: Validate allowed_signers file permissions
   ansible.builtin.file:
     path: "{{ ansible_facts['env']['HOME'] }}/.ssh/allowed_signers"

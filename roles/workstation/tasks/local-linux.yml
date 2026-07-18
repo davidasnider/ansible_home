@@ -48,20 +48,6 @@
         ServerAliveInterval 60
         ServerAliveCountMax 3
 
-- name: Configure git to use ssh.exe for SSH connections
-  community.general.git_config:
-    name: core.sshCommand
-    value: ssh.exe
-    scope: global
-  when: "'microsoft' in (ansible_facts.kernel | default(''))"
-
-- name: Configure GPG SSH program
-  community.general.git_config:
-    name: gpg.ssh.program
-    value: /mnt/c/Users/david/AppData/Local/1Password/app/8/op-ssh-sign-wsl
-    scope: global
-  when: "'microsoft' in (ansible_facts.kernel | default(''))"
-
 - name: Include Linux package installations
   ansible.builtin.include_tasks: local-linux-packages.yml
 
