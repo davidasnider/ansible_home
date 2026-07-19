@@ -179,74 +179,44 @@
       when: not _workstation_nerd_font_check.stat.exists
 
 
-- name: Ensure ~/.local/bin directory exists
-  ansible.builtin.file:
-    path: "{{ ansible_facts['env']['HOME'] }}/.local/bin"
-    state: directory
-    mode: "0755"
+- name: Check if Oh My Zsh is installed
+  ansible.builtin.stat:
+    path: "{{ ansible_facts['env']['HOME'] }}/.oh-my-zsh"
+  register: workstation_oh_my_zsh_stat
 
-- name: Create GPG key rotation script
-  ansible.builtin.copy:
-    dest: "{{ ansible_facts['env']['HOME'] }}/.local/bin/rotate-git-keys"
-    mode: "0755"
-    content: |
-      #!/bin/bash
-      # Git SSH Key Rotation Script
-      # This script helps rotate SSH keys used for Git signing
 
-      set -euo pipefail
+- name: Install Oh My Zsh with error handling
+  block:
+    - name: Install Oh My Zsh if not present
+      ansible.builtin.shell: |
+        sh -c "$(curl -fsSL -m 300 https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
+      args:
+        creates: "{{ ansible_facts['env']['HOME'] }}/.oh-my-zsh"
+      when: not workstation_oh_my_zsh_stat.stat.exists
+      changed_when: false
+      register: workstation_oh_my_zsh_install_result
+      retries: 3
+      delay: 5
+      until: workstation_oh_my_zsh_install_result.rc == 0
 
-      SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-      SSH_DIR="$HOME/.ssh"
-      ALLOWED_SIGNERS="$SSH_DIR/allowed_signers"
-      BACKUP_DIR="$SSH_DIR/backups/$(date +%Y%m%d_%H%M%S)"
+    - name: Verify Oh My Zsh installation
+      ansible.builtin.stat:
+        path: "{{ ansible_facts['env']['HOME'] }}/.oh-my-zsh"
+      register: workstation_oh_my_zsh_stat_check
 
-      echo "🔐 Git SSH Key Rotation Script"
-      echo "=============================="
+    - name: Fail if Oh My Zsh is not installed
+      ansible.builtin.fail:
+        msg: "Oh My Zsh installation failed. The directory ~/.oh-my-zsh was not found."
+      when: not workstation_oh_my_zsh_stat_check.stat.exists
+  rescue:
+    - name: Fail if Oh My Zsh installation failed
+      ansible.builtin.fail:
+        msg: "Oh My Zsh installation failed. Please check the logs for more details."
 
-      # Create backup directory
-      mkdir -p "$BACKUP_DIR"
-
-      # Backup current allowed_signers
-      if [[ -f "$ALLOWED_SIGNERS" ]]; then
-          cp "$ALLOWED_SIGNERS" "$BACKUP_DIR/allowed_signers.backup"
-          echo "✅ Backed up current allowed_signers to $BACKUP_DIR"
-      fi
-
-      echo ""
-      echo "Current signing keys in allowed_signers:"
-      if [[ -f "$ALLOWED_SIGNERS" ]]; then
-          cat "$ALLOWED_SIGNERS" | nl
-      else
-          echo "No allowed_signers file found"
-      fi
-
-      echo ""
-      echo "Available SSH keys in agent:"
-      if command -v ssh-add >/dev/null 2>&1; then
-          ssh-add -L 2>/dev/null || echo "No keys in SSH agent"
-      else
-          echo "ssh-add not available"
-      fi
-
-      echo ""
-      echo "To add a new key to allowed_signers:"
-      echo "1. Ensure your new key is loaded in 1Password SSH agent"
-      echo "2. Run: echo 'david@davidsnider.org <new-key-type> <new-public-key>' >> ~/.ssh/allowed_signers"
-      echo "3. Update Git configuration: git config --global user.signingkey '<new-public-key>'"
-      echo ""
-      echo "⚠️  Remember to update the Ansible configuration in roles/workstation/tasks/local-mac.yml"
-      echo "    with the new signing key for consistent deployment."
-
-      echo ""
-      echo "🔍 Verifying current Git configuration..."
-      echo "Current signing key: $(git config --global user.signingkey || echo 'Not set')"
-      echo "GPG format: $(git config --global gpg.format || echo 'Not set')"
-      echo "Commit signing enabled: $(git config --global commit.gpgsign || echo 'Not set')"
-
-- name: Include Oh My Zsh installation tasks
-  ansible.builtin.include_tasks:
-    file: install-oh-my-zsh.yml
+- name: Debug Oh My Zsh installation result
+  ansible.builtin.debug:
+    var: workstation_oh_my_zsh_install_result
+    verbosity: 2
 
 - name: Check if Hermes Agent is installed
   ansible.builtin.command: which hermes
@@ -323,7 +293,6 @@
     dest: "{{ ansible_facts['env']['HOME'] }}/.zprofile"
     mode: "0644"
     backup: true
-  changed_when: false
 
 # 1Password CLI Security Enhancements
 - name: Include 1Password security enhancements
