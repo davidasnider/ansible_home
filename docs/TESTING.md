@@ -86,7 +86,7 @@ open htmlcov/index.html
 ## Test Structure
 
 ```
-roles/localhost/molecule/
+roles/workstation/molecule/
 ├── default/                 # Default test scenario
 │   ├── molecule.yml        # Molecule configuration
 │   ├── converge.yml        # Test playbook
@@ -105,12 +105,19 @@ roles/localhost/molecule/
 - File existence and content verification
 - Service status and configuration
 - Package installation verification
+- Pulumi infrastructure code unit testing using `pulumi.runtime.Mocks` (`tests/test_infrastructure_pulumi.py`)
+
+
+### Infrastructure as Code (Pulumi) Tests
+- Validation of Pulumi infrastructure code using `pytest` and `pulumi.runtime.Mocks`
+- Property tests verify resource attributes (e.g., Repository and BranchProtection settings) without performing actual deployments
 
 ### Security Tests
 - SSH configuration validation
 - Git security settings verification
 - File permission checks
 - Cryptographic key validation
+- Subprocess isolation testing (e.g., verifying `GITHUB_TOKEN` requirement)
 
 ### Idempotency Tests
 - Configuration stability across runs
@@ -123,23 +130,28 @@ roles/localhost/molecule/
 
 ## CI/CD Integration
 
-### GitHub Actions Workflow
-The `.github/workflows/molecule.yml` workflow:
-1. **Lint Stage**: Runs ansible-lint on all roles
-2. **Test Matrix**: Executes multiple scenarios in parallel
-3. **Coverage**: Generates and uploads coverage reports
+### GitHub Actions Workflows
+
+The `.github/workflows/ci.yml` workflow:
+1. **Lint Stage**: Runs ansible-lint and pre-commit on all roles and files.
+2. **Security**: Runs secret scanning via `detect-secrets`.
+3. **Syntax**: Executes playbook syntax checking (`ansible-playbook --syntax-check`).
+4. **Dependencies**: Automated dependency review and optional automated approvals.
+
+The `.github/workflows/dependency-check.yml` workflow:
+1. Scheduled weekly to run `scripts/check_updates.py`.
+2. Validates whether `remote_homeassistant` and `home_assistant` dependencies are out of date and alerts if they are.
 
 ### Workflow Triggers
-- Push to `main` or `develop` branches
-- Pull requests to `main`
-- Changes to role files, molecule configurations, or workflows
+- `ci.yml`: Push to `main` branch, pull requests to `main` branch.
+- `dependency-check.yml`: Weekly schedules and `workflow_dispatch`.
 
 ## Test Configuration
 
 ### pytest Configuration (`pyproject.toml`)
 ```toml
 [tool.pytest.ini_options]
-testpaths = ["roles/localhost/molecule", "tests"]
+testpaths = ["roles/workstation/molecule", "tests"]
 addopts = [
     "--cov=roles",
     "--cov-report=html",
@@ -178,6 +190,7 @@ def test_functionality(host):
 3. **Error Messages**: Provide meaningful assertion messages
 4. **Platform Awareness**: Consider platform differences in tests
 5. **Idempotency**: Ensure tests can run multiple times safely
+6. **Environment Isolation**: Use idiomatic `pytest` fixtures like `tmp_path` and `monkeypatch.delenv` for strict environment isolation in subprocess execution, rather than manual `tempfile` handling or `runpy`.
 
 ## Troubleshooting
 
@@ -200,7 +213,7 @@ docker system prune -f
 #### Test Failures
 ```bash
 # Run specific test with verbose output
-cd roles/localhost
+cd roles/workstation
 uv run molecule test -s default --debug
 ```
 

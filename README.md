@@ -27,6 +27,9 @@ This is a personal development environment automation project that uses Ansible 
 ansible_home/
 ├── Makefile                    # macOS development setup automation
 ├── bootstrap.sh               # Linux bootstrap script
+├── site.yml                   # Master execution playbook
+├── scripts/
+│   └── check_updates.py       # Update checker script
 ├── pyproject.toml             # Python project configuration and dependencies
 ├── uv.lock                # Locked dependency versions
 ├── inventory/
@@ -35,6 +38,9 @@ ansible_home/
 │   ├── workstations.yml       # Workstation playbook with OS detection
 │   └── raspberry_pis.yml      # Raspberry Pi execution playbook
 ├── roles/
+│   ├── docker/                # Docker installation role
+│   ├── home_assistant_remote/ # Home Assistant remote node configuration
+│   ├── raspberry_pi/          # Raspberry Pi baseline configuration
 │   └── workstation/            # Core workstation configuration role
 │       ├── handlers/
 │       │   └── main.yml        # Event handlers
@@ -101,7 +107,7 @@ git clone https://github.com/davidasnider/ansible_home.git
 cd ansible_home
 # Ensure you have your IPs configured in inventory/hosts.yml
 uv sync
-ansible-playbook playbooks/raspberry_pis.yml
+uv run ansible-playbook -i inventory/hosts.yml --limit raspberry_pis site.yml
 ```
 
 ## Detailed Setup Process
@@ -195,12 +201,11 @@ The current framework structure will extend to support:
 
 ### Package Management
 - **Homebrew**: Primary package manager with automatic installation
-- **Formulae**: Command-line tools (gh, htop, oh-my-posh, uv, pre-commit, pulumi, opencode, imsg)
-- **Casks**: GUI applications and fonts (1Password, 1Password CLI, iTerm2, VS Code, OrbStack, Rectangle, font-meslo-lg-nerd-font)
+- **Formulae**: Command-line tools (gh, htop, macmon, oh-my-posh, uv, pre-commit, pulumi, opencode, imsg, pi-coding-agent, zsh-autocomplete, zsh-autosuggestions, zsh-history-substring-search, zsh-syntax-highlighting)
+- **Casks**: GUI applications, command-line utilities, and fonts (1Password, 1Password CLI, Antigravity CLI, iTerm2, VS Code, OrbStack, Rectangle, Obsidian, font-meslo-lg-nerd-font)
 - **Update Strategy**: Checks last update time, only updates if >24 hours old
 
 ### Key Features
-- **Dotfiles Integration**: Clones and manages dotfiles repository from GitHub
 - **Oh My Zsh**: Automated installation with custom plugin configuration
 - **Shell Customization**: Comprehensive zsh configuration with syntax highlighting and autocomplete
 
@@ -220,17 +225,21 @@ The current framework structure will extend to support:
 - zsh-autosuggestions
 - zsh-syntax-highlighting
 - zsh-history-substring-search
-```
+- pi-coding-agent
 # Homebrew casks
 - 1password
 - 1password-cli
+- antigravity-cli
 - iterm2
 - visual-studio-code
 - orbstack
 - rectangle
+- obsidian
 - font-meslo-lg-nerd-font
 
 # Custom scripts/binaries
+- pulumi
+- opencode
 - hermes-agent
 ```
 
@@ -268,6 +277,9 @@ The current framework structure will extend to support:
 
 ## Platform Differences
 
+### Global Features
+- **Gemini Agent Integration**: Automatically links local agent workflows (`~/.agents/workflows`) to the Gemini configuration directory (`~/.gemini/agents`) if both directories are present on the system.
+
 ### Package Managers
 - **macOS**: Homebrew formulae and casks
 - **Linux**: APT packages with custom repositories for specialized tools
@@ -287,7 +299,7 @@ The current framework structure will extend to support:
 ## Common Tasks Across Platforms
 - Git user configuration (name and email)
 - `~/code` directory creation
-- Oh My Zsh installation and configuration
+- Oh My Zsh installation and configuration (extracted to `roles/workstation/tasks/install-oh-my-zsh.yml`)
 - Zsh plugin management (syntax highlighting, autosuggestions)
 - oh-my-posh theme engine setup
 - Python virtual environment detection and auto-activation
@@ -314,14 +326,11 @@ export ANSIBLE_SUDO_PASS="op://vault/sudo-password/password"
 ```
 
 ### Validation System
-The zsh configuration includes automatic validation of required environment variables:
+The zsh configuration checks for the presence of the .env file and verifies 1Password authentication:
 
 ```bash
-# Required variables checked at shell startup
-REQUIRED_VARS=(GITHUB_TOKEN ANSIBLE_SUDO_PASS)
-
-# Warns user if variables are missing from .env file
-# Provides instructions for creating missing entries
+# Warns user if .env file is missing and provides instructions to create it
+# Checks if 1Password CLI is authenticated, and if not, prompts to use opload
 ```
 
 ## Security Features
@@ -380,7 +389,7 @@ vars:
 ```bash
 # Full setup (first time or complete refresh)
 source .venv/bin/activate
-ansible-playbook -i inventory/hosts.yml playbooks/workstations.yml
+ansible-playbook -i inventory/hosts.yml site.yml
 
 # Quick setup with bootstrap (Linux)
 ./bootstrap.sh
@@ -395,6 +404,9 @@ opload
 echo $GITHUB_TOKEN
 echo $ANSIBLE_SUDO_PASS
 ```
+
+### GitHub Token Requirement
+The `GITHUB_TOKEN` environment variable is required for certain infrastructure automation scripts (e.g., in `infrastructure/__main__.py`). Ensure it is loaded into your environment. Tests verify that an error is correctly raised if it is missing, using fully isolated subprocess environments.
 
 ## Development Workflows
 
@@ -449,7 +461,7 @@ The project uses automated syntax validation for all playbooks. This is the fast
 # Run all syntax checks via Makefile
 make test-syntax
 
-# Or check a specific playbook manually
+# Or check the workstations playbook
 ansible-playbook --syntax-check -i inventory/hosts.yml playbooks/workstations.yml
 ```
 
@@ -463,6 +475,13 @@ make test-lint
 ansible-lint roles/
 ```
 
+#### Updates Checking
+We use a script to check for updates to third-party dependencies (like `remote_homeassistant` for Home Assistant).
+```bash
+# Run update checks via Makefile
+make check-updates
+```
+
 #### Dry Run (Mocked)
 Before applying changes to a live system, perform a dry run to see exactly what Ansible will do.
 ```bash
@@ -471,6 +490,11 @@ ansible-playbook --check --diff -i inventory/hosts.yml playbooks/workstations.ym
 ```
 
 ## Maintenance Workflows
+
+### Dependency Checks
+The project includes automated dependency update checking.
+- **GitHub Actions Workflow**: `.github/workflows/dependency-check.yml` runs weekly to check for updates.
+- **Local Check**: Run `make check-updates` to execute `scripts/check_updates.py`, which monitors pinned versions in `roles/home_assistant_remote/defaults/main.yml` against the latest GitHub Releases for `custom-components/remote_homeassistant` and `home-assistant/core`.
 
 ### Updating Dependencies
 ```bash
@@ -492,6 +516,13 @@ uv sync
 
 # Or use make target (macOS)
 make dev-setup
+```
+
+### Checking Application Updates
+```bash
+# Check for updates to remote node applications (e.g., `remote_homeassistant` and `home-assistant/core`).
+# Note: `make check-updates` runs `scripts/check_updates.py` to compare pinned versions against GitHub releases.
+make check-updates
 ```
 
 ### Secret Rotation

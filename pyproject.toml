@@ -30,7 +30,8 @@ dev = [
     "ansible-lint>=25.8.2",
     "molecule>=6.0.0",
     "molecule-plugins[docker]>=23.5.0",
-    "pytest>=9.0.3"
+    "pytest>=9.0.3",
+    "pyyaml>=6.0.2"
 ]
 
 [tool.pytest.ini_options]
