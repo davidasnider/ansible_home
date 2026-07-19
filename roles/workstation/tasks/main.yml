@@ -1,4 +1,7 @@
 ---
+- name: Include global git configurations
+  ansible.builtin.include_tasks: setup-git.yml
+
 - name: Include local-mac tasks if MacOS
   ansible.builtin.include_tasks: local-mac.yml
   when: ansible_facts['system'] == 'Darwin'

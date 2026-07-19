@@ -1,0 +1,222 @@
+---
+# Linux package installations and specific CLI tools
+
+- name: Install a package and update cache if needed
+  become: true
+  ansible.builtin.apt:
+    name:
+      - gh
+      - htop
+      - jq
+      - uv
+      - pre-commit
+      - zsh
+      - zsh-autosuggestions
+      - zsh-syntax-highlighting
+      - unzip
+    state: present
+    update_cache: true
+    cache_valid_time: 86400 # in seconds, equals 24 hours
+  when: not workstation_optimized_base_check.stat.exists
+  retries: 3
+  delay: 5
+
+- name: Verify apt packages installation
+  ansible.builtin.command: gh --version
+  register: workstation_gh_version_check_linux
+  changed_when: false
+  failed_when: workstation_gh_version_check_linux.rc != 0
+  retries: 3
+  delay: 5
+  until: workstation_gh_version_check_linux.rc == 0
+
+- name: Check if OpenCode is installed
+  ansible.builtin.stat:
+    path: "{{ ansible_facts['env']['HOME'] }}/.local/bin/opencode"
+  register: workstation_opencode_check_linux
+
+- name: Download OpenCode installation script
+  ansible.builtin.get_url:
+    url: https://opencode.ai/install
+    dest: "{{ ansible_facts['env']['HOME'] }}/.opencode-install.sh"
+    mode: "0755"
+  when:
+    - not workstation_optimized_base_check.stat.exists
+    - not workstation_opencode_check_linux.stat.exists
+  register: workstation_opencode_download_linux
+  retries: 3
+  delay: 5
+  until: workstation_opencode_download_linux is succeeded
+
+- name: Install OpenCode
+  ansible.builtin.command: bash "{{ ansible_facts['env']['HOME'] }}/.opencode-install.sh"
+  args:
+    creates: "{{ ansible_facts['env']['HOME'] }}/.local/bin/opencode"
+  register: workstation_opencode_install_linux
+  when:
+    - not workstation_optimized_base_check.stat.exists
+    - not workstation_opencode_check_linux.stat.exists
+  retries: 3
+  delay: 5
+  until: workstation_opencode_install_linux is succeeded
+
+- name: Clean up OpenCode installation script
+  ansible.builtin.file:
+    path: "{{ ansible_facts['env']['HOME'] }}/.opencode-install.sh"
+    state: absent
+  when:
+    - not workstation_optimized_base_check.stat.exists
+    - not workstation_opencode_check_linux.stat.exists
+
+- name: Install Pulumi CLI
+  block:
+    - name: Check if Pulumi is already installed
+      ansible.builtin.command: which pulumi
+      register: workstation_pulumi_check
+      failed_when: false
+      changed_when: false
+
+    - name: Download Pulumi installation script
+      ansible.builtin.get_url:
+        url: https://get.pulumi.com
+        dest: /tmp/pulumi-install.sh
+        mode: "0755"
+      when: workstation_pulumi_check.rc != 0 and not workstation_optimized_base_check.stat.exists
+      retries: 3
+      delay: 5
+
+    - name: Install Pulumi CLI
+      ansible.builtin.shell:
+        cmd: bash /tmp/pulumi-install.sh
+        executable: /bin/bash
+      when: workstation_pulumi_check.rc != 0 and not workstation_optimized_base_check.stat.exists
+      register: workstation_pulumi_install_result
+      changed_when: false
+
+    - name: Verify Pulumi installation
+      ansible.builtin.shell: |
+        export PATH=$HOME/.pulumi/bin:$PATH
+        pulumi version
+      register: workstation_pulumi_version_check
+      changed_when: false
+      failed_when: workstation_pulumi_version_check.rc != 0
+      retries: 5
+      delay: 10
+      until: workstation_pulumi_version_check.rc == 0
+
+  rescue:
+    - name: Fail if Pulumi installation failed
+      ansible.builtin.fail:
+        msg: "Pulumi installation failed. Please check the logs for more details."
+
+- name: Download and install 1Password CLI
+  when: not workstation_optimized_base_check.stat.exists
+  block:
+    - name: Check if GPG keyring already exists
+      ansible.builtin.stat:
+        path: /usr/share/keyrings/1password-archive-keyring.gpg
+      register: workstation_gpg_keyring_exists
+
+    - name: Download 1Password GPG key
+      ansible.builtin.get_url:
+        url: https://downloads.1password.com/linux/keys/1password.asc
+        dest: /tmp/1password.asc
+        mode: "0644"
+        force: false
+      register: workstation_gpg_key_download
+      when: not workstation_gpg_keyring_exists.stat.exists
+      changed_when: false
+      retries: 3
+      delay: 5
+
+    - name: Create 1Password keyring directory
+      ansible.builtin.file:
+        path: /usr/share/keyrings
+        state: directory
+        mode: "0755"
+      become: true
+
+    - name: Import 1Password GPG key to system keyring
+      ansible.builtin.shell: |
+        gpg --dearmor < /tmp/1password.asc > /usr/share/keyrings/1password-archive-keyring.gpg
+      become: true
+      when: not workstation_gpg_keyring_exists.stat.exists
+      args:
+        creates: /usr/share/keyrings/1password-archive-keyring.gpg
+      register: workstation_gpg_import_result
+      changed_when: false
+
+    - name: Validate GPG keyring file permissions
+      ansible.builtin.file:
+        path: /usr/share/keyrings/1password-archive-keyring.gpg
+        mode: "0644"
+        owner: root
+        group: root
+      become: true
+
+    - name: Get system architecture
+      ansible.builtin.command: dpkg --print-architecture
+      register: workstation_system_arch
+      changed_when: false
+
+    - name: Add 1Password repository
+      ansible.builtin.apt_repository:
+        repo: >-
+          deb [arch={{ workstation_system_arch.stdout }}
+          signed-by=/usr/share/keyrings/1password-archive-keyring.gpg]
+          https://downloads.1password.com/linux/debian/{{ workstation_system_arch.stdout }}
+          stable main
+        filename: 1password
+        state: present
+      become: true
+      retries: 3
+      delay: 5
+
+    - name: Update apt cache
+      ansible.builtin.apt:
+        update_cache: true
+      become: true
+      retries: 3
+      delay: 5
+
+    - name: Install 1Password CLI
+      ansible.builtin.apt:
+        name: 1password-cli
+        state: present
+      become: true
+      retries: 3
+      delay: 5
+
+    - name: Verify 1Password CLI installation and version
+      ansible.builtin.command: op --version
+      register: workstation_op_version_linux
+      changed_when: false
+
+    - name: Validate 1Password CLI version meets security requirements
+      ansible.builtin.fail:
+        msg: "1Password CLI version {{ workstation_op_version_linux.stdout }} does not meet minimum security requirements (2.0.0+)"
+      when:
+        - workstation_op_version_linux.stdout is defined
+        - (workstation_op_version_linux.stdout | regex_search('([0-9]+)\\.([0-9]+)\\.([0-9]+)') | split('.') | first | int) < 2
+  rescue:
+    - name: Fail if 1Password CLI installation failed
+      ansible.builtin.fail:
+        msg: "1Password CLI installation failed. Please check the logs for more details."
+
+  always:
+    - name: Clean up temporary files
+      ansible.builtin.file:
+        path: /tmp/1password.asc
+        state: absent
+      register: workstation_cleanup_result
+      changed_when: false
+
+# 1Password CLI Security Enhancements
+- name: Include 1Password security enhancements
+  ansible.builtin.include_tasks: 1password-security.yml
+
+- name: Run 1Password CLI health check
+  ansible.builtin.command: "{{ ansible_facts['env']['HOME'] }}/.local/bin/op-health-check"
+  register: workstation_op_health_check_linux
+  changed_when: false
+  failed_when: workstation_op_health_check_linux.rc > 1  # Allow warnings (rc=1) but fail on errors (rc=2)
