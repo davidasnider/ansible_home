@@ -46,7 +46,10 @@ ansible_home/
 │       │   └── main.yml        # Event handlers
 │       └── tasks/
 │           ├── main.yml        # Role entry point (OS detection)
-│           ├── local-linux.yml # Linux-specific tasks
+│           ├── local-linux.yml # Linux entry point
+│           ├── local-linux-packages.yml # Linux package management
+│           ├── local-linux-shell.yml # Linux shell config
+│           ├── setup-git.yml   # Global Git configuration
 │           ├── local-mac.yml   # macOS-specific tasks
 │           ├── zshrc-linux     # Linux zsh configuration template
 ├── src/
@@ -64,7 +67,7 @@ ansible_home/
 ### OS Detection Pattern (Standard Role Architecture)
 The `workstation` role uses a standard `tasks/main.yml` entry point to detect the operating system and delegate to platform-specific logic:
 - `ansible_facts['system'] == 'Darwin'` → includes `local-mac.yml`
-- `ansible_facts['system'] == 'Linux'` → includes `local-linux.yml`
+- `ansible_facts['system'] == 'Linux'` → includes `local-linux.yml` (which delegates to `-packages` and `-shell`)
 
 ### Configuration Management
 - **Templates**: Shell configuration files (like `zshrc-linux`) are stored as templates
@@ -297,7 +300,7 @@ The current framework structure will extend to support:
 - **Linux**: 1Password CLI-only with manual GPG key and repository setup
 
 ## Common Tasks Across Platforms
-- Git user configuration (name and email)
+- Git user configuration and SSH key setup (`roles/workstation/tasks/setup-git.yml`)
 - `~/code` directory creation
 - Oh My Zsh installation and configuration (extracted to `roles/workstation/tasks/install-oh-my-zsh.yml`)
 - Zsh plugin management (syntax highlighting, autosuggestions)
@@ -426,7 +429,7 @@ The `GITHUB_TOKEN` environment variable is required for certain infrastructure a
 
 #### Linux (APT)
 ```yaml
-# Add to roles/workstation/tasks/local-linux.yml
+# Add to roles/workstation/tasks/local-linux-packages.yml
 - name: Install packages
   ansible.builtin.apt:
     name:
