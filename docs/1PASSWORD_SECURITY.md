@@ -215,7 +215,7 @@ The security enhancements are implemented across several components:
 ### Ansible Tasks
 - `roles/workstation/tasks/1password-security.yml`: Core security module
 - `roles/workstation/tasks/local-mac.yml`: macOS-specific integration
-- `roles/workstation/tasks/local-linux.yml`: Linux-specific integration
+- `roles/workstation/tasks/local-linux-packages.yml`: Linux-specific integration
 
 ### Test Coverage
 - `roles/workstation/molecule/macos/tests/test_macos_specific.py`: macOS security tests
