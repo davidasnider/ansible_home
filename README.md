@@ -46,7 +46,10 @@ ansible_home/
 │       │   └── main.yml        # Event handlers
 │       └── tasks/
 │           ├── main.yml        # Role entry point (OS detection)
-│           ├── local-linux.yml # Linux-specific tasks
+│           ├── local-linux.yml # Linux-specific tasks (orchestration)
+│           ├── local-linux-packages.yml # Linux package installations
+│           ├── local-linux-shell.yml # Linux shell configuration
+│           ├── setup-git.yml   # Global Git and SSH configurations
 │           ├── local-mac.yml   # macOS-specific tasks
 │           ├── zshrc-linux     # Linux zsh configuration template
 ├── src/
@@ -426,8 +429,9 @@ The `GITHUB_TOKEN` environment variable is required for certain infrastructure a
 
 #### Linux (APT)
 ```yaml
-# Add to roles/workstation/tasks/local-linux.yml
-- name: Install packages
+# Add to roles/workstation/tasks/local-linux-packages.yml
+- name: Install a package and update cache if needed
+  become: true
   ansible.builtin.apt:
     name:
       - existing-package
