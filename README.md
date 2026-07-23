@@ -46,7 +46,10 @@ ansible_home/
 │       │   └── main.yml        # Event handlers
 │       └── tasks/
 │           ├── main.yml        # Role entry point (OS detection)
-│           ├── local-linux.yml # Linux-specific tasks
+│           ├── setup-git.yml   # Shared Git configuration
+│           ├── local-linux.yml # Linux orchestration tasks
+│           ├── local-linux-packages.yml # Linux package management
+│           ├── local-linux-shell.yml # Linux shell configuration
 │           ├── local-mac.yml   # macOS-specific tasks
 │           ├── zshrc-linux     # Linux zsh configuration template
 ├── src/
@@ -64,7 +67,7 @@ ansible_home/
 ### OS Detection Pattern (Standard Role Architecture)
 The `workstation` role uses a standard `tasks/main.yml` entry point to detect the operating system and delegate to platform-specific logic:
 - `ansible_facts['system'] == 'Darwin'` → includes `local-mac.yml`
-- `ansible_facts['system'] == 'Linux'` → includes `local-linux.yml`
+- `ansible_facts['system'] == 'Linux'` → includes `local-linux.yml` (which in turn orchestrates `local-linux-packages.yml` and `local-linux-shell.yml`)
 
 ### Configuration Management
 - **Templates**: Shell configuration files (like `zshrc-linux`) are stored as templates
@@ -243,7 +246,7 @@ The current framework structure will extend to support:
 - hermes-agent
 ```
 
-## Linux Configuration (`roles/workstation/tasks/local-linux.yml`)
+## Linux Configuration (`roles/workstation/tasks/local-linux-packages.yml` and `roles/workstation/tasks/local-linux-shell.yml`)
 
 ### Package Management
 - **APT**: Uses apt package manager for Ubuntu/Debian systems
@@ -426,7 +429,7 @@ The `GITHUB_TOKEN` environment variable is required for certain infrastructure a
 
 #### Linux (APT)
 ```yaml
-# Add to roles/workstation/tasks/local-linux.yml
+# Add to roles/workstation/tasks/local-linux-packages.yml
 - name: Install packages
   ansible.builtin.apt:
     name:
