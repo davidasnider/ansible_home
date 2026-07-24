@@ -46,8 +46,11 @@ ansible_home/
 │       │   └── main.yml        # Event handlers
 │       └── tasks/
 │           ├── main.yml        # Role entry point (OS detection)
-│           ├── local-linux.yml # Linux-specific tasks
+│           ├── local-linux.yml # Linux entry point
+│           ├── local-linux-packages.yml # Linux package management
+│           ├── local-linux-shell.yml    # Linux shell & user config
 │           ├── local-mac.yml   # macOS-specific tasks
+│           ├── setup-git.yml   # Shared global Git and SSH configuration
 │           ├── zshrc-linux     # Linux zsh configuration template
 ├── src/
 │   └── steel_mountain_ansible/    # Python package structure
@@ -245,6 +248,10 @@ The current framework structure will extend to support:
 
 ## Linux Configuration (`roles/workstation/tasks/local-linux.yml`)
 
+Tasks are split into logical components:
+- `local-linux-packages.yml`: Package management (APT, GitHub CLI, 1Password CLI, etc.)
+- `local-linux-shell.yml`: Shell configuration (Zsh, oh-my-posh)
+
 ### Package Management
 - **APT**: Uses apt package manager for Ubuntu/Debian systems
 - **Cache Management**: Updates cache with 24-hour validity period
@@ -297,7 +304,7 @@ The current framework structure will extend to support:
 - **Linux**: 1Password CLI-only with manual GPG key and repository setup
 
 ## Common Tasks Across Platforms
-- Git user configuration (name and email)
+- Git user configuration (name and email), GPG signing, SSH config, and key validation (extracted to `roles/workstation/tasks/setup-git.yml`)
 - `~/code` directory creation
 - Oh My Zsh installation and configuration (extracted to `roles/workstation/tasks/install-oh-my-zsh.yml`)
 - Zsh plugin management (syntax highlighting, autosuggestions)
@@ -426,7 +433,7 @@ The `GITHUB_TOKEN` environment variable is required for certain infrastructure a
 
 #### Linux (APT)
 ```yaml
-# Add to roles/workstation/tasks/local-linux.yml
+# Add to roles/workstation/tasks/local-linux-packages.yml
 - name: Install packages
   ansible.builtin.apt:
     name:
