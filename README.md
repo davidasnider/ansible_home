@@ -45,10 +45,13 @@ ansible_home/
 │       ├── handlers/
 │       │   └── main.yml        # Event handlers
 │       └── tasks/
-│           ├── main.yml        # Role entry point (OS detection)
-│           ├── local-linux.yml # Linux-specific tasks
-│           ├── local-mac.yml   # macOS-specific tasks
-│           ├── zshrc-linux     # Linux zsh configuration template
+│           ├── main.yml                 # Role entry point (OS detection)
+│           ├── local-linux.yml          # Linux-specific tasks entry point
+│           ├── local-linux-packages.yml # Linux package installations
+│           ├── local-linux-shell.yml    # Linux shell configuration
+│           ├── local-mac.yml            # macOS-specific tasks
+│           ├── setup-git.yml            # Global Git and SSH configuration
+│           ├── zshrc-linux              # Linux zsh configuration template
 ├── src/
 │   └── steel_mountain_ansible/    # Python package structure
 └── tests/                     # Test files
@@ -243,7 +246,12 @@ The current framework structure will extend to support:
 - hermes-agent
 ```
 
-## Linux Configuration (`roles/workstation/tasks/local-linux.yml`)
+## Linux Configuration
+
+Linux workstation tasks are organized into modular sub-playbooks within `roles/workstation/tasks/`:
+- **`local-linux.yml`**: The main entry point for Linux setup, orchestrating the modular tasks.
+- **`local-linux-packages.yml`**: Handles APT package installations and downloads specialized tools.
+- **`local-linux-shell.yml`**: Manages Oh My Zsh installation, shell default settings, and Zsh configuration via template.
 
 ### Package Management
 - **APT**: Uses apt package manager for Ubuntu/Debian systems
@@ -297,7 +305,7 @@ The current framework structure will extend to support:
 - **Linux**: 1Password CLI-only with manual GPG key and repository setup
 
 ## Common Tasks Across Platforms
-- Git user configuration (name and email)
+- Global Git user configuration and SSH setup (centralized in `setup-git.yml`)
 - `~/code` directory creation
 - Oh My Zsh installation and configuration (extracted to `roles/workstation/tasks/install-oh-my-zsh.yml`)
 - Zsh plugin management (syntax highlighting, autosuggestions)
