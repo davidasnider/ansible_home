@@ -46,7 +46,10 @@ ansible_home/
 │       │   └── main.yml        # Event handlers
 │       └── tasks/
 │           ├── main.yml        # Role entry point (OS detection)
-│           ├── local-linux.yml # Linux-specific tasks
+│           ├── setup-git.yml   # Shared global Git configurations
+│           ├── local-linux.yml # Linux-specific tasks entry
+│           ├── local-linux-packages.yml # Linux package management
+│           ├── local-linux-shell.yml    # Linux shell configuration
 │           ├── local-mac.yml   # macOS-specific tasks
 │           ├── zshrc-linux     # Linux zsh configuration template
 ├── src/
@@ -243,7 +246,9 @@ The current framework structure will extend to support:
 - hermes-agent
 ```
 
-## Linux Configuration (`roles/workstation/tasks/local-linux.yml`)
+## Linux Configuration
+
+The Linux configuration is entry-pointed by `roles/workstation/tasks/local-linux.yml` and broken into modular components:
 
 ### Package Management
 - **APT**: Uses apt package manager for Ubuntu/Debian systems
@@ -426,7 +431,7 @@ The `GITHUB_TOKEN` environment variable is required for certain infrastructure a
 
 #### Linux (APT)
 ```yaml
-# Add to roles/workstation/tasks/local-linux.yml
+# Add to roles/workstation/tasks/local-linux-packages.yml
 - name: Install packages
   ansible.builtin.apt:
     name:
