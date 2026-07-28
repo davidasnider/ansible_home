@@ -46,7 +46,10 @@ ansible_home/
 │       │   └── main.yml        # Event handlers
 │       └── tasks/
 │           ├── main.yml        # Role entry point (OS detection)
-│           ├── local-linux.yml # Linux-specific tasks
+│           ├── local-linux.yml # Linux entry point
+│           ├── local-linux-packages.yml # Linux packages
+│           ├── local-linux-shell.yml # Linux shell configuration
+│           ├── setup-git.yml # Shared Git configuration
 │           ├── local-mac.yml   # macOS-specific tasks
 │           ├── zshrc-linux     # Linux zsh configuration template
 ├── src/
@@ -245,6 +248,12 @@ The current framework structure will extend to support:
 
 ## Linux Configuration (`roles/workstation/tasks/local-linux.yml`)
 
+The Linux configuration has been modularized into separate components for better maintainability:
+- `local-linux.yml`: Main entry point that orchestrates the sub-playbooks.
+- `local-linux-packages.yml`: Handles package installation.
+- `local-linux-shell.yml`: Manages shell configurations and Oh My Zsh.
+- `setup-git.yml`: Shared Git configuration across platforms.
+
 ### Package Management
 - **APT**: Uses apt package manager for Ubuntu/Debian systems
 - **Cache Management**: Updates cache with 24-hour validity period
@@ -426,7 +435,7 @@ The `GITHUB_TOKEN` environment variable is required for certain infrastructure a
 
 #### Linux (APT)
 ```yaml
-# Add to roles/workstation/tasks/local-linux.yml
+# Add to roles/workstation/tasks/local-linux-packages.yml
 - name: Install packages
   ansible.builtin.apt:
     name:
