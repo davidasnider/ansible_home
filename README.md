@@ -45,10 +45,14 @@ ansible_home/
 │       ├── handlers/
 │       │   └── main.yml        # Event handlers
 │       └── tasks/
-│           ├── main.yml        # Role entry point (OS detection)
-│           ├── local-linux.yml # Linux-specific tasks
-│           ├── local-mac.yml   # macOS-specific tasks
-│           ├── zshrc-linux     # Linux zsh configuration template
+│           ├── main.yml                 # Role entry point (OS detection and shared tasks)
+│           ├── gemini-setup.yml         # Global Gemini configuration
+│           ├── setup-git.yml            # Shared global Git configuration
+│           ├── local-linux.yml          # Linux OS entry point
+│           ├── local-linux-packages.yml # Linux package management tasks
+│           ├── local-linux-shell.yml    # Linux shell configuration tasks
+│           ├── local-mac.yml            # macOS-specific tasks
+│           ├── zshrc-linux              # Linux zsh configuration template
 ├── src/
 │   └── steel_mountain_ansible/    # Python package structure
 └── tests/                     # Test files
@@ -62,9 +66,9 @@ ansible_home/
 - **Task Organization**: Related tasks are grouped logically within each platform file
 
 ### OS Detection Pattern (Standard Role Architecture)
-The `workstation` role uses a standard `tasks/main.yml` entry point to detect the operating system and delegate to platform-specific logic:
+The `workstation` role uses a standard `tasks/main.yml` entry point to include shared configurations (like `setup-git.yml` and `gemini-setup.yml`), detect the operating system, and delegate to platform-specific logic:
 - `ansible_facts['system'] == 'Darwin'` → includes `local-mac.yml`
-- `ansible_facts['system'] == 'Linux'` → includes `local-linux.yml`
+- `ansible_facts['system'] == 'Linux'` → includes `local-linux.yml` (which further modularizes into `local-linux-packages.yml` and `local-linux-shell.yml`)
 
 ### Configuration Management
 - **Templates**: Shell configuration files (like `zshrc-linux`) are stored as templates
@@ -243,7 +247,7 @@ The current framework structure will extend to support:
 - hermes-agent
 ```
 
-## Linux Configuration (`roles/workstation/tasks/local-linux.yml`)
+## Linux Configuration (`roles/workstation/tasks/local-linux.yml` and sub-playbooks)
 
 ### Package Management
 - **APT**: Uses apt package manager for Ubuntu/Debian systems
@@ -297,7 +301,7 @@ The current framework structure will extend to support:
 - **Linux**: 1Password CLI-only with manual GPG key and repository setup
 
 ## Common Tasks Across Platforms
-- Git user configuration (name and email)
+- Git global and SSH configurations (user, email, signing key, allowed signers) via `setup-git.yml`
 - `~/code` directory creation
 - Oh My Zsh installation and configuration (extracted to `roles/workstation/tasks/install-oh-my-zsh.yml`)
 - Zsh plugin management (syntax highlighting, autosuggestions)
@@ -426,7 +430,7 @@ The `GITHUB_TOKEN` environment variable is required for certain infrastructure a
 
 #### Linux (APT)
 ```yaml
-# Add to roles/workstation/tasks/local-linux.yml
+# Add to roles/workstation/tasks/local-linux-packages.yml
 - name: Install packages
   ansible.builtin.apt:
     name:
