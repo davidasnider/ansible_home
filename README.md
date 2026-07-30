@@ -238,12 +238,12 @@ The current framework structure will extend to support:
 - font-meslo-lg-nerd-font
 
 # Custom scripts/binaries
-- pulumi
-- opencode
 - hermes-agent
 ```
 
 ## Linux Configuration (`roles/workstation/tasks/local-linux.yml`)
+
+Note: Package installations are in `roles/workstation/tasks/local-linux-packages.yml` and shell configuration is in `roles/workstation/tasks/local-linux-shell.yml`
 
 ### Package Management
 - **APT**: Uses apt package manager for Ubuntu/Debian systems
@@ -426,7 +426,7 @@ The `GITHUB_TOKEN` environment variable is required for certain infrastructure a
 
 #### Linux (APT)
 ```yaml
-# Add to roles/workstation/tasks/local-linux.yml
+# Add to roles/workstation/tasks/local-linux-packages.yml
 - name: Install packages
   ansible.builtin.apt:
     name:
