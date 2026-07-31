@@ -47,7 +47,10 @@ ansible_home/
 │       └── tasks/
 │           ├── main.yml        # Role entry point (OS detection)
 │           ├── local-linux.yml # Linux-specific tasks
+│           ├── local-linux-packages.yml # Linux package installations
+│           ├── local-linux-shell.yml    # Linux shell configuration
 │           ├── local-mac.yml   # macOS-specific tasks
+│           ├── setup-git.yml   # Global Git configuration
 │           ├── zshrc-linux     # Linux zsh configuration template
 ├── src/
 │   └── steel_mountain_ansible/    # Python package structure
@@ -243,7 +246,7 @@ The current framework structure will extend to support:
 - hermes-agent
 ```
 
-## Linux Configuration (`roles/workstation/tasks/local-linux.yml`)
+## Linux Configuration (`roles/workstation/tasks/local-linux-packages.yml` and `roles/workstation/tasks/local-linux-shell.yml`)
 
 ### Package Management
 - **APT**: Uses apt package manager for Ubuntu/Debian systems
@@ -426,14 +429,17 @@ The `GITHUB_TOKEN` environment variable is required for certain infrastructure a
 
 #### Linux (APT)
 ```yaml
-# Add to roles/workstation/tasks/local-linux.yml
-- name: Install packages
+# Add to roles/workstation/tasks/local-linux-packages.yml
+- name: Install a package and update cache if needed
+  become: true
   ansible.builtin.apt:
     name:
       - existing-package
       - new-package-name  # Add here
     state: present
-    update_cache: yes
+    update_cache: true
+    cache_valid_time: 86400 # in seconds, equals 24 hours
+  when: not workstation_optimized_base_check.stat.exists
 ```
 
 ### Modifying Shell Configuration
@@ -446,11 +452,10 @@ plugins=(git gh pip python systemd new-plugin)
 ```
 
 #### Update Zsh Configuration (macOS)
-Modify the `ansible.builtin.blockinfile` task in `local-mac.yml`:
-```yaml
-block: |
-  # Add new configuration here
-  source /opt/homebrew/share/new-plugin/new-plugin.zsh
+Edit `roles/workstation/tasks/zshrc-mac` template:
+```bash
+# Add new configuration here
+source /opt/homebrew/share/new-plugin/new-plugin.zsh
 ```
 
 ### Testing Changes
