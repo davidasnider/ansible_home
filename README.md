@@ -243,7 +243,7 @@ The current framework structure will extend to support:
 - hermes-agent
 ```
 
-## Linux Configuration (`roles/workstation/tasks/local-linux.yml`)
+## Linux Configuration (`roles/workstation/tasks/local-linux-packages.yml`)
 
 ### Package Management
 - **APT**: Uses apt package manager for Ubuntu/Debian systems
@@ -426,7 +426,7 @@ The `GITHUB_TOKEN` environment variable is required for certain infrastructure a
 
 #### Linux (APT)
 ```yaml
-# Add to roles/workstation/tasks/local-linux.yml
+# Add to roles/workstation/tasks/local-linux-packages.yml
 - name: Install packages
   ansible.builtin.apt:
     name:
