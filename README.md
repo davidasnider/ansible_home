@@ -45,10 +45,16 @@ ansible_home/
 │       ├── handlers/
 │       │   └── main.yml        # Event handlers
 │       └── tasks/
-│           ├── main.yml        # Role entry point (OS detection)
-│           ├── local-linux.yml # Linux-specific tasks
-│           ├── local-mac.yml   # macOS-specific tasks
-│           ├── zshrc-linux     # Linux zsh configuration template
+│           ├── main.yml                 # Role entry point (OS detection)
+│           ├── local-linux.yml          # Linux-specific task entry point
+│           ├── local-linux-packages.yml # Linux package installations
+│           ├── local-linux-shell.yml    # Linux shell configuration
+│           ├── local-mac.yml            # macOS-specific tasks
+│           ├── setup-git.yml            # Global Git configuration
+│           ├── 1password-security.yml   # 1Password security enhancements
+│           ├── install-oh-my-zsh.yml    # Oh My Zsh installation
+│           ├── gemini-setup.yml         # Gemini prompt setup
+│           ├── zshrc-linux              # Linux zsh configuration template
 ├── src/
 │   └── steel_mountain_ansible/    # Python package structure
 └── tests/                     # Test files
@@ -245,7 +251,9 @@ The current framework structure will extend to support:
 
 ## Linux Configuration (`roles/workstation/tasks/local-linux.yml`)
 
-### Package Management
+The `local-linux.yml` file serves as the main entry point for Linux configuration, which has been split into logical components for better maintainability:
+
+### Package Management (`local-linux-packages.yml`)
 - **APT**: Uses apt package manager for Ubuntu/Debian systems
 - **Cache Management**: Updates cache with 24-hour validity period
 - **System Integration**: Sets zsh as default shell system-wide
