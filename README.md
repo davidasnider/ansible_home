@@ -97,7 +97,7 @@ git clone https://github.com/davidasnider/ansible_home.git
 cd ansible_home
 make dev-setup
 source .venv/bin/activate
-ansible-playbook -i inventory/hosts.yml playbooks/workstations.yml
+ansible-playbook -i inventory/hosts.yml site.yml
 ```
 
 ### Linux Setup
@@ -469,8 +469,8 @@ The project uses automated syntax validation for all playbooks. This is the fast
 # Run all syntax checks via Makefile
 make test-syntax
 
-# Or check the workstations playbook
-ansible-playbook --syntax-check -i inventory/hosts.yml playbooks/workstations.yml
+# Or check the main site playbook
+ansible-playbook --syntax-check -i inventory/hosts.yml site.yml
 ```
 
 #### Linting
@@ -493,8 +493,8 @@ make check-updates
 #### Dry Run (Mocked)
 Before applying changes to a live system, perform a dry run to see exactly what Ansible will do.
 ```bash
-# Perform a dry run on the workstation playbook
-ansible-playbook --check --diff -i inventory/hosts.yml playbooks/workstations.yml
+# Perform a dry run on the site playbook
+ansible-playbook --check --diff -i inventory/hosts.yml site.yml
 ```
 
 ## Maintenance Workflows
@@ -551,7 +551,7 @@ git checkout -b feature/add-new-tool
 
 # Make changes to playbooks/roles
 # Test changes locally
-ansible-playbook --check -i inventory/hosts.yml playbooks/workstations.yml
+ansible-playbook --check -i inventory/hosts.yml site.yml
 
 # Commit changes
 git add .
@@ -573,7 +573,7 @@ git pull origin main
 
 # Apply updated configuration
 source .venv/bin/activate
-ansible-playbook -i inventory/hosts.yml playbooks/workstations.yml
+ansible-playbook -i inventory/hosts.yml site.yml
 ```
 
 ### PR Management
@@ -677,7 +677,7 @@ echo $SHELL
 chsh -s $(which zsh)
 
 # Re-run Ansible task
-ansible-playbook -i inventory/hosts.yml playbooks/workstations.yml --tags shell
+ansible-playbook -i inventory/hosts.yml site.yml --tags shell
 ```
 
 #### Oh My Zsh Installation Problems
@@ -689,7 +689,7 @@ rm -rf ~/.oh-my-zsh
 mv ~/.zshrc ~/.zshrc.backup
 
 # Re-run playbook
-ansible-playbook -i inventory/hosts.yml playbooks/workstations.yml
+ansible-playbook -i inventory/hosts.yml site.yml
 ```
 
 #### Plugin Loading Errors
@@ -751,22 +751,22 @@ ls -la /usr/share/keyrings/1password-archive-keyring.gpg
 ### Ansible Debugging
 ```bash
 # Verbose output
-ansible-playbook -i inventory/hosts.yml playbooks/workstations.yml -v
+ansible-playbook -i inventory/hosts.yml site.yml -v
 
 # Very verbose (includes task details)
-ansible-playbook -i inventory/hosts.yml playbooks/workstations.yml -vv
+ansible-playbook -i inventory/hosts.yml site.yml -vv
 
 # Extremely verbose (includes connection debugging)
-ansible-playbook -i inventory/hosts.yml playbooks/workstations.yml -vvv
+ansible-playbook -i inventory/hosts.yml site.yml -vvv
 ```
 
 ### Dry Run Testing
 ```bash
 # Check what would change without applying
-ansible-playbook --check -i inventory/hosts.yml playbooks/workstations.yml
+ansible-playbook --check -i inventory/hosts.yml site.yml
 
 # Check specific tasks
-ansible-playbook --check --start-at-task "Install packages" -i inventory/hosts.yml playbooks/workstations.yml
+ansible-playbook --check --start-at-task "Install packages" -i inventory/hosts.yml site.yml
 ```
 
 ### Manual Task Testing
