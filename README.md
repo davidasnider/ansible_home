@@ -434,7 +434,7 @@ The `GITHUB_TOKEN` environment variable is required for certain infrastructure a
 
 #### Linux (APT)
 ```yaml
-# Add to roles/workstation/tasks/local-linux.yml
+# Add to roles/workstation/tasks/local-linux-packages.yml
 - name: Install packages
   ansible.builtin.apt:
     name:
@@ -454,11 +454,10 @@ plugins=(git gh pip python systemd new-plugin)
 ```
 
 #### Update Zsh Configuration (macOS)
-Modify the `ansible.builtin.blockinfile` task in `local-mac.yml`:
-```yaml
-block: |
-  # Add new configuration here
-  source /opt/homebrew/share/new-plugin/new-plugin.zsh
+Modify the `roles/workstation/tasks/zshrc-mac` template:
+```bash
+# Add new configuration here
+source /opt/homebrew/share/new-plugin/new-plugin.zsh
 ```
 
 ### Testing Changes
