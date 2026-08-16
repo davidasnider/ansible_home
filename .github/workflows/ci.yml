@@ -100,8 +100,8 @@ jobs:
 
     - name: Check playbook syntax
       run: |
-        ansible-playbook --syntax-check -i inventory/hosts.yml playbooks/workstations.yml
-        ansible-playbook --syntax-check -i inventory/hosts.yml playbooks/raspberry_pis.yml
+        ansible-playbook --syntax-check -i inventory/hosts.yml site.yml
+
 
 
   dependency-review:
