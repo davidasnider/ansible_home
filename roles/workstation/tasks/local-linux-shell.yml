@@ -69,23 +69,16 @@
       ansible.builtin.fail:
         msg: "Oh My Zsh installation failed. Please check the logs for more details."
 
-- name: Copy zshrc file
+- name: Copy zsh configuration files
+  # ⚡ Bolt: Consolidated multiple copy tasks into a loop to reduce task parsing and initialization overhead
+  # Expected impact: Minor reduction in total playbook execution time
   ansible.builtin.copy:
-    src: zshrc-linux
-    dest: "{{ ansible_facts['env']['HOME'] }}/.zshrc"
-    mode: "0644"
-  changed_when: false
-
-- name: Copy zshenv file
-  ansible.builtin.copy:
-    src: zshenv-linux
-    dest: "{{ ansible_facts['env']['HOME'] }}/.zshenv"
-    mode: "0644"
-  changed_when: false
-
-- name: Copy zprofile file
-  ansible.builtin.copy:
-    src: zprofile-linux
-    dest: "{{ ansible_facts['env']['HOME'] }}/.zprofile"
+    src: "{{ item.src }}"
+    dest: "{{ ansible_facts['env']['HOME'] }}/{{ item.dest }}"
     mode: "0644"
     backup: true
+  loop:
+    - { src: "zshrc-linux", dest: ".zshrc" }
+    - { src: "zshenv-linux", dest: ".zshenv" }
+    - { src: "zprofile-linux", dest: ".zprofile" }
+  changed_when: false
