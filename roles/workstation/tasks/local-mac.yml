@@ -271,28 +271,19 @@
   failed_when: workstation_hermes_version_check.rc != 0
   when: workstation_hermes_check.rc != 0
 
-- name: Copy zshrc file
+- name: Copy zsh configuration files
+  # ⚡ Bolt: Consolidated multiple copy tasks into a loop to reduce task parsing and initialization overhead
+  # Expected impact: Minor reduction in total playbook execution time
   ansible.builtin.copy:
-    src: zshrc-mac
-    dest: "{{ ansible_facts['env']['HOME'] }}/.zshrc"
+    src: "{{ item.src }}"
+    dest: "{{ ansible_facts['env']['HOME'] }}/{{ item.dest }}"
     mode: "0644"
     backup: true
+  loop:
+    - { src: "zshrc-mac", dest: ".zshrc" }
+    - { src: "zshenv-mac", dest: ".zshenv" }
+    - { src: "zprofile-mac", dest: ".zprofile" }
   changed_when: false
-
-- name: Copy zshenv file
-  ansible.builtin.copy:
-    src: zshenv-mac
-    dest: "{{ ansible_facts['env']['HOME'] }}/.zshenv"
-    mode: "0644"
-    backup: true
-  changed_when: false
-
-- name: Copy zprofile file
-  ansible.builtin.copy:
-    src: zprofile-mac
-    dest: "{{ ansible_facts['env']['HOME'] }}/.zprofile"
-    mode: "0644"
-    backup: true
 
 # 1Password CLI Security Enhancements
 - name: Include 1Password security enhancements

@@ -36,17 +36,16 @@
 - name: Configure WSL-specific Git settings
   when: "'microsoft' in (ansible_facts.kernel | default(''))"
   block:
-    - name: Configure git to use ssh.exe for SSH connections
+    - name: Configure WSL-specific git settings
+      # ⚡ Bolt: Consolidated multiple git_config tasks into a loop to reduce task parsing and initialization overhead
+      # Expected impact: Minor reduction in total playbook execution time
       community.general.git_config:
-        name: core.sshCommand
-        value: ssh.exe
+        name: "{{ item.name }}"
+        value: "{{ item.value }}"
         scope: global
-
-    - name: Configure GPG SSH program for WSL
-      community.general.git_config:
-        name: gpg.ssh.program
-        value: /mnt/c/Users/david/AppData/Local/1Password/app/8/op-ssh-sign-wsl
-        scope: global
+      loop:
+        - { name: "core.sshCommand", value: "ssh.exe" }
+        - { name: "gpg.ssh.program", value: "/mnt/c/Users/david/AppData/Local/1Password/app/8/op-ssh-sign-wsl" }
 
 - name: Validate allowed_signers file permissions
   ansible.builtin.file:
