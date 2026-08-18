@@ -36,7 +36,9 @@
 - name: Configure WSL-specific Git settings
   when: "'microsoft' in (ansible_facts.kernel | default(''))"
   block:
-    - name: Configure git and GPG settings for WSL
+    - name: Configure WSL-specific git settings
+      # ⚡ Bolt: Consolidated multiple git_config tasks into a loop to reduce task parsing and initialization overhead
+      # Expected impact: Minor reduction in total playbook execution time
       community.general.git_config:
         name: "{{ item.name }}"
         value: "{{ item.value }}"

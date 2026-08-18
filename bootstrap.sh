@@ -11,4 +11,4 @@ uv sync
 read -sp "Enter Sudo Password: " ANSIBLE_SUDO_PASSWORD
 echo ""
 
-ANSIBLE_SUDO_PASS="$ANSIBLE_SUDO_PASSWORD" uv run ansible-playbook playbooks/workstations.yml
+ANSIBLE_SUDO_PASS="$ANSIBLE_SUDO_PASSWORD" uv run ansible-playbook site.yml

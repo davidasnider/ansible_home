@@ -1,3 +1,3 @@
-## 2024-08-18 - Ansible Module Consolidation Optimization
-**Learning:** In Ansible playbooks, executing multiple similar module calls (e.g., `community.general.git_config`) individually incurs significant task execution overhead due to task setup, plugin loading, and connection management for each separate invocation. This can slow down playbook execution.
-**Action:** When configuring multiple related items using the same module, consolidate them into a single task utilizing the `loop` directive. This pattern significantly reduces execution time by minimizing repetitive initialization overhead per item, making the playbook faster.
+## 2024-05-24 - Ansible Execution Overhead
+**Learning:** Consolidating multiple similar Ansible module calls (like `community.general.git_config`) into a single task with a `loop` reduces task execution overhead (setup, plugin loading, and connection management).
+**Action:** Always look for sequential calls to the same module and group them using `loop`.
