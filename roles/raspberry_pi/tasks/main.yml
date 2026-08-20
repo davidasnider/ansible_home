@@ -25,36 +25,19 @@
     key: "{{ item }}"
   loop: "{{ raspberry_pi_authorized_keys }}"
 
-- name: Configure SSH Port
+- name: Configure SSH Daemon settings
+  # ⚡ Bolt: Consolidated multiple SSH configuration tasks into a single loop
+  # Expected impact: Reduced task execution overhead and faster playbook runs
   ansible.builtin.lineinfile:
     path: /etc/ssh/sshd_config
-    regexp: "^#?Port "
-    line: "Port {{ raspberry_pi_ssh_port }}"
+    regexp: "{{ item.regexp }}"
+    line: "{{ item.line }}"
     state: present
-  notify: Restart SSH service
-
-- name: Disable root SSH login
-  ansible.builtin.lineinfile:
-    path: /etc/ssh/sshd_config
-    regexp: "^#?PermitRootLogin "
-    line: "PermitRootLogin {{ raspberry_pi_permit_root_login }}"
-    state: present
-  notify: Restart SSH service
-
-- name: Disable password authentication via SSH
-  ansible.builtin.lineinfile:
-    path: /etc/ssh/sshd_config
-    regexp: "^#?PasswordAuthentication "
-    line: "PasswordAuthentication {{ raspberry_pi_password_authentication }}"
-    state: present
-  notify: Restart SSH service
-
-- name: Disable empty passwords via SSH
-  ansible.builtin.lineinfile:
-    path: /etc/ssh/sshd_config
-    regexp: "^#?PermitEmptyPasswords "
-    line: "PermitEmptyPasswords no"
-    state: present
+  loop:
+    - { regexp: "^#?Port ", line: "Port {{ raspberry_pi_ssh_port }}" }
+    - { regexp: "^#?PermitRootLogin ", line: "PermitRootLogin {{ raspberry_pi_permit_root_login }}" }
+    - { regexp: "^#?PasswordAuthentication ", line: "PasswordAuthentication {{ raspberry_pi_password_authentication }}" }
+    - { regexp: "^#?PermitEmptyPasswords ", line: "PermitEmptyPasswords no" }
   notify: Restart SSH service
 
 - name: Configure UFW default policies
