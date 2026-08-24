@@ -172,17 +172,11 @@
       retries: 3
       delay: 5
 
-    - name: Update apt cache
-      ansible.builtin.apt:
-        update_cache: true
-      become: true
-      retries: 3
-      delay: 5
-
-    - name: Install 1Password CLI
+    - name: Install 1Password CLI and update cache
       ansible.builtin.apt:
         name: 1password-cli
         state: present
+        update_cache: true
       become: true
       retries: 3
       delay: 5
