@@ -2,6 +2,7 @@
 # tasks file for docker
 
 - name: Install dependencies for Docker repository
+  # ⚡ Bolt: Added cache_valid_time to prevent redundant apt cache updates and speed up playbook execution
   ansible.builtin.apt:
     name:
       - ca-certificates
@@ -9,6 +10,7 @@
       - gnupg
     state: present
     update_cache: true
+    cache_valid_time: 86400
 
 - name: Create directory for Docker repository key
   ansible.builtin.file:
