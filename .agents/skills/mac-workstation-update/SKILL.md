@@ -9,7 +9,7 @@ description: Runs the Ansible playbook to update the local macOS workstation con
 ### Prerequisites
 
 - Run this skill from the repository root so relative paths such as `inventory/hosts.yml` and `site.yml` resolve correctly.
-- Set `ANSIBLE_SUDO_PASS` as an inline environment variable on the `uv run ansible-playbook` invocation (see command below); the playbook reads it for `ansible_become_pass`.
+- You will be prompted for your sudo password when running the playbook because of the `--ask-become-pass` flag.
 - Ensure `uv` is installed and the project dependencies needed for `ansible-playbook` are available.
 - This skill is intended only for macOS.
 
@@ -21,6 +21,6 @@ if [[ "$(uname)" != "Darwin" ]]; then
 fi
 
 echo "🚀 Updating local macOS workstation..."
-ANSIBLE_SUDO_PASS="$(read -rsp 'Sudo password: ' pw; echo "$pw")" uv run ansible-playbook -i inventory/hosts.yml site.yml --limit localhost
+uv run ansible-playbook -i inventory/hosts.yml site.yml --limit localhost --ask-become-pass
 echo "✅ Workstation update complete."
 ```

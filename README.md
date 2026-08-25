@@ -328,7 +328,6 @@ Required secrets are managed through a `~/.env` file with 1Password secret refer
 ```bash
 # Example .env file structure
 export GITHUB_TOKEN="op://vault/github-token/token"
-export ANSIBLE_SUDO_PASS="op://vault/sudo-password/password"
 ```
 
 ### Validation System
@@ -342,9 +341,7 @@ The zsh configuration checks for the presence of the .env file and verifies 1Pas
 ## Security Features
 
 ### Sudo Password Management
-- **Environment Variable**: Uses `ANSIBLE_SUDO_PASS` for automated privilege escalation
-- **Secure Storage**: Password stored in 1Password, referenced via secret URI
-- **Bootstrap Integration**: `bootstrap.sh` prompts for password when needed
+- **Bootstrap Integration**: `bootstrap.sh` prompts for password when needed using `--ask-become-pass`
 
 ### Secret Storage Strategy
 - **No Hardcoded Secrets**: All sensitive data referenced via 1Password URIs
@@ -408,7 +405,6 @@ opload
 
 # Verify required variables are loaded
 echo $GITHUB_TOKEN
-echo $ANSIBLE_SUDO_PASS
 ```
 
 ### GitHub Token Requirement
@@ -632,14 +628,8 @@ uv sync
 
 #### Sudo Password Issues
 ```bash
-# Ensure ANSIBLE_SUDO_PASS is set
-echo $ANSIBLE_SUDO_PASS
-
-# Load secrets if missing
-opload
-
-# Alternative: Set manually for testing
-export ANSIBLE_SUDO_PASS="your-sudo-pass"  # pragma: allowlist secret
+# Ensure you use --ask-become-pass when running ansible manually
+uv run ansible-playbook site.yml --ask-become-pass
 ```
 
 #### Permission Denied Errors
