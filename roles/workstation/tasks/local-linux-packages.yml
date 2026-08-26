@@ -168,15 +168,18 @@
           stable main
         filename: 1password
         state: present
+        update_cache: true
       become: true
       retries: 3
       delay: 5
 
     - name: Install 1Password CLI and update cache
+      # ⚡ Bolt: Consolidated update_cache and cache_valid_time to prevent redundant cache updates on subsequent runs
       ansible.builtin.apt:
         name: 1password-cli
         state: present
         update_cache: true
+        cache_valid_time: 86400
       become: true
       retries: 3
       delay: 5
