@@ -7,3 +7,8 @@
 **Vulnerability:** The 1Password secure wrapper script (`op-secure`) logged the entire `op` command array (`$*`), including sensitive arguments like passwords and secret values, into a persistent log file (`~/.config/op/op-secure.log`).
 **Learning:** Command-line parameters passed to wrapper scripts are often blindly logged for debugging purposes. When interacting with secret managers or authentication tools, these parameters frequently contain sensitive data that should never touch the disk in plaintext.
 **Prevention:** Never log `$@` or `$*` when wrapping CLI tools that handle secrets. Always selectively log only safe parts of the command (e.g. just the subcommand, like `$1`) and omit the remaining arguments to prevent credential harvesting from log files.
+
+## 2024-10-17 - Environment Variable Leakage in Bootstrap
+**Vulnerability:** The `bootstrap.sh` script previously read the sudo password and passed it via the `ANSIBLE_SUDO_PASS` environment variable, exposing it to child processes and memory.
+**Learning:** Hardcoding or passing secrets through environment variables in scripts introduces an unneeded attack surface.
+**Prevention:** Native interactive tools (such as `--ask-become-pass` for Ansible) should be used instead of manual prompt loops combined with environment variables for secret ingestion.
