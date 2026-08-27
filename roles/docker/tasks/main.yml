@@ -1,6 +1,7 @@
 ---
 # tasks file for docker
 
+# ⚡ Bolt: Added cache_valid_time to prevent redundant apt-get update executions on idempotent runs
 - name: Install dependencies for Docker repository
   ansible.builtin.apt:
     name:
@@ -9,6 +10,7 @@
       - gnupg
     state: present
     update_cache: true
+    cache_valid_time: 86400
 
 - name: Create directory for Docker repository key
   ansible.builtin.file:
