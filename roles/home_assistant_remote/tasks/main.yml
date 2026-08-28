@@ -2,6 +2,7 @@
 # tasks file for home_assistant_remote
 
 - name: Install Bluetooth stack and utilities
+  # ⚡ Bolt: Added cache_valid_time to prevent redundant apt-get updates within 24 hours
   ansible.builtin.apt:
     name:
       - bluez
@@ -9,6 +10,7 @@
       - dbus
     state: present
     update_cache: true
+    cache_valid_time: 86400
 
 - name: Ensure Bluetooth service is running and enabled
   ansible.builtin.systemd:
