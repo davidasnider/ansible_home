@@ -633,14 +633,11 @@ If you experience authentication failures during playbook execution:
 - Verify your user has sudo privileges on the target machine.
 
 ```bash
-# Ensure ANSIBLE_SUDO_PASS is set
-echo $ANSIBLE_SUDO_PASS
-
-# Load secrets if missing
+# Load other secrets if missing (the sudo password is prompted via --ask-become-pass)
 opload
 
-# Alternative: Set inline for testing to prevent environment leakage
-ANSIBLE_SUDO_PASS="your-sudo-pass" ansible-playbook -i inventory/hosts.yml site.yml  # pragma: allowlist secret
+# Run the playbook with an interactive become password prompt
+uv run ansible-playbook -i inventory/hosts.yml site.yml --ask-become-pass
 ```
 
 #### Permission Denied Errors
