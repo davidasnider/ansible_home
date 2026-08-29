@@ -113,7 +113,7 @@ git clone https://github.com/davidasnider/ansible_home.git
 cd ansible_home
 # Ensure you have your IPs configured in inventory/hosts.yml
 uv sync
-uv run ansible-playbook -i inventory/hosts.yml --limit raspberry_pis site.yml
+uv run ansible-playbook -i inventory/hosts.yml --limit raspberry_pis site.yml --ask-become-pass
 ```
 
 ## Detailed Setup Process
@@ -129,7 +129,7 @@ uv run ansible-playbook -i inventory/hosts.yml --limit raspberry_pis site.yml
 2. **Dependencies**: Installs `python3-venv` and `uv`
 3. **Virtual Environment**: Creates `.venv` and activates it
 4. **uv Install**: Installs project dependencies
-5. **Sudo Password**: Prompts for sudo password and runs the main playbook
+5. **Sudo Password**: Runs the main playbook with `--ask-become-pass`, which prompts for the sudo password at runtime
 
 ## Python Environment Management
 
@@ -328,7 +328,6 @@ Required secrets are managed through a `~/.env` file with 1Password secret refer
 ```bash
 # Example .env file structure
 export GITHUB_TOKEN="op://vault/github-token/token"
-export ANSIBLE_SUDO_PASS="op://vault/sudo-password/password"
 ```
 
 ### Validation System
@@ -342,9 +341,8 @@ The zsh configuration checks for the presence of the .env file and verifies 1Pas
 ## Security Features
 
 ### Sudo Password Management
-- **Environment Variable**: Uses `ANSIBLE_SUDO_PASS` for automated privilege escalation
-- **Secure Storage**: Password stored in 1Password, referenced via secret URI
-- **Bootstrap Integration**: `bootstrap.sh` prompts for password when needed
+- **Interactive Prompt**: Uses Ansible's native `--ask-become-pass` for secure privilege escalation without exposing secrets to the environment.
+- **Bootstrap Integration**: `bootstrap.sh` runs the playbook with `--ask-become-pass`, which prompts for the sudo password at runtime
 
 ### Secret Storage Strategy
 - **No Hardcoded Secrets**: All sensitive data referenced via 1Password URIs
@@ -395,7 +393,7 @@ vars:
 ```bash
 # Full setup (first time or complete refresh)
 source .venv/bin/activate
-ansible-playbook -i inventory/hosts.yml site.yml
+ansible-playbook -i inventory/hosts.yml site.yml --ask-become-pass
 
 # Quick setup with bootstrap (Linux)
 ./bootstrap.sh
@@ -408,7 +406,6 @@ opload
 
 # Verify required variables are loaded
 echo $GITHUB_TOKEN
-echo $ANSIBLE_SUDO_PASS
 ```
 
 ### GitHub Token Requirement
@@ -631,15 +628,16 @@ uv sync
 ### Ansible Execution Problems
 
 #### Sudo Password Issues
-```bash
-# Ensure ANSIBLE_SUDO_PASS is set
-echo $ANSIBLE_SUDO_PASS
+If you experience authentication failures during playbook execution:
+- Ensure you are providing the correct sudo password when prompted by `--ask-become-pass`.
+- Verify your user has sudo privileges on the target machine.
 
-# Load secrets if missing
+```bash
+# Load other secrets if missing (the sudo password is prompted via --ask-become-pass)
 opload
 
-# Alternative: Set manually for testing
-export ANSIBLE_SUDO_PASS="your-sudo-pass"  # pragma: allowlist secret
+# Run the playbook with an interactive become password prompt
+uv run ansible-playbook -i inventory/hosts.yml site.yml --ask-become-pass
 ```
 
 #### Permission Denied Errors
