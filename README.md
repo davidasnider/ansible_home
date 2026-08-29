@@ -129,7 +129,7 @@ uv run ansible-playbook -i inventory/hosts.yml --limit raspberry_pis site.yml
 2. **Dependencies**: Installs `python3-venv` and `uv`
 3. **Virtual Environment**: Creates `.venv` and activates it
 4. **uv Install**: Installs project dependencies
-5. **Sudo Password**: Prompts for sudo password and runs the main playbook
+5. **Sudo Password**: Runs the main playbook with `--ask-become-pass`, which prompts for the sudo password at runtime
 
 ## Python Environment Management
 
