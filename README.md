@@ -97,7 +97,7 @@ git clone https://github.com/davidasnider/ansible_home.git
 cd ansible_home
 make dev-setup
 source .venv/bin/activate
-ansible-playbook -i inventory/hosts.yml site.yml
+ansible-playbook -i inventory/hosts.yml site.yml --ask-become-pass
 ```
 
 ### Linux Setup
@@ -113,7 +113,7 @@ git clone https://github.com/davidasnider/ansible_home.git
 cd ansible_home
 # Ensure you have your IPs configured in inventory/hosts.yml
 uv sync
-uv run ansible-playbook -i inventory/hosts.yml --limit raspberry_pis site.yml
+uv run ansible-playbook -i inventory/hosts.yml --limit raspberry_pis site.yml --ask-become-pass
 ```
 
 ## Detailed Setup Process
@@ -393,7 +393,7 @@ vars:
 ```bash
 # Full setup (first time or complete refresh)
 source .venv/bin/activate
-ansible-playbook -i inventory/hosts.yml site.yml
+ansible-playbook -i inventory/hosts.yml site.yml --ask-become-pass
 
 # Quick setup with bootstrap (Linux)
 ./bootstrap.sh
