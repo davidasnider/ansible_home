@@ -9,7 +9,7 @@ description: Runs the Ansible playbook to update the local macOS workstation con
 ### Prerequisites
 
 - Run this skill from the repository root so relative paths such as `inventory/hosts.yml` and `site.yml` resolve correctly.
-- Use the `--ask-become-pass` flag on the `uv run ansible-playbook` invocation (see command below) to securely prompt for the sudo password.
+- No sudo password is required on macOS; the workstation role tasks for macOS all run with `become: false`.
 - Ensure `uv` is installed and the project dependencies needed for `ansible-playbook` are available.
 - This skill is intended only for macOS.
 
@@ -21,6 +21,6 @@ if [[ "$(uname)" != "Darwin" ]]; then
 fi
 
 echo "🚀 Updating local macOS workstation..."
-uv run ansible-playbook -i inventory/hosts.yml site.yml --limit localhost --ask-become-pass
+uv run ansible-playbook -i inventory/hosts.yml site.yml --limit localhost
 echo "✅ Workstation update complete."
 ```
