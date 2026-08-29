@@ -638,8 +638,8 @@ echo $ANSIBLE_SUDO_PASS
 # Load secrets if missing
 opload
 
-# Alternative: Set manually for testing
-export ANSIBLE_SUDO_PASS="your-sudo-pass"  # pragma: allowlist secret
+# Alternative: Set inline for testing to prevent environment leakage
+ANSIBLE_SUDO_PASS="your-sudo-pass" ansible-playbook -i inventory/hosts.yml site.yml  # pragma: allowlist secret
 ```
 
 #### Permission Denied Errors
