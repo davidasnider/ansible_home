@@ -1,4 +1,7 @@
 ---
+# NOTE: Linux workstation tasks use `become: true`. Supply the become
+# password via --ask-become-pass (or sudo's interactive TTY prompt); it is
+# no longer read from the ANSIBLE_SUDO_PASS environment variable.
 - name: Setup Workstations
   hosts: workstations
   gather_facts: true

@@ -97,7 +97,7 @@ git clone https://github.com/davidasnider/ansible_home.git
 cd ansible_home
 make dev-setup
 source .venv/bin/activate
-ansible-playbook -i inventory/hosts.yml site.yml --ask-become-pass
+ansible-playbook -i inventory/hosts.yml site.yml
 ```
 
 ### Linux Setup
