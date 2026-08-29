@@ -8,7 +8,5 @@ source $HOME/.cargo/env
 
 uv sync
 
-read -sp "Enter Sudo Password: " ANSIBLE_SUDO_PASSWORD
-echo ""
 
-ANSIBLE_SUDO_PASS="$ANSIBLE_SUDO_PASSWORD" uv run ansible-playbook site.yml
+uv run ansible-playbook --ask-become-pass site.yml
