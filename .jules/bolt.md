@@ -5,3 +5,7 @@
 ## 2026-08-23 - Consolidate apt update and install
 **Learning:** In Ansible, `ansible.builtin.apt` can update the cache (`update_cache: true`) and install a package (`name`) in a single task, eliminating the overhead of running two separate tasks and establishing two separate connections. Note that combining `update_cache: true` with a package install does not require `cache_valid_time` if the cache was just updated with a new repository via `apt_repository`.
 **Action:** Always combine `update_cache` and package installation in a single `apt` module task when updating the cache right before an install.
+
+## 2024-05-24 - Optimize apt cache update
+**Learning:** In Ansible, when using `update_cache: true` with `ansible.builtin.apt`, it is crucial to also specify `cache_valid_time` (e.g., `86400` for 24 hours). Without it, Ansible will update the apt cache unconditionally on every playbook run, causing significant execution overhead and slower playbook execution.
+**Action:** Always combine `update_cache: true` with `cache_valid_time: 86400` on `ansible.builtin.apt` tasks, except when updating the cache immediately after adding a new repository via `apt_repository`.

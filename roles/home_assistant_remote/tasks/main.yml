@@ -9,6 +9,7 @@
       - dbus
     state: present
     update_cache: true
+    cache_valid_time: 86400
 
 - name: Ensure Bluetooth service is running and enabled
   ansible.builtin.systemd:
