@@ -33,7 +33,7 @@ The 1Password CLI security enhancements provide robust protection through multip
 ### ✅ Authentication Failure Recovery Procedures
 - Automatic retry mechanism with exponential backoff
 - Session invalidation and recreation on authentication failures
-- Comprehensive logging of authentication events
+- Comprehensive but safe logging (subcommands only, no sensitive flags) of authentication events
 - Graceful degradation with meaningful error messages
 
 ### ✅ CLI Version Validation and Updates
@@ -64,7 +64,7 @@ op-secure --clear-session
 - Timeout protection for all operations
 - Automatic session management
 - Retry logic with authentication failure recovery
-- Comprehensive logging
+- Comprehensive but safe logging (subcommands only, no sensitive flags)
 - Permission validation and auto-remediation
 
 ### op-health-check
