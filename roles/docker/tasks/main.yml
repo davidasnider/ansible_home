@@ -39,6 +39,7 @@
     update_cache: true
 
 - name: Install Docker Engine packages
+  # ⚡ Bolt: Added update_cache and cache_valid_time to consolidate caching and package installation
   ansible.builtin.apt:
     name:
       - docker-ce
@@ -46,6 +47,8 @@
       - containerd.io
       - python3-docker
     state: present
+    update_cache: true
+    cache_valid_time: 86400
 
 - name: Ensure Docker service is enabled and started
   ansible.builtin.systemd:
