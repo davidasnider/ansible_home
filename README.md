@@ -342,7 +342,7 @@ The zsh configuration checks for the presence of the .env file and verifies 1Pas
 
 ### Sudo Password Management
 - **Interactive Prompt**: Uses Ansible's native `--ask-become-pass` for secure privilege escalation without exposing secrets to the environment.
-- **Bootstrap Integration**: `bootstrap.sh` prompts for password when needed
+- **Bootstrap Integration**: `bootstrap.sh` runs the playbook with `--ask-become-pass`, which prompts for the sudo password at runtime
 
 ### Secret Storage Strategy
 - **No Hardcoded Secrets**: All sensitive data referenced via 1Password URIs
