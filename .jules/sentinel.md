@@ -6,7 +6,7 @@
 ## 2024-05-27 - TOCTOU Race Condition in File Creation
 **Vulnerability:** The script created the session file with default permissions and then ran `chmod 600`, exposing the file briefly.
 **Learning:** This Time-Of-Check to Time-Of-Use race condition allows unauthorized users a window to read the secret before permissions are tightened.
-**Prevention:** Create the file with restrictive permissions from creation time using a subshell and umask (e.g., `(umask 077; printf '%s\n' "secret" > "file")`). This closes the post-create chmod window by ensuring the file is never written with permissive permissions, though it is not an atomic write/update.
+**Prevention:** Create the file with restrictive permissions from creation time using a subshell and umask (e.g., `(umask 077; rm -f "file"; printf '%s\n' "secret" > "file")`). Removing any pre-existing file first ensures restrictive permissions apply even if an old file with permissive mode is present. This closes the post-create chmod window by ensuring the file is never written with permissive permissions, though it is not an atomic write/update.
 
 ## 2024-08-18 - Sensitive Data Leakage in Logs
 **Vulnerability:** The 1Password secure wrapper script (`op-secure`) logged the entire `op` command array (`$*`), including sensitive arguments like passwords and secret values, into a persistent log file (`~/.config/op/op-secure.log`).
