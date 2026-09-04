@@ -12,3 +12,8 @@
 **Vulnerability:** The `bootstrap.sh` script and related workflow documents exported the user's sudo password as an inline environment variable (`ANSIBLE_SUDO_PASS`) to be consumed by Ansible playbooks.
 **Learning:** Passing sensitive secrets like passwords through environment variables exposes them to all child processes and makes them vulnerable to memory scraping or accidental leakage in crash reports or process listing tools (e.g., `ps e`).
 **Prevention:** Instead of reading secrets and placing them in the environment, leverage the built-in, secure credential prompting mechanisms of the tools being used. For Ansible, use the `--ask-become-pass` flag to ensure passwords are interactively gathered and held securely in memory only by the process that strictly requires them.
+
+## 2024-05-24 - [TOCTOU Vulnerability in File Creation]
+**Vulnerability:** A script was creating a file holding a session token and then modifying its permissions, introducing a Time-Of-Check to Time-Of-Use (TOCTOU) vulnerability where the file was temporarily readable.
+**Learning:** This existed because bash file redirection creates files with default permissions (which might be readable by others) before a subsequent `chmod` command can secure them. This is a common pattern in scripts but insecure for sensitive data.
+**Prevention:** Always create files atomically with the correct permissions from the start. Use a subshell and `umask` (e.g., `(umask 077; echo "secret" > "file")`) to ensure the file is created with restricted permissions.
