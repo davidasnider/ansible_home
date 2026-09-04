@@ -9,3 +9,7 @@
 ## 2026-08-23 - Prevent Redundant APT Cache Updates After Adding Repos
 **Learning:** Adding a repository and then subsequently running an `apt` module task with `update_cache: true` works, but causes unconditional cache updates on every playbook run if `cache_valid_time` isn't used. However, applying `cache_valid_time` right after adding a repository without updating the cache *first* can cause the new package not to be found. The correct pattern is to add `update_cache: true` directly to the `ansible.builtin.apt_repository` task so the cache is updated immediately *only* when the repo is first added or changed. Then, the subsequent `ansible.builtin.apt` task can safely use both `update_cache: true` and `cache_valid_time: 86400` to prevent redundant updates on future runs.
 **Action:** When adding a repository and installing its packages, use `update_cache: true` in `apt_repository`, and then use both `update_cache: true` and `cache_valid_time: 86400` in the subsequent `apt` installation task.
+
+## 2026-08-25 - Consolidate Ansible Shell Loops
+**Learning:** In Ansible, looping over `command` or `shell` tasks incurs per-iteration task parsing and setup overhead.
+**Action:** When iterating over shell commands with known/static items, consolidate the iterations into a single multiline `ansible.builtin.shell` block to reduce execution time.
