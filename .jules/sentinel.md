@@ -3,6 +3,11 @@
 **Learning:** Sensitive variables left in the environment can be accessed by child processes or linger in memory longer than necessary, increasing the attack surface.
 **Prevention:** Pass environment variables containing sensitive secrets (like passwords or tokens) inline to the commands that require them, rather than exporting them globally in the script. Note that this only limits the secret's scope to the shell session and that single command invocation — the command and its own child processes (e.g., Ansible modules doing an env lookup) can still read it. For stronger protection, prefer interactive prompts such as `--ask-become-pass` or a dedicated secret manager instead of passing secrets through the environment at all.
 
+## 2024-05-27 - TOCTOU Race Condition in File Creation
+**Vulnerability:** The script created the session file with default permissions and then ran `chmod 600`, exposing the file briefly.
+**Learning:** This Time-Of-Check to Time-Of-Use race condition allows unauthorized users a window to read the secret before permissions are tightened.
+**Prevention:** Create the file with restrictive permissions from creation time using a subshell and umask (e.g., `(umask 077 && rm -f "file" && printf '%s\n' "secret" > "file")`). Removing any pre-existing file first ensures restrictive permissions apply even if an old file with permissive mode is present. This closes the post-create chmod window by ensuring the file is never written with permissive permissions, though it is not an atomic write/update.
+
 ## 2024-08-18 - Sensitive Data Leakage in Logs
 **Vulnerability:** The 1Password secure wrapper script (`op-secure`) logged the entire `op` command array (`$*`), including sensitive arguments like passwords and secret values, into a persistent log file (`~/.config/op/op-secure.log`).
 **Learning:** Command-line parameters passed to wrapper scripts are often blindly logged for debugging purposes. When interacting with secret managers or authentication tools, these parameters frequently contain sensitive data that should never touch the disk in plaintext.
