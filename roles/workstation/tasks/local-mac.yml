@@ -76,12 +76,13 @@
   delay: 5
   until: workstation_homebrew_tap_result is succeeded
 
-# ⚡ Bolt: Consolidated multiple homebrew tap trust commands into a single shell command
-# Expected impact: Faster playbook runs by avoiding task initialization overhead
+# ⚡ Bolt: Consolidated multiple homebrew tap trust commands into a single shell task
+# Expected impact: Faster playbook runs by avoiding per-iteration task startup overhead
 - name: Trust Homebrew taps
   ansible.builtin.shell: |
-    /opt/homebrew/bin/brew trust anomalyco/tap
-    /opt/homebrew/bin/brew trust steipete/tap
+    for tap in anomalyco/tap steipete/tap; do
+      /opt/homebrew/bin/brew trust "$tap"
+    done
   changed_when: false
   failed_when: false
 
