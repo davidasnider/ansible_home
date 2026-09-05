@@ -77,10 +77,11 @@
   until: workstation_homebrew_tap_result is succeeded
 
 - name: Trust Homebrew taps
-  ansible.builtin.command: /opt/homebrew/bin/brew trust "{{ item }}"
-  loop:
-    - anomalyco/tap
-    - steipete/tap
+  # ⚡ Bolt: Consolidated multiple brew trust commands into a single shell block
+  # Expected impact: Reduced task execution overhead and faster playbook runs
+  ansible.builtin.shell: |
+    /opt/homebrew/bin/brew trust anomalyco/tap
+    /opt/homebrew/bin/brew trust steipete/tap
   changed_when: false
   failed_when: false
 
