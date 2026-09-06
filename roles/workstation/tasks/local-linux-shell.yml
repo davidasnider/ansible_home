@@ -1,14 +1,10 @@
 ---
 # Linux shell configuration, including zsh and oh-my-posh
 
-- name: Get current user
-  ansible.builtin.command: whoami
-  register: workstation_current_user
-  changed_when: false
-
 - name: Set zsh as default shell
+  # ⚡ Bolt: Use built-in ansible_facts['user_id'] instead of whoami command to reduce task overhead
   ansible.builtin.user:
-    name: "{{ workstation_current_user.stdout }}"
+    name: "{{ ansible_facts['user_id'] }}"
     shell: /usr/bin/zsh
   become: true
 

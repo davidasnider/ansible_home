@@ -13,3 +13,7 @@
 ## 2026-09-05 - Ansible performance shell script commands
 **Learning:** For some Ansible shell command task loops, executing a single `ansible.builtin.shell` command that runs multiple successive scripts in a YAML `|` (literal block scalar) multiline block eliminates the Ansible loop task startup, parse, and setup overhead for each iteration. Using a shell `for` loop inside that block keeps the shell usage clearly required (satisfying the `command-instead-of-shell` lint rule) while keeping the item list easy to extend.
 **Action:** When a loop involves running a sequence of identical fast scripts with varying arguments, consider moving the loop into a single `shell` command using a YAML `|` (literal block scalar) block — with a shell `for` loop when iterating over items — instead of a task `loop`.
+
+## 2024-11-20 - Ansible User Facts
+**Learning:** Shell commands like `whoami` have an implicit task execution overhead. The built-in `ansible_facts['user_id']` contains the current running user ID and can be used in its place to skip running a separate command.
+**Action:** Use `ansible_facts['user_id']` instead of creating new tasks that run `whoami`.
