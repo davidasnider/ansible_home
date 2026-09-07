@@ -436,7 +436,8 @@ The `GITHUB_TOKEN` environment variable is required for certain infrastructure a
       - existing-package
       - new-package-name  # Add here
     state: present
-    update_cache: yes
+    update_cache: true
+    cache_valid_time: 86400
 ```
 
 ### Modifying Shell Configuration
