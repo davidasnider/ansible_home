@@ -68,7 +68,20 @@ elif [ -f /opt/homebrew/opt/zsh-fast-syntax-highlighting/share/zsh-fast-syntax-h
 fi
 
 # 1Password login and environment variable loading alias
-alias opload='eval "$(op signin)" && eval "$(cat ~/.env | op inject)"'
+opload() {
+    eval "$(op signin)"
+    while IFS= read -r line; do
+        [[ -z "$line" || "$line" == \#* ]] && continue
+        line="${line#export }"
+        key="${line%%=*}"
+        val="${line#*=}"
+        val="${val%\"}"
+        val="${val#\"}"
+        val="${val%\'}"
+        val="${val#\'}"
+        export "$key"="$val"
+    done < <(cat ~/.env | op inject)
+}
 
 # Load environment variables from .env file with validation
 if [ -f "$HOME/.env" ]; then

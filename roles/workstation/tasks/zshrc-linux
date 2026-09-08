@@ -60,7 +60,20 @@ if grep -q microsoft /proc/version 2>/dev/null; then
 fi
 
 # 1Password login and environment variable loading alias
-alias opload='eval "$(op signin)" && eval "$(cat ~/.env | op inject)"'
+opload() {
+    eval "$(op signin)"
+    while IFS= read -r line; do
+        [[ -z "$line" || "$line" == \#* ]] && continue
+        line="${line#export }"
+        key="${line%%=*}"
+        val="${line#*=}"
+        val="${val%\"}"
+        val="${val#\"}"
+        val="${val%\'}"
+        val="${val#\'}"
+        export "$key"="$val"
+    done < <(cat ~/.env | op inject)
+}
 
 # Load environment variables from .env file with validation
 if [ -f "$HOME/.env" ]; then
