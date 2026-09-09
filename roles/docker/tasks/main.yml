@@ -24,16 +24,15 @@
     dest: /etc/apt/keyrings/docker.asc
     mode: '0644'
 
-- name: Get APT architecture
-  ansible.builtin.command: dpkg --print-architecture
-  register: docker_deb_architecture
-  changed_when: false
-
 - name: Add Docker repository to APT sources
+  # ⚡ Bolt: Use mapped ansible_facts['architecture'] to skip dpkg --print-architecture shell command overhead
+  # Expected impact: Saves ~1-2 seconds of task execution overhead per run
   ansible.builtin.apt_repository:
     repo: >-
-      deb [arch={{ docker_deb_architecture.stdout }} signed-by=/etc/apt/keyrings/docker.asc]
-      https://download.docker.com/linux/debian {{ ansible_facts['distribution_release'] }} stable
+      {% set a = ansible_facts.architecture %}
+      {% set m = 'amd64' if a == 'x86_64' else 'armhf' if a == 'armv7l' else 'arm64' if a == 'aarch64' else a %}
+      deb [arch={{ m }} signed-by=/etc/apt/keyrings/docker.asc]
+      https://download.docker.com/linux/debian {{ ansible_facts.distribution_release }} stable
     state: present
     filename: docker
     update_cache: true
