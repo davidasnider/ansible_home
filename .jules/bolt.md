@@ -17,3 +17,7 @@
 ## 2024-11-20 - Ansible User Facts
 **Learning:** Shell commands like `whoami` have an implicit task execution overhead. The built-in `ansible_facts['user_id']` contains the current running user ID and can be used in its place to skip running a separate command.
 **Action:** Use `ansible_facts['user_id']` instead of creating new tasks that run `whoami`.
+
+## 2026-09-09 - Avoid dpkg command overhead
+**Learning:** Shell commands like `dpkg --print-architecture` have an implicit task execution overhead and delay playbook runs. We can use the native `ansible_facts['architecture']` mapped to debian architectures (e.g., `{{ 'amd64' if ansible_facts['architecture'] == 'x86_64' else 'arm64' if ansible_facts['architecture'] == 'aarch64' else ansible_facts['architecture'] }}`) to skip running a separate command.
+**Action:** Use mapped `ansible_facts['architecture']` instead of creating new tasks that run `dpkg --print-architecture`.
