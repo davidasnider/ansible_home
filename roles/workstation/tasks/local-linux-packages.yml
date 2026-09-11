@@ -154,19 +154,17 @@
         group: root
       become: true
 
-    - name: Get system architecture
-      ansible.builtin.command: dpkg --print-architecture
-      register: workstation_system_arch
-      changed_when: false
-
     - name: Add 1Password repository
       # ⚡ Bolt: Immediately update the cache when the repo is added
       # Expected impact: No impact on first run, enables cache_valid_time on subsequent apt tasks
+      # ⚡ Bolt: Replaced shell dpkg command with native mapped ansible_facts['architecture'] to reduce task execution overhead.
+      # Expected impact: Eliminates one task execution and shell invocation per run.
       ansible.builtin.apt_repository:
         repo: >-
-          deb [arch={{ workstation_system_arch.stdout }}
+          {% set arch = {'x86_64': 'amd64', 'aarch64': 'arm64'}.get(ansible_facts['architecture'], ansible_facts['architecture']) %}
+          deb [arch={{ arch }}
           signed-by=/usr/share/keyrings/1password-archive-keyring.gpg]
-          https://downloads.1password.com/linux/debian/{{ workstation_system_arch.stdout }}
+          https://downloads.1password.com/linux/debian/{{ arch }}
           stable main
         filename: 1password
         state: present

@@ -24,15 +24,13 @@
     dest: /etc/apt/keyrings/docker.asc
     mode: '0644'
 
-- name: Get APT architecture
-  ansible.builtin.command: dpkg --print-architecture
-  register: docker_deb_architecture
-  changed_when: false
-
 - name: Add Docker repository to APT sources
+  # ⚡ Bolt: Replaced shell dpkg command with native mapped ansible_facts['architecture'] to reduce task execution overhead.
+  # Expected impact: Eliminates one task execution and shell invocation per run.
   ansible.builtin.apt_repository:
     repo: >-
-      deb [arch={{ docker_deb_architecture.stdout }} signed-by=/etc/apt/keyrings/docker.asc]
+      {% set arch = {'x86_64': 'amd64', 'aarch64': 'arm64'}.get(ansible_facts['architecture'], ansible_facts['architecture']) %}
+      deb [arch={{ arch }} signed-by=/etc/apt/keyrings/docker.asc]
       https://download.docker.com/linux/debian {{ ansible_facts['distribution_release'] }} stable
     state: present
     filename: docker
