@@ -59,8 +59,24 @@ if grep -q microsoft /proc/version 2>/dev/null; then
     alias ssh-add='ssh-add.exe'
 fi
 
-# 1Password login and environment variable loading alias
-alias opload='eval "$(op signin)" && eval "$(cat ~/.env | op inject)"'
+# 1Password login and environment variable loading
+opload() {
+    eval "$(op signin)"
+    # Securely parse and export injected variables without using eval
+    while IFS= read -r line || [[ -n "$line" ]]; do
+        if [[ -n "$line" && "$line" != \#* ]]; then
+            line="${line#export }"
+            local key="${line%%=*}"
+            local value="${line#*=}"
+            # Strip surrounding quotes
+            value="${value%\"}"
+            value="${value#\"}"
+            value="${value%\'}"
+            value="${value#\'}"
+            export "$key"="$value"
+        fi
+    done < <(cat ~/.env | op inject)
+}
 
 # Load environment variables from .env file with validation
 if [ -f "$HOME/.env" ]; then
