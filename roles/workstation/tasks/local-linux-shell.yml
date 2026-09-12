@@ -32,11 +32,6 @@
     - not (ansible_facts.virtualization_type is defined and ansible_facts.virtualization_type == 'docker')
   failed_when: false
 
-- name: Check if Oh My Zsh is installed
-  ansible.builtin.stat:
-    path: "{{ ansible_facts['env']['HOME'] }}/.oh-my-zsh"
-  register: workstation_oh_my_zsh_stat
-
 - name: Install Oh My Zsh with error handling
   block:
     - name: Install Oh My Zsh if not present
@@ -44,7 +39,7 @@
         sh -c "$(curl -fsSL -m 300 https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
       args:
         creates: "{{ ansible_facts['env']['HOME'] }}/.oh-my-zsh"
-      when: not workstation_oh_my_zsh_stat.stat.exists
+      # ⚡ Bolt: Removed redundant ansible.builtin.stat check and when condition; relying on creates.
       changed_when: false
       register: workstation_oh_my_zsh_install_result
       retries: 3
