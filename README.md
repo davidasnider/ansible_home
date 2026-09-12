@@ -331,11 +331,10 @@ export GITHUB_TOKEN="op://vault/github-token/token"
 ```
 
 ### Validation System
-The zsh configuration checks for the presence of the .env file and verifies 1Password authentication:
+The zsh configuration checks for the presence of the .env file:
 
 ```bash
 # Warns user if .env file is missing and provides instructions to create it
-# Checks if 1Password CLI is authenticated, and if not, prompts to use opload
 ```
 
 ## Security Features

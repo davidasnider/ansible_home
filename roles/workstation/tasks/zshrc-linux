@@ -62,13 +62,8 @@ fi
 # 1Password login and environment variable loading alias
 alias opload='eval "$(op signin)" && eval "$(cat ~/.env | op inject)"'
 
-# Load environment variables from .env file with validation
-if [ -f "$HOME/.env" ]; then
-    # Check if user is already authenticated to 1Password (guard with command check)
-    if command -v op >/dev/null 2>&1 && ! op whoami >/dev/null 2>&1; then
-        echo "Use opload to load environment variables from .env"
-    fi
-else
+# Validate that ~/.env file exists for 1Password secret references
+if [ ! -f "$HOME/.env" ]; then
     echo "Warning: .env file not found in $HOME"
     echo "Please create a .env file in your home directory with your 1Password secret references."
 fi
