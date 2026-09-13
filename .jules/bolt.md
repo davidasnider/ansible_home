@@ -17,3 +17,7 @@
 ## 2024-11-20 - Ansible User Facts
 **Learning:** Shell commands like `whoami` have an implicit task execution overhead. The built-in `ansible_facts['user_id']` contains the current running user ID and can be used in its place to skip running a separate command.
 **Action:** Use `ansible_facts['user_id']` instead of creating new tasks that run `whoami`.
+
+## 2026-09-13 - Ansible Fact Mapping
+**Learning:** Shell commands like `dpkg --print-architecture` have task execution overhead (setup, connection, plugin loading). You can eliminate this overhead by mapping native ansible facts like `ansible_facts['architecture']` using a jinja inline mapping (e.g. `{% set deb_arch = 'amd64' if ansible_facts['architecture'] == 'x86_64' else ... %}`).
+**Action:** Use native `ansible_facts` and map values in jinja rather than executing additional shell tasks where possible.
