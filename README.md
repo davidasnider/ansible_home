@@ -321,6 +321,15 @@ The project uses 1Password CLI for secure secrets management with a streamlined 
 # Login and load environment variables in one command
 opload() {
     eval "$(op signin)"
+    # Capture op inject output with a checked command substitution so its
+    # exit status is visible: a process substitution would hide failures
+    # (auth errors, missing $HOME/.env, bad templates) behind a clean loop.
+    local output
+    if ! output="$(op inject < "$HOME/.env")"; then
+        echo "opload: op inject failed, no environment variables were loaded" >&2
+        return 1
+    fi
+    local line key val
     while IFS= read -r line; do
         [[ -z "$line" || "$line" == \#* ]] && continue
         line="${line#export }"
@@ -331,7 +340,7 @@ opload() {
         val="${val%\'}"
         val="${val#\'}"
         export "$key=$val"
-    done < <(op inject < "$HOME/.env")
+    done <<< "$output"
 }
 ```
 
