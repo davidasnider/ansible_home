@@ -61,37 +61,53 @@ fi
 
 # 1Password login and environment variable loading alias
 opload() {
-    # Capture op signin via a checked command substitution so a failed
-    # login stops the load (preserving the old alias's && short-circuit):
-    # a still-valid prior session could otherwise let op inject succeed
-    # and report success despite the failed login.
-    local signin
-    if ! signin="$(op signin)"; then
+    # op signin --raw emits only the session token on stdout, so nothing
+    # produced by the CLI is ever evaluated (same pattern as the repo's
+    # 1Password wrapper in roles/workstation/tasks/1password-security.yml).
+    # The checked substitution also makes a failed login stop the load
+    # (preserving the old alias's && short-circuit): a still-valid prior
+    # session could otherwise let op inject succeed and report success
+    # despite the failed login.
+    local session
+    if ! session="$(op signin --raw)"; then
         echo "opload: op signin failed, no environment variables were loaded" >&2
         return 1
     fi
-    eval "$signin"
     # Capture op inject output with a checked command substitution so its
     # exit status is visible: a process substitution would hide failures
     # (auth errors, missing $HOME/.env, bad templates) behind a clean loop.
+    # The session is passed explicitly via --session.
     local output
-    if ! output="$(op inject < "$HOME/.env")"; then
+    if ! output="$(op inject --session "$session" < "$HOME/.env")"; then
         echo "opload: op inject failed, no environment variables were loaded" >&2
         return 1
     fi
     # Only variable names declared by the $HOME/.env template may be
     # exported: a secret containing newlines cannot smuggle extra
     # assignments (e.g. "export PATH=/attacker") into the caller's shell.
-    local -A declared
-    local tmpl_line tmpl_key
+    # declared_quote records whether each template line quoted its value
+    # (with " or with '): only the template's own quote syntax is stripped
+    # below, and an unquoted template preserves the value verbatim.
+    local -A declared declared_quote
+    local tmpl_line tmpl_key tmpl_val
     while IFS= read -r tmpl_line || [[ -n "$tmpl_line" ]]; do
         [[ -z "$tmpl_line" || "$tmpl_line" == \#* ]] && continue
         tmpl_key="${tmpl_line#export }"
         tmpl_key="${tmpl_key%%=*}"
-        [[ "$tmpl_key" =~ ^[A-Za-z_][A-Za-z0-9_]*$ ]] && declared[$tmpl_key]=1
+        if [[ "$tmpl_key" =~ ^[A-Za-z_][A-Za-z0-9_]*$ ]]; then
+            declared[$tmpl_key]=1
+            tmpl_val="${tmpl_line#*=}"
+            if [[ "$tmpl_val" == \"* && "$tmpl_val" == *\" ]]; then
+                declared_quote[$tmpl_key]='"'
+            elif [[ "$tmpl_val" == \'* && "$tmpl_val" == *\' ]]; then
+                declared_quote[$tmpl_key]="'"
+            else
+                declared_quote[$tmpl_key]=""
+            fi
+        fi
     done < "$HOME/.env"
     local -a assignments
-    local line key val quote c i
+    local line key val quote c i assignment tmpl_q
     while IFS= read -r line; do
         [[ -z "$line" || "$line" == \#* ]] && continue
         line="${line#export }"
@@ -101,30 +117,34 @@ opload() {
             echo "opload: refusing to export variable '$key' (not declared in $HOME/.env)" >&2
             return 1
         fi
-        # Walk the value tracking quote state: a quote still open at end
-        # of line means the value continues on the next physical line,
-        # which a line-based parser cannot represent safely, so refuse.
-        quote=''
-        for (( i = 1; i <= ${#val}; i++ )); do
-            c="${val[i]}"
-            if [[ -z "$quote" ]]; then
-                [[ "$c" == \" || "$c" == \' ]] && quote="$c"
-            elif [[ "$c" == "$quote" ]]; then
-                quote=''
+        # Quotes are template syntax only: track just the template's own
+        # quote character (unquoted template lines get no tracking, since
+        # quote characters in their values are data, not syntax). A quote
+        # still open at end of line means the value continues on the next
+        # physical line, which a line-based parser cannot represent safely,
+        # so refuse.
+        tmpl_q="${declared_quote[$key]:-}"
+        if [[ -n "$tmpl_q" ]]; then
+            quote=''
+            for (( i = 1; i <= ${#val}; i++ )); do
+                c="${val[i]}"
+                if [[ -z "$quote" ]]; then
+                    [[ "$c" == "$tmpl_q" ]] && quote="$c"
+                elif [[ "$c" == "$quote" ]]; then
+                    quote=''
+                fi
+            done
+            if [[ -n "$quote" ]]; then
+                echo "opload: value for '$key' has unbalanced quotes (multiline or malformed value); refusing to load" >&2
+                return 1
             fi
-        done
-        if [[ -n "$quote" ]]; then
-            echo "opload: value for '$key' has unbalanced quotes (multiline or malformed value); refusing to load" >&2
-            return 1
-        fi
-        # Strip only a single matching outer quote pair so values that
-        # begin or end with the other quote character are preserved.
-        if [[ "$val" == \"*\" ]]; then
-            val="${val#\"}"
-            val="${val%\"}"
-        elif [[ "$val" == \'*\' ]]; then
-            val="${val#\'}"
-            val="${val%\'}"
+            # Strip only the outer pair of the template's own quote style
+            # so values that begin or end with any other character (e.g.
+            # the other quote character) are preserved.
+            if [[ "$val" == "$tmpl_q"*"$tmpl_q" ]]; then
+                val="${val#"$tmpl_q"}"
+                val="${val%"$tmpl_q"}"
+            fi
         fi
         assignments+=("$key=$val")
     done <<< "$output"
