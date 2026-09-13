@@ -71,8 +71,8 @@ opload() {
         val="${val#\"}"
         val="${val%\'}"
         val="${val#\'}"
-        export "$key"="$val"
-    done < <(cat ~/.env | op inject)
+        export "$key=$val"
+    done < <(op inject < "$HOME/.env")
 }
 
 # Load environment variables from .env file with validation
