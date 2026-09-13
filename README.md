@@ -320,7 +320,16 @@ The project uses 1Password CLI for secure secrets management with a streamlined 
 ```bash
 # Login and load environment variables in one command
 opload() {
-    eval "$(op signin)"
+    # Capture op signin via a checked command substitution so a failed
+    # login stops the load (preserving the old alias's && short-circuit):
+    # a still-valid prior session could otherwise let op inject succeed
+    # and report success despite the failed login.
+    local signin
+    if ! signin="$(op signin)"; then
+        echo "opload: op signin failed, no environment variables were loaded" >&2
+        return 1
+    fi
+    eval "$signin"
     # Capture op inject output with a checked command substitution so its
     # exit status is visible: a process substitution would hide failures
     # (auth errors, missing $HOME/.env, bad templates) behind a clean loop.
@@ -329,18 +338,60 @@ opload() {
         echo "opload: op inject failed, no environment variables were loaded" >&2
         return 1
     fi
-    local line key val
+    # Only variable names declared by the $HOME/.env template may be
+    # exported: a secret containing newlines cannot smuggle extra
+    # assignments (e.g. "export PATH=/attacker") into the caller's shell.
+    local -A declared
+    local tmpl_line tmpl_key
+    while IFS= read -r tmpl_line || [[ -n "$tmpl_line" ]]; do
+        [[ -z "$tmpl_line" || "$tmpl_line" == \#* ]] && continue
+        tmpl_key="${tmpl_line#export }"
+        tmpl_key="${tmpl_key%%=*}"
+        [[ "$tmpl_key" =~ ^[A-Za-z_][A-Za-z0-9_]*$ ]] && declared[$tmpl_key]=1
+    done < "$HOME/.env"
+    local -a assignments
+    local line key val quote c i
     while IFS= read -r line; do
         [[ -z "$line" || "$line" == \#* ]] && continue
         line="${line#export }"
         key="${line%%=*}"
         val="${line#*=}"
-        val="${val%\"}"
-        val="${val#\"}"
-        val="${val%\'}"
-        val="${val#\'}"
-        export "$key=$val"
+        if [[ ! "$key" =~ ^[A-Za-z_][A-Za-z0-9_]*$ || -z "${declared[$key]:-}" ]]; then
+            echo "opload: refusing to export variable '$key' (not declared in $HOME/.env)" >&2
+            return 1
+        fi
+        # Walk the value tracking quote state: a quote still open at end
+        # of line means the value continues on the next physical line,
+        # which a line-based parser cannot represent safely, so refuse.
+        quote=''
+        for (( i = 1; i <= ${#val}; i++ )); do
+            c="${val[i]}"
+            if [[ -z "$quote" ]]; then
+                [[ "$c" == \" || "$c" == \' ]] && quote="$c"
+            elif [[ "$c" == "$quote" ]]; then
+                quote=''
+            fi
+        done
+        if [[ -n "$quote" ]]; then
+            echo "opload: value for '$key' has unbalanced quotes (multiline or malformed value); refusing to load" >&2
+            return 1
+        fi
+        # Strip only a single matching outer quote pair so values that
+        # begin or end with the other quote character are preserved.
+        if [[ "$val" == \"*\" ]]; then
+            val="${val#\"}"
+            val="${val%\"}"
+        elif [[ "$val" == \'*\' ]]; then
+            val="${val#\'}"
+            val="${val%\'}"
+        fi
+        assignments+=("$key=$val")
     done <<< "$output"
+    # Export only after every line validated, so a refusal loads nothing.
+    for assignment in "${assignments[@]}"; do
+        export "$assignment"
+    done
+    return 0
 }
 ```
 
