@@ -207,8 +207,8 @@ The current framework structure will extend to support:
 
 ### Package Management
 - **Homebrew**: Primary package manager with automatic installation
-- **Formulae**: Command-line tools (gh, htop, macmon, oh-my-posh, uv, pre-commit, pulumi, opencode, imsg, pi-coding-agent, zsh-autocomplete, zsh-autosuggestions, zsh-history-substring-search, zsh-syntax-highlighting)
-- **Casks**: GUI applications, command-line utilities, and fonts (1Password, 1Password CLI, Antigravity CLI, iTerm2, VS Code, OrbStack, Rectangle, Obsidian, font-meslo-lg-nerd-font)
+- **Formulae**: Command-line tools (gh, htop, macmon, oh-my-posh, uv, pre-commit, pulumi, opencode, imsg, zsh-autocomplete, zsh-autosuggestions, zsh-syntax-highlighting, zsh-history-substring-search, pi-coding-agent)
+- **Casks**: GUI applications, command-line utilities, and fonts (1password, 1password-cli, antigravity-cli, iterm2, visual-studio-code, orbstack, rectangle, obsidian, font-meslo-lg-nerd-font)
 - **Update Strategy**: Checks last update time, only updates if >24 hours old
 
 ### Key Features
@@ -232,6 +232,7 @@ The current framework structure will extend to support:
 - zsh-syntax-highlighting
 - zsh-history-substring-search
 - pi-coding-agent
+
 # Homebrew casks
 - 1password
 - 1password-cli
