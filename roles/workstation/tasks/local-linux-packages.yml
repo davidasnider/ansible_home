@@ -161,8 +161,7 @@
       # Expected impact: Saves ~1-2 seconds of task execution overhead per run
       ansible.builtin.apt_repository:
         repo: >-
-          {% set a = ansible_facts.architecture %}
-          {% set m = 'amd64' if a == 'x86_64' else 'armhf' if a == 'armv7l' else 'arm64' if a == 'aarch64' else a %}
+          {%- set m = {'x86_64': 'amd64', 'i686': 'i386', 'armv7l': 'armhf', 'aarch64': 'arm64'}.get(ansible_facts.architecture, ansible_facts.architecture) -%}
           deb [arch={{ m }} signed-by=/usr/share/keyrings/1password-archive-keyring.gpg]
           https://downloads.1password.com/linux/debian/{{ m }} stable main
         filename: 1password
