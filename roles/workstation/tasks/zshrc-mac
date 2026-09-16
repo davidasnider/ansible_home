@@ -70,7 +70,13 @@ fi
 # 1Password login and environment variable loading alias
 opload() {
     # Ensure signin succeeds before attempting to load secrets
-    eval "$(op signin)" || return 1
+    # Capture the output and check op's exit status explicitly, since eval
+    # alone can succeed even if the substitution produced no output.
+    local signin_output
+    if ! signin_output="$(op signin)"; then
+        return 1
+    fi
+    eval "$signin_output" || return 1
 
     while IFS= read -r line || [[ -n "$line" ]]; do
         # Skip empty lines and comments
