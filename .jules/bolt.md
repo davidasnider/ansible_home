@@ -17,3 +17,7 @@
 ## 2024-11-20 - Ansible User Facts
 **Learning:** Shell commands like `whoami` have an implicit task execution overhead. The built-in `ansible_facts['user_id']` contains the current running user ID and can be used in its place to skip running a separate command.
 **Action:** Use `ansible_facts['user_id']` instead of creating new tasks that run `whoami`.
+
+## 2026-09-17 - Ansible Command `dpkg` facts Map Bypass
+**Learning:** Shell commands like `dpkg --print-architecture` have an implicit task execution overhead.
+**Action:** Use mapped native facts instead of shelling out (e.g., replace `dpkg --print-architecture` with a Jinja mapping of `ansible_facts['architecture']`). Always use `.get(key, default)` for dictionary mappings instead of strict bracket notation to prevent `UndefinedError`.
