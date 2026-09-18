@@ -319,7 +319,28 @@ The project uses 1Password CLI for secure secrets management with a streamlined 
 
 ```bash
 # Login and load environment variables in one command
-alias opload='eval "$(op signin)" && eval "$(cat ~/.env | op inject)"'
+# 1Password login and environment variable loading function
+opload() {
+    eval "$(op signin)" || return 1
+    while IFS= read -r line || [[ -n "$line" ]]; do
+        [[ -z "$line" || "$line" == \#* ]] && continue
+        line="${line#export }"
+        local key="${line%%=*}"
+        local val="${line#*=}"
+
+        if [[ "$val" == \"*\" ]]; then
+            val="${val%\"}"
+            val="${val#\"}"
+        elif [[ "$val" == \'*\' ]]; then
+            val="${val%\'}"
+            val="${val#\'}"
+        fi
+
+        if [[ -n "$key" ]]; then
+            export "$key"="$val"
+        fi
+    done < <(cat ~/.env | op inject)
+}
 ```
 
 ### Environment Variables

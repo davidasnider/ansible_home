@@ -17,3 +17,8 @@
 **Vulnerability:** The `bootstrap.sh` script and related workflow documents exported the user's sudo password as an inline environment variable (`ANSIBLE_SUDO_PASS`) to be consumed by Ansible playbooks.
 **Learning:** Passing sensitive secrets like passwords through environment variables exposes them to all child processes and makes them vulnerable to memory scraping or accidental leakage in crash reports or process listing tools (e.g., `ps e`).
 **Prevention:** Instead of reading secrets and placing them in the environment, leverage the built-in, secure credential prompting mechanisms of the tools being used. For Ansible, use the `--ask-become-pass` flag to ensure passwords are interactively gathered and held securely in memory only by the process that strictly requires them.
+
+## 2026-10-09 - `eval` Command Injection Vulnerability via Injected Output
+**Vulnerability:** The `opload` alias used `eval` on the output of `op inject` (e.g., `eval "$(cat ~/.env | op inject)"`). Using `eval` on strings that inject secrets is highly dangerous, as any unescaped special characters or malicious inputs within the loaded secrets can trigger unintended command execution in the current shell.
+**Learning:** `eval` interprets strings as code. When injecting variables or secrets from external or user-controlled sources, `eval` bypasses all shell quoting safeguards if the injected content itself contains executable sequences.
+**Prevention:** Never use `eval` or `source` directly on outputs that substitute secrets. Parse and load them securely using a safe string parsing loop (e.g., `while IFS= read -r line || [[ -n "$line" ]]`) combined with robust shell parameter expansions to strip prefixes and quotes, before explicitly using `export`.
