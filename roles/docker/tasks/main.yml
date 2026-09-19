@@ -25,6 +25,9 @@
     mode: '0644'
 
 - name: Get APT architecture
+  # dpkg --print-architecture reports the Debian userspace/ABI (e.g. armhf on a
+  # 64-bit-kernel/32-bit-userland host), which cannot be derived from
+  # ansible_facts['architecture'] (the kernel/machine arch reported by uname -m).
   ansible.builtin.command: dpkg --print-architecture
   register: docker_deb_architecture
   changed_when: false
@@ -33,7 +36,7 @@
   ansible.builtin.apt_repository:
     repo: >-
       deb [arch={{ docker_deb_architecture.stdout }} signed-by=/etc/apt/keyrings/docker.asc]
-      https://download.docker.com/linux/debian {{ ansible_facts['distribution_release'] }} stable
+      https://download.docker.com/linux/debian {{ ansible_facts.distribution_release }} stable
     state: present
     filename: docker
     update_cache: true

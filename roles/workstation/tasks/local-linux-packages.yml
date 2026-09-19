@@ -155,6 +155,9 @@
       become: true
 
     - name: Get system architecture
+      # dpkg --print-architecture reports the Debian userspace/ABI (e.g. armhf on a
+      # 64-bit-kernel/32-bit-userland host), which cannot be derived from
+      # ansible_facts['architecture'] (the kernel/machine arch reported by uname -m).
       ansible.builtin.command: dpkg --print-architecture
       register: workstation_system_arch
       changed_when: false
@@ -164,10 +167,8 @@
       # Expected impact: No impact on first run, enables cache_valid_time on subsequent apt tasks
       ansible.builtin.apt_repository:
         repo: >-
-          deb [arch={{ workstation_system_arch.stdout }}
-          signed-by=/usr/share/keyrings/1password-archive-keyring.gpg]
-          https://downloads.1password.com/linux/debian/{{ workstation_system_arch.stdout }}
-          stable main
+          deb [arch={{ workstation_system_arch.stdout }} signed-by=/usr/share/keyrings/1password-archive-keyring.gpg]
+          https://downloads.1password.com/linux/debian/{{ workstation_system_arch.stdout }} stable main
         filename: 1password
         state: present
         update_cache: true
