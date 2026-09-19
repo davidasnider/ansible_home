@@ -59,8 +59,104 @@ if grep -q microsoft /proc/version 2>/dev/null; then
     alias ssh-add='ssh-add.exe'
 fi
 
-# 1Password login and environment variable loading alias
-alias opload='eval "$(op signin)" && eval "$(cat ~/.env | op inject)"'
+# 1Password login and environment variable loading function (securely parses op inject)
+opload() {
+    # Ensure signin succeeds before attempting to load secrets
+    local signin_output
+    if ! signin_output="$(op signin)"; then
+        return 1
+    fi
+    eval "$signin_output" || return 1
+
+    if [ ! -f "$HOME/.env" ]; then
+        echo "Warning: .env file not found in $HOME" >&2
+        return 1
+    fi
+
+    local injected_env
+    if ! injected_env="$(op inject -i "$HOME/.env")"; then
+        return 1
+    fi
+
+    local line key value
+    local in_multiline=0
+    local quote_char=""
+    local multiline_key=""
+    local multiline_val=""
+
+    while IFS= read -r line || [[ -n "$line" ]]; do
+        if (( in_multiline )); then
+            multiline_val+=$'\n'"$line"
+            if [[ "$quote_char" == '"' && "$line" == *'"' ]] || [[ "$quote_char" == "'" && "$line" == *"'" ]]; then
+                if [[ "$quote_char" == '"' && "$line" == *'\"' ]]; then
+                    continue
+                fi
+                in_multiline=0
+                key="$multiline_key"
+                value="$multiline_val"
+                if [[ "$quote_char" == '"' ]]; then
+                    value="${value%\"}"
+                    value="${value#\"}"
+                else
+                    value="${value%\'}"
+                    value="${value#\'}"
+                fi
+                if [[ "$key" =~ ^[a-zA-Z_][a-zA-Z0-9_]*$ ]]; then
+                    export "$key"="$value"
+                fi
+            fi
+            continue
+        fi
+
+        # Skip empty lines and comments
+        if [[ -z "$line" || "$line" == \#* ]]; then
+            continue
+        fi
+
+        # Strip leading 'export '
+        line="${line#export }"
+
+        # Must contain '='
+        if [[ "$line" != *=* ]]; then
+            continue
+        fi
+
+        key="${line%%=*}"
+        value="${line#*=}"
+
+        # Trim whitespace from key
+        key="${key#"${key%%[![:space:]]*}"}"
+        key="${key%"${key##*[![:space:]]}"}"
+
+        # Check for starting quote without matching closing quote (multiline)
+        if [[ "$value" == \"* && ("$value" != *\" || "$value" == '\"' || ${#value} -eq 1) ]]; then
+            in_multiline=1
+            quote_char='"'
+            multiline_key="$key"
+            multiline_val="$value"
+            continue
+        elif [[ "$value" == \'* && ("$value" != *\' || ${#value} -eq 1) ]]; then
+            in_multiline=1
+            quote_char="'"
+            multiline_key="$key"
+            multiline_val="$value"
+            continue
+        fi
+
+        # Single-line: strip matching surrounding quotes only
+        if [[ "$value" == \"*\" && "$value" == *\" && ${#value} -ge 2 ]]; then
+            value="${value%\"}"
+            value="${value#\"}"
+        elif [[ "$value" == \'*\' && "$value" == *\' && ${#value} -ge 2 ]]; then
+            value="${value%\'}"
+            value="${value#\'}"
+        fi
+
+        if [[ "$key" =~ ^[a-zA-Z_][a-zA-Z0-9_]*$ ]]; then
+            export "$key"="$value"
+        fi
+    done <<< "$injected_env"
+}
 
 # Validate that ~/.env file exists for 1Password secret references
 if [ ! -f "$HOME/.env" ]; then
