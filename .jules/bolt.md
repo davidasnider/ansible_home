@@ -18,6 +18,10 @@
 **Learning:** Shell commands like `whoami` have an implicit task execution overhead. The built-in `ansible_facts['user_id']` contains the current running user ID and can be used in its place to skip running a separate command.
 **Action:** Use `ansible_facts['user_id']` instead of creating new tasks that run `whoami`.
 
+## 2024-05-18 - [Ansible: Native Shell Task Idempotency]
+**Learning:** Checking for file existence with a separate `ansible.builtin.stat` task before running a shell command that creates it adds unnecessary overhead (connection setup, module execution, task parsing) and violates the principle of letting Ansible handle idempotency natively.
+**Action:** Remove redundant `ansible.builtin.stat` + `when` condition combinations and rely exclusively on the `creates` argument within `ansible.builtin.shell` or `ansible.builtin.command` to skip execution if the target file or directory already exists.
+
 ## 2026-09-09 - dpkg --print-architecture reports the userspace ABI, not the kernel arch
 **Learning:** `dpkg --print-architecture` reports the Debian **userspace/ABI** (e.g. `amd64`, `i386`, `armhf`, `arm64`), while `ansible_facts['architecture']` reports the **kernel/machine** architecture from `uname -m` (e.g. `x86_64`, `i686`, `armv7l`, `aarch64`). On mixed-ABI hosts — e.g. a Raspberry Pi with a 64-bit kernel and 32-bit Debian userland — they diverge: the fact is `aarch64` while dpkg reports `armhf`. There is no built-in Ansible fact that exposes the Debian userspace ABI, so mapping `ansible_facts['architecture']` for APT repository arch selectors/URLs can select the wrong architecture (e.g. `arm64` instead of `armhf`) and make the repository unavailable.
 **Action:** Keep a `dpkg --print-architecture` task (with `changed_when: false`) as the source of truth for Debian architecture selectors in APT repository lines; do not substitute `ansible_facts['architecture']`.

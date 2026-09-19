@@ -207,8 +207,8 @@ The current framework structure will extend to support:
 
 ### Package Management
 - **Homebrew**: Primary package manager with automatic installation
-- **Formulae**: Command-line tools (gh, htop, macmon, oh-my-posh, uv, pre-commit, pulumi, opencode, imsg, pi-coding-agent, zsh-autocomplete, zsh-autosuggestions, zsh-history-substring-search, zsh-syntax-highlighting)
-- **Casks**: GUI applications, command-line utilities, and fonts (1Password, 1Password CLI, Antigravity CLI, iTerm2, VS Code, OrbStack, Rectangle, Obsidian, font-meslo-lg-nerd-font)
+- **Formulae**: Command-line tools (gh, htop, macmon, oh-my-posh, uv, pre-commit, pulumi, opencode, imsg, zsh-autocomplete, zsh-autosuggestions, zsh-syntax-highlighting, zsh-history-substring-search, pi-coding-agent)
+- **Casks**: GUI applications, command-line utilities, and fonts (1password, 1password-cli, antigravity-cli, iterm2, visual-studio-code, orbstack, rectangle, obsidian, font-meslo-lg-nerd-font)
 - **Update Strategy**: Checks last update time, only updates if >24 hours old
 
 ### Key Features
@@ -232,6 +232,7 @@ The current framework structure will extend to support:
 - zsh-syntax-highlighting
 - zsh-history-substring-search
 - pi-coding-agent
+
 # Homebrew casks
 - 1password
 - 1password-cli
@@ -319,7 +320,7 @@ The project uses 1Password CLI for secure secrets management with a streamlined 
 
 ```bash
 # Login and load environment variables in one command
-alias opload='eval "$(op signin)" && eval "$(cat ~/.env | op inject)"'
+opload
 ```
 
 ### Environment Variables
@@ -331,11 +332,10 @@ export GITHUB_TOKEN="op://vault/github-token/token"
 ```
 
 ### Validation System
-The zsh configuration checks for the presence of the .env file and verifies 1Password authentication:
+The zsh configuration checks for the presence of the .env file:
 
 ```bash
 # Warns user if .env file is missing and provides instructions to create it
-# Checks if 1Password CLI is authenticated, and if not, prompts to use opload
 ```
 
 ## Security Features
@@ -347,7 +347,7 @@ The zsh configuration checks for the presence of the .env file and verifies 1Pas
 ### Secret Storage Strategy
 - **No Hardcoded Secrets**: All sensitive data referenced via 1Password URIs
 - **User-Specific Paths**: Uses `{{ lookup('env', 'HOME') }}` for user directory access
-- **Environment Isolation**: Secrets loaded per-session via `opload` alias
+- **Environment Isolation**: Secrets loaded per-session via `opload` function
 
 ### Platform-Specific Security
 - **macOS**: 1Password app provides GUI and CLI integration

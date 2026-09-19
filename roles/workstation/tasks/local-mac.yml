@@ -52,7 +52,6 @@
     var: workstation_homebrew_install_result
     verbosity: 2
 
-
 - name: Check last Homebrew update time
   ansible.builtin.stat:
     path: /opt/homebrew/.git/FETCH_HEAD
@@ -180,13 +179,6 @@
         state: present
       when: not _workstation_nerd_font_check.stat.exists
 
-
-- name: Check if Oh My Zsh is installed
-  ansible.builtin.stat:
-    path: "{{ ansible_facts['env']['HOME'] }}/.oh-my-zsh"
-  register: workstation_oh_my_zsh_stat
-
-
 - name: Install Oh My Zsh with error handling
   block:
     - name: Install Oh My Zsh if not present
@@ -194,7 +186,7 @@
         sh -c "$(curl -fsSL -m 300 https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
       args:
         creates: "{{ ansible_facts['env']['HOME'] }}/.oh-my-zsh"
-      when: not workstation_oh_my_zsh_stat.stat.exists
+      # ⚡ Bolt: Removed redundant ansible.builtin.stat check and when condition; relying on creates.
       changed_when: false
       register: workstation_oh_my_zsh_install_result
       retries: 3
