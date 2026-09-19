@@ -319,7 +319,7 @@ The project uses 1Password CLI for secure secrets management with a streamlined 
 
 ```bash
 # Login and load environment variables in one command
-alias opload='eval "$(op signin)" && eval "$(cat ~/.env | op inject)"'
+opload
 ```
 
 ### Environment Variables
@@ -347,7 +347,7 @@ The zsh configuration checks for the presence of the .env file and verifies 1Pas
 ### Secret Storage Strategy
 - **No Hardcoded Secrets**: All sensitive data referenced via 1Password URIs
 - **User-Specific Paths**: Uses `{{ lookup('env', 'HOME') }}` for user directory access
-- **Environment Isolation**: Secrets loaded per-session via `opload` alias
+- **Environment Isolation**: Secrets loaded per-session via `opload` function
 
 ### Platform-Specific Security
 - **macOS**: 1Password app provides GUI and CLI integration
