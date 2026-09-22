@@ -33,12 +33,8 @@
     - "{{ home_assistant_remote_config_dir }}"
     - "{{ home_assistant_remote_config_dir }}/custom_components"
 
-- name: Check if Home Assistant configuration.yaml exists
-  ansible.builtin.stat:
-    path: "{{ home_assistant_remote_config_dir }}/configuration.yaml"
-  register: home_assistant_remote_config_file
-
 - name: Seed baseline configuration.yaml
+  # ⚡ Bolt: Removed redundant stat check. Relying on copy's native force: false for idempotency.
   ansible.builtin.copy:
     content: |
       default_config:
@@ -49,7 +45,7 @@
     owner: "{{ home_assistant_remote_user }}"
     group: "{{ home_assistant_remote_user }}"
     mode: "0644"
-  when: not home_assistant_remote_config_file.stat.exists
+    force: false
 
 - name: Check if remote_homeassistant custom component is installed
   ansible.builtin.stat:
