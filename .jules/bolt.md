@@ -26,6 +26,6 @@
 **Learning:** `dpkg --print-architecture` reports the Debian **userspace/ABI** (e.g. `amd64`, `i386`, `armhf`, `arm64`), while `ansible_facts['architecture']` reports the **kernel/machine** architecture from `uname -m` (e.g. `x86_64`, `i686`, `armv7l`, `aarch64`). On mixed-ABI hosts — e.g. a Raspberry Pi with a 64-bit kernel and 32-bit Debian userland — they diverge: the fact is `aarch64` while dpkg reports `armhf`. There is no built-in Ansible fact that exposes the Debian userspace ABI, so mapping `ansible_facts['architecture']` for APT repository arch selectors/URLs can select the wrong architecture (e.g. `arm64` instead of `armhf`) and make the repository unavailable.
 **Action:** Keep a `dpkg --print-architecture` task (with `changed_when: false`) as the source of truth for Debian architecture selectors in APT repository lines; do not substitute `ansible_facts['architecture']`.
 
-## 2026-10-25 - Copy Task Optimization
+## 2026-09-22 - Copy Task Optimization
 **Learning:** Checking for file existence with a separate `ansible.builtin.stat` task before conditionally running `ansible.builtin.copy` creates unnecessary overhead. The `ansible.builtin.copy` module supports the `force: false` parameter, which natively skips file creation if the file already exists, eliminating the need for the preceding `stat` check.
 **Action:** Use `force: false` in `ansible.builtin.copy` tasks instead of a separate `ansible.builtin.stat` task + `when` condition to improve performance.
