@@ -34,6 +34,7 @@
     - "{{ home_assistant_remote_config_dir }}/custom_components"
 
 - name: Seed baseline configuration.yaml
+  # ⚡ Bolt: Removed redundant stat check. Relying on copy's native force: false for idempotency.
   ansible.builtin.copy:
     content: |
       default_config:
