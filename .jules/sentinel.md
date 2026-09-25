@@ -22,3 +22,8 @@
 **Vulnerability:** The `opload` alias used `eval "$(cat ~/.env | op inject)"` to load environment variables, exposing the shell to command injection if a secret contained unescaped shell metacharacters.
 **Learning:** Using `eval` or `source` to execute the output of secret managers directly is dangerous, because secrets might contain special characters (like semicolons or backticks) that the shell will interpret as commands.
 **Prevention:** Always use a secure string parsing loop (e.g., `while IFS= read -r line`) to safely read, sanitize (strip `export ` and quotes), and export keys and values without invoking shell evaluation.
+
+## 2026-09-08 - Command Injection in op signin Evaluation
+**Vulnerability:** The `opload` function evaluated the output of `op signin` directly using `eval "$signin_output"`, exposing the shell to potential command injection.
+**Learning:** Even built-in CLI commands that output shell variables can be a vector for command injection if their output is directly evaluated.
+**Prevention:** Instead of using `eval`, always parse the output of such commands securely using a string parsing loop (e.g., `while IFS= read -r line`), extracting the keys and values and exporting them safely without invoking shell evaluation.
