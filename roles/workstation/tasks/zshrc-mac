@@ -74,7 +74,29 @@ opload() {
     if ! signin_output="$(op signin)"; then
         return 1
     fi
-    eval "$signin_output" || return 1
+
+    local s_line s_key s_value
+    while IFS= read -r s_line || [[ -n "$s_line" ]]; do
+        if [[ -z "$s_line" || "$s_line" == \#* ]]; then
+            continue
+        fi
+        s_line="${s_line#export }"
+        if [[ "$s_line" != *=* ]]; then
+            continue
+        fi
+        s_key="${s_line%%=*}"
+        s_value="${s_line#*=}"
+        if [[ "$s_value" == \"*\" && "$s_value" == *\" && ${#s_value} -ge 2 ]]; then
+            s_value="${s_value%\"}"
+            s_value="${s_value#\"}"
+        elif [[ "$s_value" == \'*\' && "$s_value" == *\' && ${#s_value} -ge 2 ]]; then
+            s_value="${s_value%\'}"
+            s_value="${s_value#\'}"
+        fi
+        if [[ "$s_key" =~ ^[a-zA-Z_][a-zA-Z0-9_]*$ ]]; then
+            export "$s_key"="$s_value"
+        fi
+    done <<< "$signin_output"
 
     if [ ! -f "$HOME/.env" ]; then
         echo "Warning: .env file not found in $HOME" >&2
