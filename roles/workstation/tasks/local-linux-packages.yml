@@ -100,12 +100,6 @@
       register: workstation_pulumi_install_result
       changed_when: false
 
-    - name: Remove temporary directory for Pulumi
-      ansible.builtin.file:
-        path: "{{ workstation_pulumi_tmpdir.path }}"
-        state: absent
-      when: workstation_pulumi_check.rc != 0 and not workstation_optimized_base_check.stat.exists
-
     - name: Verify Pulumi installation
       ansible.builtin.shell: |
         export PATH=$HOME/.pulumi/bin:$PATH
@@ -121,6 +115,14 @@
     - name: Fail if Pulumi installation failed
       ansible.builtin.fail:
         msg: "Pulumi installation failed. Please check the logs for more details."
+
+  always:
+    - name: Remove temporary directory for Pulumi
+      ansible.builtin.file:
+        path: "{{ workstation_pulumi_tmpdir.path }}"
+        state: absent
+      changed_when: false
+      when: workstation_pulumi_tmpdir is defined and workstation_pulumi_tmpdir.path is defined
 
 - name: Download and install 1Password CLI
   when: not workstation_optimized_base_check.stat.exists
