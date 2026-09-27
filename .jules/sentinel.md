@@ -24,6 +24,6 @@
 **Prevention:** Always use a secure string parsing loop (e.g., `while IFS= read -r line`) to safely read, sanitize (strip `export ` and quotes), and export keys and values without invoking shell evaluation.
 
 ## 2026-09-08 - Command Injection via `eval` on `op signin`
-**Vulnerability:** The `opload` alias used `eval "$(op signin)"` to execute the output directly, exposing the shell to command injection if the `op signin` output contains unescaped shell metacharacters.
+**Vulnerability:** The `opload` function used `eval "$(op signin)"` to execute the output directly, exposing the shell to command injection if the `op signin` output contains unescaped shell metacharacters.
 **Learning:** Evaluating the raw output of authentication commands using `eval` is dangerous and unnecessary, as it provides an execution path for unintended shell commands.
 **Prevention:** Always use a secure string parsing loop (e.g., `while IFS= read -r line`) to safely read, sanitize (strip `export ` and quotes), and export keys and values without invoking shell evaluation, applying this pattern to all secret and session loading commands.

@@ -81,6 +81,9 @@ opload() {
             continue
         fi
         s_key="${s_line%%=*}"
+        # Trim surrounding whitespace from the key (matches the .env parser below)
+        s_key="${s_key#"${s_key%%[![:space:]]*}"}"
+        s_key="${s_key%"${s_key##*[![:space:]]}"}"
         s_value="${s_line#*=}"
         if [[ "$s_value" == \"*\" && "$s_value" == *\" && ${#s_value} -ge 2 ]]; then
             s_value="${s_value%\"}"
