@@ -76,10 +76,17 @@
       failed_when: false
       changed_when: false
 
+    - name: Create temporary directory for Pulumi installation
+      ansible.builtin.tempfile:
+        state: directory
+        suffix: _pulumi_install
+      register: workstation_pulumi_tmpdir
+      when: workstation_pulumi_check.rc != 0 and not workstation_optimized_base_check.stat.exists
+
     - name: Download Pulumi installation script
       ansible.builtin.get_url:
         url: https://get.pulumi.com
-        dest: /tmp/pulumi-install.sh
+        dest: "{{ workstation_pulumi_tmpdir.path }}/install.sh"
         mode: "0755"
       when: workstation_pulumi_check.rc != 0 and not workstation_optimized_base_check.stat.exists
       retries: 3
@@ -87,11 +94,17 @@
 
     - name: Install Pulumi CLI
       ansible.builtin.shell:
-        cmd: bash /tmp/pulumi-install.sh
+        cmd: bash "{{ workstation_pulumi_tmpdir.path }}/install.sh"
         executable: /bin/bash
       when: workstation_pulumi_check.rc != 0 and not workstation_optimized_base_check.stat.exists
       register: workstation_pulumi_install_result
       changed_when: false
+
+    - name: Remove temporary directory for Pulumi
+      ansible.builtin.file:
+        path: "{{ workstation_pulumi_tmpdir.path }}"
+        state: absent
+      when: workstation_pulumi_check.rc != 0 and not workstation_optimized_base_check.stat.exists
 
     - name: Verify Pulumi installation
       ansible.builtin.shell: |
@@ -117,10 +130,17 @@
         path: /usr/share/keyrings/1password-archive-keyring.gpg
       register: workstation_gpg_keyring_exists
 
+    - name: Create temporary directory for 1Password GPG key
+      ansible.builtin.tempfile:
+        state: directory
+        suffix: _1password_gpg
+      register: workstation_1password_tmpdir
+      when: not workstation_gpg_keyring_exists.stat.exists
+
     - name: Download 1Password GPG key
       ansible.builtin.get_url:
         url: https://downloads.1password.com/linux/keys/1password.asc
-        dest: /tmp/1password.asc
+        dest: "{{ workstation_1password_tmpdir.path }}/1password.asc"
         mode: "0644"
         force: false
       register: workstation_gpg_key_download
@@ -138,7 +158,7 @@
 
     - name: Import 1Password GPG key to system keyring
       ansible.builtin.shell: |
-        gpg --dearmor < /tmp/1password.asc > /usr/share/keyrings/1password-archive-keyring.gpg
+        gpg --dearmor < "{{ workstation_1password_tmpdir.path }}/1password.asc" > /usr/share/keyrings/1password-archive-keyring.gpg
       become: true
       when: not workstation_gpg_keyring_exists.stat.exists
       args:
@@ -205,12 +225,13 @@
         msg: "1Password CLI installation failed. Please check the logs for more details."
 
   always:
-    - name: Clean up temporary files
+    - name: Clean up temporary directory
       ansible.builtin.file:
-        path: /tmp/1password.asc
+        path: "{{ workstation_1password_tmpdir.path }}"
         state: absent
       register: workstation_cleanup_result
       changed_when: false
+      when: workstation_1password_tmpdir is defined and workstation_1password_tmpdir.path is defined
 
 # 1Password CLI Security Enhancements
 - name: Include 1Password security enhancements

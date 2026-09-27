@@ -27,3 +27,8 @@
 **Vulnerability:** The `opload` function evaluated the output of `op signin` directly using `eval "$signin_output"`, exposing the shell to potential command injection.
 **Learning:** Even built-in CLI commands that output shell variables can be a vector for command injection if their output is directly evaluated.
 **Prevention:** Instead of using `eval`, always parse the output of such commands securely using a string parsing loop (e.g., `while IFS= read -r line`), extracting the keys and values and exporting them safely without invoking shell evaluation.
+
+## 2026-09-08 - Predictable /tmp File Creation Vulnerability
+**Vulnerability:** The `local-linux-packages.yml` playbook used `ansible.builtin.get_url` with static, predictable paths in the world-writable `/tmp` directory (`/tmp/1password.asc`, `/tmp/pulumi-install.sh`).
+**Learning:** Hardcoding `/tmp/filename` allows local privilege escalation or arbitrary code execution via Time-Of-Check to Time-Of-Use (TOCTOU) race conditions or malicious symlinking/pre-creation by an unprivileged local user.
+**Prevention:** Always use `ansible.builtin.tempfile` to securely create temporary files or directories with unpredictable, randomized names and strict permissions before writing data or downloading files into them.
