@@ -67,6 +67,10 @@ opload() {
         return 1
     fi
 
+    # Defensive, best-effort parsing: `op signin` usually prints informational
+    # text (e.g. "New session established...") rather than export lines, so
+    # non-matching output is intentionally ignored and opload proceeds to the
+    # .env injection below whenever `op signin` exits 0.
     local s_line s_key s_value
     while IFS= read -r s_line || [[ -n "$s_line" ]]; do
         if [[ -z "$s_line" || "$s_line" == \#* ]]; then
