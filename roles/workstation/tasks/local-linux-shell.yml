@@ -8,20 +8,37 @@
     shell: /usr/bin/zsh
   become: true
 
+- name: Check if oh-my-posh is installed
+  ansible.builtin.stat:
+    path: "{{ ansible_facts['env']['HOME'] }}/.local/bin/oh-my-posh"
+  register: workstation_omp_check
+
+- name: Create secure temp directory for oh-my-posh installation
+  ansible.builtin.tempfile:
+    state: directory
+    suffix: omp_install
+  register: workstation_omp_tmpdir
+  when:
+    - not workstation_optimized_base_check.stat.exists
+    - not workstation_omp_check.stat.exists
+    - not (ansible_facts.virtualization_type is defined and ansible_facts.virtualization_type == 'docker')
+
 - name: Download oh-my-posh installation script
   ansible.builtin.get_url:
     url: https://ohmyposh.dev/install.sh
-    dest: /tmp/oh-my-posh-install.sh
-    mode: "0755"
+    dest: "{{ workstation_omp_tmpdir.path }}/install.sh"
+    mode: "0700"
   when:
     - not workstation_optimized_base_check.stat.exists
+    - not workstation_omp_check.stat.exists
     - not (ansible_facts.virtualization_type is defined and ansible_facts.virtualization_type == 'docker')
   retries: 3
   delay: 5
 
 - name: Install oh-my-posh if not present
+  # Security: Execute installer from secure temporary directory to prevent symlink/TOCTOU attacks in /tmp
   ansible.builtin.shell:
-    cmd: zsh /tmp/oh-my-posh-install.sh
+    cmd: zsh "{{ workstation_omp_tmpdir.path }}/install.sh"
     executable: /usr/bin/zsh
   environment:
     OMP_INSTALL_DIR: "{{ ansible_facts['env']['HOME'] }}/.local/bin"
@@ -29,8 +46,16 @@
     creates: "{{ ansible_facts['env']['HOME'] }}/.local/bin/oh-my-posh"
   when:
     - not workstation_optimized_base_check.stat.exists
+    - not workstation_omp_check.stat.exists
     - not (ansible_facts.virtualization_type is defined and ansible_facts.virtualization_type == 'docker')
   failed_when: false
+
+- name: Clean up oh-my-posh installation script temp directory
+  ansible.builtin.file:
+    path: "{{ workstation_omp_tmpdir.path }}"
+    state: absent
+  when:
+    - workstation_omp_tmpdir.path is defined
 
 - name: Install Oh My Zsh with error handling
   block:
