@@ -19,10 +19,13 @@
     mode: '0755'
 
 - name: Download Docker official GPG key
+  # ⚡ Bolt: Set force: false to avoid re-downloading GPG key if it already exists
+  # Expected impact: Prevents network request overhead on subsequent playbook runs
   ansible.builtin.get_url:
     url: https://download.docker.com/linux/debian/gpg
     dest: /etc/apt/keyrings/docker.asc
     mode: '0644'
+    force: false
 
 - name: Get APT architecture
   # dpkg --print-architecture reports the Debian userspace/ABI (e.g. armhf on a
