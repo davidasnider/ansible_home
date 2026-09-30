@@ -19,13 +19,16 @@
     mode: '0755'
 
 - name: Download Docker official GPG key
-  # ⚡ Bolt: Set force: false to avoid re-downloading GPG key if it already exists
-  # Expected impact: Prevents network request overhead on subsequent playbook runs
+  # ⚡ Bolt: force: false plus a pinned checksum means re-runs with an unchanged local key
+  # are verified purely locally, with no HTTP request at all; the checksum also verifies
+  # key integrity on download. If Docker rotates this key file, refresh the hash with:
+  #   curl -fsSL https://download.docker.com/linux/debian/gpg | shasum -a 256
   ansible.builtin.get_url:
     url: https://download.docker.com/linux/debian/gpg
     dest: /etc/apt/keyrings/docker.asc
     mode: '0644'
     force: false
+    checksum: sha256:1500c1f56fa9e26b9b8f42452a553675796ade0807cdce11975eb98170b3a570
 
 - name: Get APT architecture
   # dpkg --print-architecture reports the Debian userspace/ABI (e.g. armhf on a
