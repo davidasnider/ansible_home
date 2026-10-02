@@ -30,6 +30,12 @@ The 1Password CLI security enhancements provide robust protection through multip
 - GPG keyring files validated for correct ownership and permissions
 - Automatic permission remediation when issues are detected
 
+### ✅ Defensive Parsing of Authentication Output
+- Command output from authentication tools (like `op signin`) is parsed securely without using `eval`
+- Validates and escapes keys and values using a strict string parsing loop
+- Prevents command injection vulnerabilities from unescaped shell metacharacters
+- Graceful degradation by ignoring non-matching informational text
+
 ### ✅ Authentication Failure Recovery Procedures
 - Automatic retry mechanism with exponential backoff
 - Session invalidation and recreation on authentication failures
