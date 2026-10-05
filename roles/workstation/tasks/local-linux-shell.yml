@@ -8,29 +8,43 @@
     shell: /usr/bin/zsh
   become: true
 
-- name: Download oh-my-posh installation script
-  ansible.builtin.get_url:
-    url: https://ohmyposh.dev/install.sh
-    dest: /tmp/oh-my-posh-install.sh
-    mode: "0755"
+- name: Download and install oh-my-posh
   when:
     - not workstation_optimized_base_check.stat.exists
     - not (ansible_facts.virtualization_type is defined and ansible_facts.virtualization_type == 'docker')
-  retries: 3
-  delay: 5
+  block:
+    - name: Create temporary directory for oh-my-posh installation
+      # Security: Use tempfile to prevent TOCTOU and symlink attacks in world-writable /tmp
+      ansible.builtin.tempfile:
+        state: directory
+        suffix: _omp_install
+      register: workstation_omp_tmpdir
 
-- name: Install oh-my-posh if not present
-  ansible.builtin.shell:
-    cmd: zsh /tmp/oh-my-posh-install.sh
-    executable: /usr/bin/zsh
-  environment:
-    OMP_INSTALL_DIR: "{{ ansible_facts['env']['HOME'] }}/.local/bin"
-  args:
-    creates: "{{ ansible_facts['env']['HOME'] }}/.local/bin/oh-my-posh"
-  when:
-    - not workstation_optimized_base_check.stat.exists
-    - not (ansible_facts.virtualization_type is defined and ansible_facts.virtualization_type == 'docker')
-  failed_when: false
+    - name: Download oh-my-posh installation script
+      ansible.builtin.get_url:
+        url: https://ohmyposh.dev/install.sh
+        dest: "{{ workstation_omp_tmpdir.path }}/oh-my-posh-install.sh"
+        mode: "0755"
+      retries: 3
+      delay: 5
+
+    - name: Install oh-my-posh if not present
+      ansible.builtin.shell:
+        cmd: "zsh {{ workstation_omp_tmpdir.path }}/oh-my-posh-install.sh"
+        executable: /usr/bin/zsh
+      environment:
+        OMP_INSTALL_DIR: "{{ ansible_facts['env']['HOME'] }}/.local/bin"
+      args:
+        creates: "{{ ansible_facts['env']['HOME'] }}/.local/bin/oh-my-posh"
+      failed_when: false
+
+  always:
+    - name: Clean up oh-my-posh temporary directory
+      ansible.builtin.file:
+        path: "{{ workstation_omp_tmpdir.path }}"
+        state: absent
+      changed_when: false
+      when: workstation_omp_tmpdir is defined and workstation_omp_tmpdir.path is defined
 
 - name: Install Oh My Zsh with error handling
   block:
