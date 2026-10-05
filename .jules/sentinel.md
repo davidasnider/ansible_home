@@ -32,3 +32,8 @@
 **Vulnerability:** The `local-linux-packages.yml` playbook used `ansible.builtin.get_url` with static, predictable paths in the world-writable `/tmp` directory (`/tmp/1password.asc`, `/tmp/pulumi-install.sh`).
 **Learning:** Hardcoding `/tmp/filename` allows local privilege escalation or arbitrary code execution via Time-Of-Check to Time-Of-Use (TOCTOU) race conditions or malicious symlinking/pre-creation by an unprivileged local user.
 **Prevention:** Always use `ansible.builtin.tempfile` to securely create temporary files or directories with unpredictable, randomized names and strict permissions before writing data or downloading files into them.
+
+## 2026-10-05 - Secure Downloads with Tempfile
+**Vulnerability:** The `local-linux-shell.yml` playbook used `ansible.builtin.get_url` with a static, predictable path `/tmp/oh-my-posh-install.sh`.
+**Learning:** Hardcoding `/tmp/filename` allows local privilege escalation or arbitrary code execution via Time-Of-Check to Time-Of-Use (TOCTOU) race conditions or malicious symlinking/pre-creation by an unprivileged local user.
+**Prevention:** Always use `ansible.builtin.tempfile` to securely create temporary files or directories with unpredictable, randomized names and strict permissions before writing data or downloading files into them.

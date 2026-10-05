@@ -29,3 +29,7 @@
 ## 2026-09-22 - Copy Task Optimization
 **Learning:** Checking for file existence with a separate `ansible.builtin.stat` task before conditionally running `ansible.builtin.copy` creates unnecessary overhead. The `ansible.builtin.copy` module supports the `force: false` parameter, which natively skips file creation if the file already exists, eliminating the need for the preceding `stat` check.
 **Action:** Use `force: false` in `ansible.builtin.copy` tasks instead of a separate `ansible.builtin.stat` task + `when` condition to improve performance.
+
+## 2026-10-05 - Raspberry Pi APT Cache Validation
+**Learning:** Adding `cache_valid_time: 86400` to Ansible `apt` tasks for baseline system and security packages prevents redundant network and disk requests when the APT cache has already been updated within the last 24 hours.
+**Action:** Use `cache_valid_time: 86400` on routine package installation tasks (like baseline tools) to improve playbook execution speed, especially on slower devices like Raspberry Pis.
