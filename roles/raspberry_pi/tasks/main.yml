@@ -7,6 +7,8 @@
     cache_valid_time: 86400
 
 - name: Install baseline system and security packages
+  # ⚡ Bolt: Added cache_valid_time to avoid redundant APT cache validation/updates
+  # Expected impact: Prevents unnecessary network/disk requests when APT cache is valid (<24h)
   ansible.builtin.apt:
     name:
       - ufw
@@ -17,6 +19,7 @@
       - wget
       - curl
     state: present
+    cache_valid_time: 86400
 
 - name: Set up authorized keys for the remote user
   ansible.posix.authorized_key:
