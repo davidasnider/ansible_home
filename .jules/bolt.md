@@ -31,5 +31,5 @@
 **Action:** Use `force: false` in `ansible.builtin.copy` tasks instead of a separate `ansible.builtin.stat` task + `when` condition to improve performance.
 
 ## 2026-10-05 - Raspberry Pi APT Cache Validation
-**Learning:** Adding `cache_valid_time: 86400` to Ansible `apt` tasks for baseline system and security packages prevents redundant network and disk requests when the APT cache has already been updated within the last 24 hours.
+**Learning:** Adding `cache_valid_time: 86400` to an `apt` task skips a cache update when the APT cache was already refreshed within that window. Note this only has effect on tasks that would otherwise run `update_cache: true`: since Ansible 2.4, explicitly setting `cache_valid_time` implicitly sets `update_cache=yes`, so on install-only tasks (like the Raspberry Pi baseline package install) it adds a stale-only refresh rather than removing one — redundancy avoidance in `roles/raspberry_pi/tasks/main.yml` was already provided by the preceding cache-updating task.
 **Action:** Use `cache_valid_time: 86400` on routine package installation tasks (like baseline tools) to improve playbook execution speed, especially on slower devices like Raspberry Pis.
