@@ -1,0 +1,17 @@
+---
+# defaults file for workstation
+
+# Network UPS Tools (NUT) Server Configuration
+workstation_nut_server_enabled: true
+workstation_nut_ups_name: "mac_ups"
+workstation_nut_ups_driver: "usbhid-ups"
+workstation_nut_ups_port: "auto"
+workstation_nut_ups_desc: "Mac Studio UPS"
+workstation_nut_pollinterval: 15
+workstation_nut_listen_address: "0.0.0.0"
+workstation_nut_listen_port: 3493
+workstation_nut_ha_user: "ha_monitor"
+workstation_nut_ha_password: >-
+  {{ lookup('ansible.builtin.env', 'NUT_HA_PASSWORD')
+     | default(lookup('community.general.onepassword', 'Home Assistant NUT Password', field='password', errors='ignore'), true)
+     | default('CHANGE_ME_SECURE_PASSWORD', true) }}

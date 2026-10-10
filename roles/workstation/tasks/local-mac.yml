@@ -91,6 +91,7 @@
       - gh
       - htop
       - macmon
+      - nut
       - oh-my-posh
       - uv
       - pre-commit
@@ -293,3 +294,8 @@
   ansible.builtin.debug:
     var: workstation_op_health_check
     verbosity: 2
+
+# Network UPS Tools (NUT) Server Configuration
+- name: Include Network UPS Tools (NUT) server tasks
+  ansible.builtin.include_tasks: nut-server-mac.yml
+  when: workstation_nut_server_enabled | default(true)
