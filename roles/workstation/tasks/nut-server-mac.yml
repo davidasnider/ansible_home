@@ -2,6 +2,13 @@
 # Network UPS Tools (NUT) Server Configuration for macOS
 # Configures the Mac Studio as a NUT server to expose UPS metrics to Home Assistant over port 3493.
 
+- name: Fail if NUT Home Assistant password is not configured
+  ansible.builtin.fail:
+    msg: >-
+      NUT Home Assistant password is not configured. Set the NUT_HA_PASSWORD
+      environment variable or create a 1Password item titled 'Home Assistant NUT Password'.
+  when: (workstation_nut_ha_password | default('') | string | length) < 12
+
 - name: Ensure NUT configuration directory exists
   ansible.builtin.file:
     path: /opt/homebrew/etc/nut
@@ -49,27 +56,14 @@
     dest: /opt/homebrew/etc/nut/upsd.conf
     mode: "0640"
 
+# Read-only user: Home Assistant's NUT integration only polls data, so the
+# account intentionally gets no upsmon monitor role (least privilege).
 - name: Configure NUT user credentials for Home Assistant (upsd.users)
   ansible.builtin.copy:
     content: |
       [{{ workstation_nut_ha_user }}]
       password = {{ workstation_nut_ha_password }}
-      upsmon secondary
     dest: /opt/homebrew/etc/nut/upsd.users
-    mode: "0600"
-
-- name: Configure NUT client monitor (upsmon.conf)
-  ansible.builtin.copy:
-    content: |
-      MONITOR {{ workstation_nut_ups_name }}@localhost 1 {{ workstation_nut_ha_user }} {{ workstation_nut_ha_password }} secondary
-      MINSUPPLIES 1
-      SHUTDOWNCMD "/sbin/shutdown -h +0"
-      POLLFREQ 5
-      POLLFREQALERT 5
-      HOSTSYNC 15
-      DEADTIME 15
-      POWERDOWNFLAG /etc/killpower
-    dest: /opt/homebrew/etc/nut/upsmon.conf
     mode: "0600"
 
 - name: Create NUT server daemon runner script

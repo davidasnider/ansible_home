@@ -40,20 +40,16 @@ All configuration files, service daemons, and package installations are managed 
    desc = "Mac Studio UPS"
    pollinterval = 15
    ```
-3. **`upsd.conf`**: Directs `upsd` to listen on all interfaces:
+3. **`upsd.conf`**: Directs `upsd` to listen on a deliberately chosen address (loopback by default — see *Listener Binding* below):
    ```ini
-   LISTEN 0.0.0.0 3493
+   LISTEN 127.0.0.1 3493
    ```
-4. **`upsd.users`**: Grants read permissions to the Home Assistant monitor:
+4. **`upsd.users`**: Grants read-only access to the Home Assistant monitor (no `upsmon` role, since HA only polls data):
    ```ini
    [ha_monitor]
    password = <secure_password>
-   upsmon secondary
    ```
-5. **`upsmon.conf`**: Local monitor configuration for client alerts and system shutdown orchestration:
-   ```ini
-   MONITOR mac_ups@localhost 1 ha_monitor <secure_password> secondary
-   ```
+5. **`upsmon.conf`**: *Not managed.* Local `upsmon` shutdown orchestration is intentionally not configured — Home Assistant receives telemetry only, and no local monitor daemon runs on the Mac.
 
 ### LaunchAgent Background Daemon
 
@@ -62,28 +58,48 @@ A dedicated LaunchAgent is deployed to `~/Library/LaunchAgents/org.networkupstoo
 * Runs `upsd -F` in the foreground so `launchd` manages process health and restarts it automatically.
 * Operates without requiring `sudo`.
 
+## Enabling on a Host
+
+NUT server setup is **opt-in**: `workstation_nut_server_enabled` defaults to `false`, so a Mac without an attached UPS never starts the LaunchAgent (which would otherwise spin in an endless `KeepAlive` restart loop). Opt a specific host in via `host_vars`, e.g. `inventory/host_vars/<mac_studio_host>.yml`:
+
+```yaml
+---
+workstation_nut_server_enabled: true
+# Deliberately expose the service on the interface Home Assistant uses:
+workstation_nut_listen_address: "<Mac_Studio_LAN_or_Tailscale_IP>"
+```
+
+(Or set the same variables in group vars for a `workstations` subgroup.)
+
 ## Configuration Variables
 
 The following variables can be customized in inventory or host variables:
 
 | Variable | Default Value | Description |
 | --- | --- | --- |
-| `workstation_nut_server_enabled` | `true` | Enables or disables the NUT server setup |
+| `workstation_nut_server_enabled` | `false` | Enables (per-host opt-in) or disables the NUT server setup |
 | `workstation_nut_ups_name` | `mac_ups` | Name assigned to the UPS in NUT |
 | `workstation_nut_ups_driver` | `macosx-ups` | Hardware driver (`macosx-ups` for native macOS support) |
 | `workstation_nut_ups_port` | `auto` | Device port |
 | `workstation_nut_ups_desc` | `Mac Studio UPS` | Description string |
 | `workstation_nut_pollinterval` | `15` | Polling interval in seconds |
-| `workstation_nut_listen_address` | `0.0.0.0` | IP address for `upsd` listener |
+| `workstation_nut_listen_address` | `127.0.0.1` | IP address for the `upsd` listener (see *Listener Binding*) |
 | `workstation_nut_listen_port` | `3493` | Port for `upsd` listener |
 | `workstation_nut_ha_user` | `ha_monitor` | Monitoring username for Home Assistant |
-| `workstation_nut_ha_password` | *(from 1Password / env / default)* | Password for Home Assistant monitor |
+| `workstation_nut_ha_password` | *(from env / 1Password — no weak default)* | Password for the Home Assistant monitor; the playbook fails early if none resolves |
 
 To provide a custom password via the environment, export:
 ```bash
 export NUT_HA_PASSWORD="<custom_secret>"
 ```
-Or store it in 1Password under the title `Home Assistant NUT Password`.
+Or store it in 1Password under the title `Home Assistant NUT Password`. The role **fails early** if no password of at least 12 characters resolves, so a placeholder can never be written into `upsd.users`.
+
+### Listener Binding
+
+The listener binds to `127.0.0.1` by default — safe, but Home Assistant must run on the same machine. To let a remote Home Assistant instance connect:
+
+* Set `workstation_nut_listen_address` to the **specific** LAN (or Tailscale) IP/hostname Home Assistant uses to reach this Mac — recommended.
+* `0.0.0.0` should only be chosen deliberately: it exposes port 3493 on **every** interface (WAN, VPN, Tailscale) and therefore requires a strong per-deployment password (enforced by the fail-fast guard above).
 
 ## Verification & Service Management
 
@@ -114,7 +130,7 @@ cat /opt/homebrew/var/log/nut-server.log
 1. In Home Assistant, navigate to **Settings** > **Devices & Services** > **Add Integration**.
 2. Search for **Network UPS Tools (NUT)**.
 3. Enter the connection settings:
-   * **Host:** `<Mac_Studio_IP>` (e.g. `10.1.1.246` or `pixel.thesniderpad.com`)
+   * **Host:** `<Mac_Studio_IP>` (e.g. the Mac's LAN or Tailscale IP/hostname)
    * **Port:** `3493`
    * **Username:** `ha_monitor`
    * **Password:** *(the configured password)*
