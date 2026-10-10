@@ -81,14 +81,21 @@
       # Start UPS driver
       /opt/homebrew/sbin/upsdrvctl start
 
-      # Clean up driver when runner terminates
+      # Run upsd as a child (not via exec) so the trap below fires on
+      # TERM/exit and can stop the driver; a trapped signal interrupts
+      # `wait`, which then returns so cleanup runs.
+      /opt/homebrew/sbin/upsd -F &
+      UPSD_PID=$!
+
+      # Clean up driver (and the upsd child) when the runner terminates
       cleanup() {
+          kill "${UPSD_PID:-}" 2>/dev/null || true
+          wait "${UPSD_PID:-}" 2>/dev/null || true
           /opt/homebrew/sbin/upsdrvctl stop 2>/dev/null || true
       }
       trap cleanup EXIT INT TERM
 
-      # Run upsd in foreground so launchd can monitor process lifecycle
-      exec /opt/homebrew/sbin/upsd -F
+      wait "$UPSD_PID"
 
 - name: Create NUT server LaunchAgent plist
   ansible.builtin.copy:
@@ -109,6 +116,8 @@
           <true/>
           <key>KeepAlive</key>
           <true/>
+          <key>ThrottleInterval</key>
+          <integer>30</integer>
           <key>StandardOutPath</key>
           <string>/opt/homebrew/var/log/nut-server.log</string>
           <key>StandardErrorPath</key>

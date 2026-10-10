@@ -91,7 +91,6 @@
       - gh
       - htop
       - macmon
-      - nut
       - oh-my-posh
       - uv
       - pre-commit
@@ -108,6 +107,12 @@
   retries: 3
   delay: 5
   timeout: 300
+
+- name: Install NUT package when NUT server is enabled
+  community.general.homebrew:
+    name: nut
+    state: present
+  when: workstation_nut_server_enabled | default(false)
 
 - name: Verify Homebrew packages installation
   ansible.builtin.command: gh --version
