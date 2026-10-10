@@ -12,11 +12,19 @@ This document outlines the architecture, configuration, and operational procedur
                                       (NUT Integration)
 ```
 
-The Mac Studio acts as the **NUT Server** (`MODE=netserver`), hosting the driver (`usbhid-ups`) and data server daemon (`upsd`). Home Assistant queries the Mac Studio across the local network on port `3493` to retrieve real-time telemetry (line voltage, battery level, runtime remaining, current load).
+The Mac Studio acts as the **NUT Server** (`MODE=netserver`), hosting the driver (`macosx-ups`) and data server daemon (`upsd`). Home Assistant queries the Mac Studio across the local network on port `3493` to retrieve real-time telemetry (line voltage, battery level, runtime remaining, current load).
+
+### Why the `macosx-ups` Driver on macOS?
+
+On macOS, the operating system kernel and native power daemon (`/usr/libexec/ioupsd`) claim exclusive access to any attached USB HID UPS. Because of macOS security protections (IOKit/SIP), standard `libusb`-based drivers like `usbhid-ups` cannot detach the kernel driver and fail with:
+```text
+Can't claim USB device: Access denied (insufficient permissions)
+```
+NUT includes a native macOS meta-driver—**`macosx-ups`**—specifically built into Homebrew's NUT formula. This driver interfaces directly with Apple's `IOPowerSources` API, providing seamless access to UPS telemetry without requiring root privileges, kernel driver detaching, or competing with macOS power management.
 
 ## Ansible Automation
 
-All configuration files and package installations are managed authoritatively via the `workstation` Ansible role:
+All configuration files, service daemons, and package installations are managed authoritatively via the `workstation` Ansible role:
 
 * **Role Tasks:** `roles/workstation/tasks/nut-server-mac.yml` (invoked via `local-mac.yml`)
 * **Role Defaults:** `roles/workstation/defaults/main.yml`
@@ -27,7 +35,7 @@ All configuration files and package installations are managed authoritatively vi
 2. **`ups.conf`**: Defines the hardware driver:
    ```ini
    [mac_ups]
-   driver = usbhid-ups
+   driver = macosx-ups
    port = auto
    desc = "Mac Studio UPS"
    pollinterval = 15
@@ -47,6 +55,13 @@ All configuration files and package installations are managed authoritatively vi
    MONITOR mac_ups@localhost 1 ha_monitor <secure_password> secondary
    ```
 
+### LaunchAgent Background Daemon
+
+A dedicated LaunchAgent is deployed to `~/Library/LaunchAgents/org.networkupstools.nut-server.plist` and managed via a runner script (`~/.local/bin/nut-server`). It:
+* Starts the `macosx-ups` driver via `upsdrvctl start`.
+* Runs `upsd -F` in the foreground so `launchd` manages process health and restarts it automatically.
+* Operates without requiring `sudo`.
+
 ## Configuration Variables
 
 The following variables can be customized in inventory or host variables:
@@ -55,7 +70,7 @@ The following variables can be customized in inventory or host variables:
 | --- | --- | --- |
 | `workstation_nut_server_enabled` | `true` | Enables or disables the NUT server setup |
 | `workstation_nut_ups_name` | `mac_ups` | Name assigned to the UPS in NUT |
-| `workstation_nut_ups_driver` | `usbhid-ups` | Hardware driver (`usbhid-ups` for standard USB HID units) |
+| `workstation_nut_ups_driver` | `macosx-ups` | Hardware driver (`macosx-ups` for native macOS support) |
 | `workstation_nut_ups_port` | `auto` | Device port |
 | `workstation_nut_ups_desc` | `Mac Studio UPS` | Description string |
 | `workstation_nut_pollinterval` | `15` | Polling interval in seconds |
@@ -81,20 +96,17 @@ The playbook creates a verification script at `~/.local/bin/nut-check`:
 ### 2. Manual Testing (CLI)
 To test driver communication directly:
 ```bash
-sudo /opt/homebrew/opt/nut/sbin/upsdrvctl start
 upsc mac_ups@localhost
 ```
 
-### 3. Background Service
-To enable NUT as a boot daemon with root permissions to claim the USB HID interface:
+### 3. Service Lifecycle
+The NUT server runs automatically under `launchd`. To view status or restart:
 ```bash
-sudo brew services start nut
-```
+# Restart the service
+launchctl kickstart -k gui/$(id -u)/org.networkupstools.nut-server
 
-To stop or restart:
-```bash
-sudo brew services restart nut
-sudo brew services stop nut
+# View daemon logs
+cat /opt/homebrew/var/log/nut-server.log
 ```
 
 ## Adding to Home Assistant
@@ -105,7 +117,7 @@ sudo brew services stop nut
    * **Host:** `<Mac_Studio_IP>` (e.g. `10.1.1.246` or `pixel.thesniderpad.com`)
    * **Port:** `3493`
    * **Username:** `ha_monitor`
-   * **Password:** `<your_secure_password>`
+   * **Password:** *(the configured password)*
 4. Home Assistant will discover the UPS and expose entities for:
    * Battery level (%)
    * Battery runtime (seconds / minutes)

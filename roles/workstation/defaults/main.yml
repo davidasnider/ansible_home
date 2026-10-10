@@ -4,7 +4,7 @@
 # Network UPS Tools (NUT) Server Configuration
 workstation_nut_server_enabled: true
 workstation_nut_ups_name: "mac_ups"
-workstation_nut_ups_driver: "usbhid-ups"
+workstation_nut_ups_driver: "macosx-ups"
 workstation_nut_ups_port: "auto"
 workstation_nut_ups_desc: "Mac Studio UPS"
 workstation_nut_pollinterval: 15

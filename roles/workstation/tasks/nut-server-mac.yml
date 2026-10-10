@@ -8,14 +8,21 @@
     state: directory
     mode: "0755"
 
-- name: Ensure NUT state and run directories exist
+- name: Ensure NUT state, run, and log directories exist
   ansible.builtin.file:
     path: "{{ item }}"
     state: directory
-    mode: "0775"
+    mode: "0750"
   loop:
     - /opt/homebrew/var/state/ups
     - /opt/homebrew/var/run
+    - /opt/homebrew/var/log
+
+- name: Ensure user LaunchAgents directory exists
+  ansible.builtin.file:
+    path: "{{ ansible_facts['env']['HOME'] }}/Library/LaunchAgents"
+    state: directory
+    mode: "0755"
 
 - name: Configure NUT server mode (nut.conf)
   ansible.builtin.copy:
@@ -40,7 +47,7 @@
     content: |
       LISTEN {{ workstation_nut_listen_address }} {{ workstation_nut_listen_port }}
     dest: /opt/homebrew/etc/nut/upsd.conf
-    mode: "0644"
+    mode: "0640"
 
 - name: Configure NUT user credentials for Home Assistant (upsd.users)
   ansible.builtin.copy:
@@ -65,6 +72,62 @@
     dest: /opt/homebrew/etc/nut/upsmon.conf
     mode: "0600"
 
+- name: Create NUT server daemon runner script
+  ansible.builtin.copy:
+    dest: "{{ ansible_facts['env']['HOME'] }}/.local/bin/nut-server"
+    mode: "0755"
+    content: |
+      #!/bin/bash
+      # Runner script for NUT driver and server daemon under launchd
+      set -euo pipefail
+
+      # Stop any stale driver instances
+      /opt/homebrew/sbin/upsdrvctl stop 2>/dev/null || true
+
+      # Start UPS driver
+      /opt/homebrew/sbin/upsdrvctl start
+
+      # Clean up driver when runner terminates
+      cleanup() {
+          /opt/homebrew/sbin/upsdrvctl stop 2>/dev/null || true
+      }
+      trap cleanup EXIT INT TERM
+
+      # Run upsd in foreground so launchd can monitor process lifecycle
+      exec /opt/homebrew/sbin/upsd -F
+
+- name: Create NUT server LaunchAgent plist
+  ansible.builtin.copy:
+    dest: "{{ ansible_facts['env']['HOME'] }}/Library/LaunchAgents/org.networkupstools.nut-server.plist"
+    mode: "0644"
+    content: |
+      <?xml version="1.0" encoding="UTF-8"?>
+      <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+      <plist version="1.0">
+      <dict>
+          <key>Label</key>
+          <string>org.networkupstools.nut-server</string>
+          <key>ProgramArguments</key>
+          <array>
+              <string>{{ ansible_facts['env']['HOME'] }}/.local/bin/nut-server</string>
+          </array>
+          <key>RunAtLoad</key>
+          <true/>
+          <key>KeepAlive</key>
+          <true/>
+          <key>StandardOutPath</key>
+          <string>/opt/homebrew/var/log/nut-server.log</string>
+          <key>StandardErrorPath</key>
+          <string>/opt/homebrew/var/log/nut-server.err</string>
+      </dict>
+      </plist>
+
+- name: Reload NUT server LaunchAgent service
+  ansible.builtin.shell: |
+    launchctl bootout gui/$(id -u)/org.networkupstools.nut-server 2>/dev/null || true
+    launchctl bootstrap gui/$(id -u) "{{ ansible_facts['env']['HOME'] }}/Library/LaunchAgents/org.networkupstools.nut-server.plist"
+  changed_when: true
+
 - name: Create NUT service verification script
   ansible.builtin.copy:
     dest: "{{ ansible_facts['env']['HOME'] }}/.local/bin/nut-check"
@@ -84,8 +147,6 @@
           echo "✅ NUT server is responding with UPS metrics."
       else
           echo "⚠️  NUT server not currently reachable or driver not running."
-          echo "To test driver manually:"
-          echo "  sudo /opt/homebrew/opt/nut/sbin/upsdrvctl start"
-          echo "To start NUT system service:"
-          echo "  sudo brew services start nut"
+          echo "To restart service via launchctl:"
+          echo "  launchctl kickstart -k gui/$(id -u)/org.networkupstools.nut-server"
       fi
