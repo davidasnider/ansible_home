@@ -37,6 +37,7 @@
       MODE=netserver
     dest: /opt/homebrew/etc/nut/nut.conf
     mode: "0644"
+  register: workstation_nut_mode_copy
 
 - name: Configure UPS hardware definition (ups.conf)
   ansible.builtin.copy:
@@ -48,6 +49,7 @@
       pollinterval = {{ workstation_nut_pollinterval }}
     dest: /opt/homebrew/etc/nut/ups.conf
     mode: "0644"
+  register: workstation_nut_hardware_copy
 
 - name: Configure NUT daemon listening address and port (upsd.conf)
   ansible.builtin.copy:
@@ -55,6 +57,7 @@
       LISTEN {{ workstation_nut_listen_address }} {{ workstation_nut_listen_port }}
     dest: /opt/homebrew/etc/nut/upsd.conf
     mode: "0640"
+  register: workstation_nut_listener_copy
 
 # Read-only user: Home Assistant's NUT integration only polls data, so the
 # account intentionally gets no upsmon monitor role (least privilege).
@@ -65,6 +68,7 @@
       password = {{ workstation_nut_ha_password }}
     dest: /opt/homebrew/etc/nut/upsd.users
     mode: "0600"
+  register: workstation_nut_users_copy
 
 - name: Create NUT server daemon runner script
   ansible.builtin.copy:
@@ -96,6 +100,7 @@
       trap cleanup EXIT INT TERM
 
       wait "$UPSD_PID"
+  register: workstation_nut_runner_copy
 
 - name: Create NUT server LaunchAgent plist
   ansible.builtin.copy:
@@ -124,12 +129,27 @@
           <string>/opt/homebrew/var/log/nut-server.err</string>
       </dict>
       </plist>
+  register: workstation_nut_plist_copy
+
+# The reload below must only run when something the service consumes changed
+# or the agent is not loaded yet, so repeated converges stay idempotent and do
+# not tear down a healthy upsd/driver pair on every run.
+- name: Check whether NUT LaunchAgent service is loaded
+  ansible.builtin.command: launchctl print gui/{{ ansible_facts['uid'] }}/org.networkupstools.nut-server
+  register: workstation_nut_service_loaded
+  failed_when: false
+  changed_when: false
 
 - name: Reload NUT server LaunchAgent service
   ansible.builtin.shell: |
     launchctl bootout gui/$(id -u)/org.networkupstools.nut-server 2>/dev/null || true
     launchctl bootstrap gui/$(id -u) "{{ ansible_facts['env']['HOME'] }}/Library/LaunchAgents/org.networkupstools.nut-server.plist"
   changed_when: true
+  when: >-
+    (workstation_nut_service_loaded.rc | default(1) != 0) or
+    (workstation_nut_mode_copy is changed or workstation_nut_hardware_copy is changed or
+     workstation_nut_listener_copy is changed or workstation_nut_users_copy is changed or
+     workstation_nut_runner_copy is changed or workstation_nut_plist_copy is changed)
 
 - name: Create NUT service verification script
   ansible.builtin.copy:
@@ -154,4 +174,5 @@
           echo "⚠️  NUT server not currently reachable or driver not running."
           echo "To restart service via launchctl:"
           echo "  launchctl kickstart -k gui/$(id -u)/org.networkupstools.nut-server"
+          exit 1
       fi
