@@ -137,7 +137,9 @@
     mode: "0755"
     content: |
       #!/bin/bash
-      # Script to verify NUT server driver and connection status
+      # Script to verify NUT server driver and connection status.
+      # Targets the configured listener address so it works with both the
+      # default loopback binding and a LAN/Tailscale opt-in binding.
       set -euo pipefail
 
       echo "🔍 Checking NUT configuration and UPS metrics..."
@@ -146,7 +148,7 @@
           exit 1
       fi
 
-      if upsc "{{ workstation_nut_ups_name }}@localhost" 2>&1; then
+      if upsc "{{ workstation_nut_ups_name }}@{{ workstation_nut_listen_address }}" 2>&1; then
           echo "✅ NUT server is responding with UPS metrics."
       else
           echo "⚠️  NUT server not currently reachable or driver not running."

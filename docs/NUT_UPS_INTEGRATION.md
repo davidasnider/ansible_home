@@ -104,16 +104,18 @@ The listener binds to `127.0.0.1` by default — safe, but Home Assistant must r
 ## Verification & Service Management
 
 ### 1. Verification Script
-The playbook creates a verification script at `~/.local/bin/nut-check`:
+The playbook creates a verification script at `~/.local/bin/nut-check`. It targets the configured listener address (`workstation_nut_listen_address`), so it works with both the default loopback binding and a LAN/Tailscale opt-in binding:
 ```bash
 ~/.local/bin/nut-check
 ```
 
 ### 2. Manual Testing (CLI)
-To test driver communication directly:
+To test driver communication directly, target the address `upsd` is bound to:
 ```bash
-upsc mac_ups@localhost
+upsc mac_ups@127.0.0.1
 ```
+
+> **Note:** `upsd` listens only on `workstation_nut_listen_address` (default `127.0.0.1`). If you opted a host in to a LAN or Tailscale IP for remote Home Assistant, `@localhost` will fail even though the service is healthy — substitute that address instead (e.g. `upsc mac_ups@<Mac_Studio_IP>`).
 
 ### 3. Service Lifecycle
 The NUT server runs automatically under `launchd`. To view status or restart:
