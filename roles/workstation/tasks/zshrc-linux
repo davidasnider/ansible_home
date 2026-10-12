@@ -193,6 +193,7 @@ opload() {
         echo "🔑 Successfully loaded $loaded_count environment variable(s) from 1Password."
     else
         echo "⚠️ No environment variables were loaded from 1Password." >&2
+        return 1
     fi
 }
 
