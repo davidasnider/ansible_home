@@ -35,38 +35,44 @@
     path: "{{ ansible_facts['env']['HOME'] }}/.local/bin/opencode"
   register: workstation_opencode_check_linux
 
-- name: Download OpenCode installation script
-  ansible.builtin.get_url:
-    url: https://opencode.ai/install
-    dest: "{{ ansible_facts['env']['HOME'] }}/.opencode-install.sh"
-    mode: "0755"
+- name: Download and install OpenCode
   when:
     - not workstation_optimized_base_check.stat.exists
     - not workstation_opencode_check_linux.stat.exists
-  register: workstation_opencode_download_linux
-  retries: 3
-  delay: 5
-  until: workstation_opencode_download_linux is succeeded
+  block:
+    - name: Create temporary directory for OpenCode installation
+      # Security: Use tempfile to prevent TOCTOU and symlink attacks
+      ansible.builtin.tempfile:
+        state: directory
+        suffix: _opencode_install
+      register: workstation_opencode_tmpdir
 
-- name: Install OpenCode
-  ansible.builtin.command: bash "{{ ansible_facts['env']['HOME'] }}/.opencode-install.sh"
-  args:
-    creates: "{{ ansible_facts['env']['HOME'] }}/.local/bin/opencode"
-  register: workstation_opencode_install_linux
-  when:
-    - not workstation_optimized_base_check.stat.exists
-    - not workstation_opencode_check_linux.stat.exists
-  retries: 3
-  delay: 5
-  until: workstation_opencode_install_linux is succeeded
+    - name: Download OpenCode installation script
+      ansible.builtin.get_url:
+        url: https://opencode.ai/install
+        dest: "{{ workstation_opencode_tmpdir.path }}/install.sh"
+        mode: "0755"
+      register: workstation_opencode_download_linux
+      retries: 3
+      delay: 5
+      until: workstation_opencode_download_linux is succeeded
 
-- name: Clean up OpenCode installation script
-  ansible.builtin.file:
-    path: "{{ ansible_facts['env']['HOME'] }}/.opencode-install.sh"
-    state: absent
-  when:
-    - not workstation_optimized_base_check.stat.exists
-    - not workstation_opencode_check_linux.stat.exists
+    - name: Install OpenCode
+      ansible.builtin.command: bash "{{ workstation_opencode_tmpdir.path }}/install.sh"
+      args:
+        creates: "{{ ansible_facts['env']['HOME'] }}/.local/bin/opencode"
+      register: workstation_opencode_install_linux
+      retries: 3
+      delay: 5
+      until: workstation_opencode_install_linux is succeeded
+
+  always:
+    - name: Clean up OpenCode temporary directory
+      ansible.builtin.file:
+        path: "{{ workstation_opencode_tmpdir.path }}"
+        state: absent
+      changed_when: false
+      when: workstation_opencode_tmpdir is defined and workstation_opencode_tmpdir.path is defined
 
 - name: Install Pulumi CLI
   block:
