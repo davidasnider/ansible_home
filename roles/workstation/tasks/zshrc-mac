@@ -197,7 +197,11 @@ opload() {
         fi
     done <<< "$injected_env"
 
-    echo "🔑 Successfully loaded $loaded_count environment variable(s) from 1Password."
+    if (( loaded_count > 0 )); then
+        echo "🔑 Successfully loaded $loaded_count environment variable(s) from 1Password."
+    else
+        echo "⚠️ No environment variables were loaded from 1Password." >&2
+    fi
 }
 
 # Validate that ~/.env file exists for 1Password secret references
