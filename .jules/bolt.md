@@ -33,3 +33,11 @@
 ## 2026-10-05 - Raspberry Pi APT Cache Validation
 **Learning:** Adding `cache_valid_time: 86400` to an `apt` task skips a cache update when the APT cache was already refreshed within that window. Note, however, that since Ansible 2.4, explicitly setting `cache_valid_time` implicitly sets `update_cache=yes`, so on install-only tasks (like the Raspberry Pi baseline package install) it adds a stale-only refresh rather than removing one — redundancy avoidance in `roles/raspberry_pi/tasks/main.yml` was already provided by the preceding cache-updating task.
 **Action:** Do not add `cache_valid_time` to install-only tasks as a speed optimization — it enables a stale cache refresh rather than removing work. Keep the single preceding `apt` task with both `update_cache: true` and `cache_valid_time: 86400` as the mechanism that avoids redundant cache updates, which is especially valuable on slower devices like Raspberry Pis.
+
+## 2026-10-11 - Idempotent Service Reloads
+**Learning:** Reloading a service unconditionally during configuration converges wastes time and restarts processes needlessly. Tracking changes to all configuration files and only reloading the service if a file changed (or if the service isn't loaded) keeps the process idempotent and avoids needless restarts.
+**Action:** Implement file state tracking and service loaded-state checks before reloading a service to ensure idempotent behavior.
+
+## 2026-10-11 - Shell Traps and exec
+**Learning:** Using `exec` replaces the shell process with the target program, meaning any shell traps (like EXIT, INT, TERM) will not be carried over or fired. To ensure cleanup traps fire, the target program must run as a child process (e.g., in the background or foreground, without `exec`) so the shell can catch the signal and run the trap.
+**Action:** Run services as child processes, not with `exec`, when relying on shell traps to perform cleanup upon service unload or termination.
