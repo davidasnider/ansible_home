@@ -94,7 +94,9 @@
   when: raspberry_pi_unattended_upgrades_enabled
 
 - name: Disable Wi-Fi power saving
-  when: raspberry_pi_wifi_power_save_off
+  when:
+    - raspberry_pi_wifi_power_save_off
+    - raspberry_pi_wifi_interface in ansible_facts.interfaces
   block:
     - name: Install iw
       ansible.builtin.apt:
