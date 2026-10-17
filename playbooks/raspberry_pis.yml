@@ -1,8 +1,22 @@
 ---
 - name: Configure All Raspberry Pis
   hosts: raspberry_pis
-  gather_facts: true
+  gather_facts: false
   become: true
+
+  pre_tasks:
+    # Resolve 1Password secrets once per host. set_fact stores the rendered value,
+    # so later tasks do not trigger additional 1Password approval prompts.
+    - name: Fetch secrets from 1Password
+      ansible.builtin.set_fact:
+        ansible_become_password: "{{ lookup('community.general.onepassword', 'Raspberry Pi Sudo', field='password') }}"
+        raspberry_pi_authorized_keys:
+          - "{{ lookup('community.general.onepassword', 'Giro SSH Key', field='public key') }}"
+          - "{{ lookup('community.general.onepassword', 'Git Commit SSH Key', field='public key') }}"
+      no_log: true
+
+    - name: Gather facts
+      ansible.builtin.setup:
 
   roles:
     - raspberry_pi

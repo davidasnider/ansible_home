@@ -113,8 +113,10 @@ git clone https://github.com/davidasnider/ansible_home.git
 cd ansible_home
 # Ensure you have your IPs configured in inventory/hosts.yml
 uv sync
-uv run ansible-playbook -i inventory/hosts.yml --limit raspberry_pis site.yml --ask-become-pass
+uv run ansible-playbook -i inventory/hosts.yml --limit raspberry_pis site.yml
 ```
+
+The sudo password is read from the 1Password item `Raspberry Pi Sudo` (field `password`) via `inventory/group_vars/raspberry_pis.yml`, so you must be signed in to 1Password (`op signin` or the desktop app integration) and no `--ask-become-pass` is needed.
 
 ## Detailed Setup Process
 

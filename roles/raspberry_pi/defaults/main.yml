@@ -16,3 +16,8 @@ raspberry_pi_allowed_ports: []
 
 # Automatic upgrades configuration
 raspberry_pi_unattended_upgrades_enabled: true
+
+# Disable Wi-Fi power saving (prevents latency/dropouts on headless Pis).
+# Installs a systemd unit so the setting persists across reboots.
+raspberry_pi_wifi_power_save_off: true
+raspberry_pi_wifi_interface: wlan0
