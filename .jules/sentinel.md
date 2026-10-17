@@ -32,3 +32,13 @@
 **Vulnerability:** The `local-linux-packages.yml` playbook used `ansible.builtin.get_url` with static, predictable paths in the world-writable `/tmp` directory (`/tmp/1password.asc`, `/tmp/pulumi-install.sh`). The same pattern later appeared in `local-linux-shell.yml` using a static, predictable path (`/tmp/oh-my-posh-install.sh`).
 **Learning:** Hardcoding `/tmp/filename` allows local privilege escalation or arbitrary code execution via Time-Of-Check to Time-Of-Use (TOCTOU) race conditions or malicious symlinking/pre-creation by an unprivileged local user.
 **Prevention:** Always use `ansible.builtin.tempfile` to securely create temporary files or directories with unpredictable, randomized names and strict permissions before writing data or downloading files into them.
+
+## 2026-10-11 - Secure Default Service Binding
+**Vulnerability:** Services listening on wildcard addresses (`0.0.0.0` or `::`) or wide network interfaces expose internal/unauthenticated services to potential attackers.
+**Learning:** Defaulting to wide network interfaces introduces an unnecessarily large attack surface, especially for services like UPS telemetry servers.
+**Prevention:** Default service bindings to `127.0.0.1` (localhost). Require explicit, per-host opt-in configuration to widen the binding address.
+
+## 2026-10-11 - Fail Early on Weak Passwords
+**Vulnerability:** Services defaulting to weak or standard passwords, or failing open, provide an easy target for attackers.
+**Learning:** Default weak passwords can easily be forgotten and left in place, opening up services to compromise.
+**Prevention:** Remove weak default passwords and enforce strict requirements (e.g., fail early if the password is under 12 characters, or if no password resolves) to enforce secure credentials.
