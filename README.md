@@ -40,6 +40,7 @@ ansible_home/
 ├── roles/
 │   ├── docker/                # Docker installation role
 │   ├── home_assistant_remote/ # Home Assistant remote node configuration
+│   ├── nut_server/            # NUT UPS server (bedroom-pi)
 │   ├── raspberry_pi/          # Raspberry Pi baseline configuration
 │   └── workstation/            # Core workstation configuration role
 │       ├── handlers/
@@ -216,7 +217,7 @@ The current framework structure will extend to support:
 ### Key Features
 - **Oh My Zsh**: Automated installation with custom plugin configuration
 - **Shell Customization**: Comprehensive zsh configuration with syntax highlighting and autocomplete
-- **Network UPS Tools (NUT)**: Automated configuration of NUT server (`MODE=netserver`) for UPS telemetry integration with Home Assistant (see [NUT Integration](docs/NUT_UPS_INTEGRATION.md))
+- **Network UPS Tools (NUT)**: Configures the Mac as a NUT client (`MODE=netclient`, `upsmon` secondary) that shuts down cleanly when the UPS on `bedroom-pi` reports a low battery (see [NUT Integration](docs/NUT_UPS_INTEGRATION.md))
 
 ### macOS-Specific Tools
 ```yaml

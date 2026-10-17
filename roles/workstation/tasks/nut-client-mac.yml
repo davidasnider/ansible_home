@@ -1,0 +1,162 @@
+---
+# Network UPS Tools (NUT) client for macOS.
+# The UPS is attached to a NUT server (bedroom-pi). The Mac runs upsmon as a
+# secondary so it shuts down cleanly when the server reports a low battery or a
+# forced shutdown. Running upsmon needs root, so it is a LaunchDaemon.
+
+- name: Resolve NUT secondary password
+  ansible.builtin.set_fact:
+    workstation_nut_secondary_password: >-
+      {{ lookup('ansible.builtin.env', 'NUT_SECONDARY_PASSWORD')
+         | default(lookup('community.general.onepassword', 'NUT Secondary Password', field='password', errors='ignore'), true) }}
+  no_log: true
+
+- name: Compose NUT monitor target
+  ansible.builtin.set_fact:
+    workstation_nut_target: "{{ workstation_nut_ups_name }}@{{ workstation_nut_server_host }}:{{ workstation_nut_server_port }}"
+
+- name: Fail if NUT secondary password is not configured
+  ansible.builtin.fail:
+    msg: >-
+      NUT secondary password is not configured. Set the NUT_SECONDARY_PASSWORD
+      environment variable or create a 1Password item titled 'NUT Secondary Password'
+      (min 12 characters).
+  when: (workstation_nut_secondary_password | default('') | string | length) < 12
+
+# Remove the Mac-hosted NUT server this client replaces.
+- name: Check for legacy NUT server LaunchAgent
+  ansible.builtin.stat:
+    path: "{{ ansible_facts['env']['HOME'] }}/Library/LaunchAgents/org.networkupstools.nut-server.plist"
+  register: workstation_nut_legacy_agent
+
+- name: Unload legacy NUT server LaunchAgent
+  ansible.builtin.command: launchctl bootout gui/{{ ansible_facts['user_uid'] }}/org.networkupstools.nut-server
+  register: workstation_nut_legacy_bootout
+  failed_when: workstation_nut_legacy_bootout.rc not in [0, 3, 113]
+  changed_when: workstation_nut_legacy_bootout.rc == 0
+  when: workstation_nut_legacy_agent.stat.exists
+
+- name: Remove legacy NUT server files
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: absent
+  loop:
+    - "{{ ansible_facts['env']['HOME'] }}/Library/LaunchAgents/org.networkupstools.nut-server.plist"
+    - "{{ ansible_facts['env']['HOME'] }}/.local/bin/nut-server"
+    - /opt/homebrew/etc/nut/ups.conf
+    - /opt/homebrew/etc/nut/upsd.conf
+    - /opt/homebrew/etc/nut/upsd.users
+
+- name: Ensure NUT configuration directory exists
+  ansible.builtin.file:
+    path: /opt/homebrew/etc/nut
+    state: directory
+    mode: "0755"
+
+- name: Ensure NUT state and log directories exist
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    mode: "0755"
+  loop:
+    - /opt/homebrew/var/state/ups
+    - /opt/homebrew/var/run
+    - /opt/homebrew/var/log
+  become: true
+
+- name: Configure NUT client mode (nut.conf)
+  ansible.builtin.copy:
+    content: |
+      MODE=netclient
+    dest: /opt/homebrew/etc/nut/nut.conf
+    mode: "0644"
+  register: workstation_nut_mode_copy
+
+- name: Configure UPS monitor (upsmon.conf)
+  ansible.builtin.copy:
+    content: |
+      MONITOR {{ workstation_nut_target }} 1 {{ workstation_nut_secondary_user }} {{ workstation_nut_secondary_password }} secondary
+      MINSUPPLIES 1
+      SHUTDOWNCMD "/sbin/shutdown -h +0"
+    dest: /opt/homebrew/etc/nut/upsmon.conf
+    owner: root
+    group: wheel
+    mode: "0600"
+  become: true
+  no_log: true
+  register: workstation_nut_upsmon_copy
+
+- name: Create upsmon LaunchDaemon plist
+  ansible.builtin.copy:
+    dest: /Library/LaunchDaemons/org.networkupstools.upsmon.plist
+    owner: root
+    group: wheel
+    mode: "0644"
+    content: |
+      <?xml version="1.0" encoding="UTF-8"?>
+      <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+      <plist version="1.0">
+      <dict>
+          <key>Label</key>
+          <string>org.networkupstools.upsmon</string>
+          <key>ProgramArguments</key>
+          <array>
+              <string>/opt/homebrew/sbin/upsmon</string>
+              <string>-F</string>
+          </array>
+          <key>RunAtLoad</key>
+          <true/>
+          <key>KeepAlive</key>
+          <true/>
+          <key>ThrottleInterval</key>
+          <integer>30</integer>
+          <key>StandardOutPath</key>
+          <string>/opt/homebrew/var/log/upsmon.log</string>
+          <key>StandardErrorPath</key>
+          <string>/opt/homebrew/var/log/upsmon.err</string>
+      </dict>
+      </plist>
+  become: true
+  register: workstation_nut_plist_copy
+
+# Reload only when something upsmon consumes changed or it is not loaded yet, so
+# repeated runs stay idempotent.
+- name: Check whether upsmon LaunchDaemon is loaded
+  ansible.builtin.command: launchctl print system/org.networkupstools.upsmon
+  register: workstation_nut_upsmon_loaded
+  failed_when: false
+  changed_when: false
+  become: true
+
+- name: Reload upsmon LaunchDaemon
+  ansible.builtin.shell: |
+    launchctl bootout system/org.networkupstools.upsmon 2>/dev/null || true
+    launchctl bootstrap system /Library/LaunchDaemons/org.networkupstools.upsmon.plist
+  changed_when: true
+  become: true
+  when: >-
+    (workstation_nut_upsmon_loaded.rc | default(1) != 0) or
+    (workstation_nut_mode_copy is changed or workstation_nut_upsmon_copy is changed or
+     workstation_nut_plist_copy is changed)
+
+- name: Create NUT verification script
+  ansible.builtin.copy:
+    dest: "{{ ansible_facts['env']['HOME'] }}/.local/bin/nut-check"
+    mode: "0755"
+    content: |
+      #!/bin/bash
+      # Verify the Mac can read UPS metrics from the NUT server.
+      set -euo pipefail
+
+      if ! command -v upsc >/dev/null 2>&1; then
+          echo "'upsc' not found. Ensure NUT is installed via Homebrew."
+          exit 1
+      fi
+
+      echo "Querying {{ workstation_nut_target }} ..."
+      if upsc "{{ workstation_nut_target }}"; then
+          echo "NUT server is responding."
+      else
+          echo "NUT server is not reachable. Check bedroom-pi and port {{ workstation_nut_server_port }}."
+          exit 1
+      fi

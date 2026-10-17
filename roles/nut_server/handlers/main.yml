@@ -1,0 +1,25 @@
+---
+# Must run before the driver restarts: udev rules shipped by the nut package only
+# apply to USB devices plugged in after install unless they are re-triggered.
+- name: Reload udev rules for NUT
+  ansible.builtin.shell: |
+    udevadm control --reload-rules
+    udevadm trigger --subsystem-match=usb --action=add
+    udevadm settle
+  changed_when: true
+
+- name: Restart NUT drivers
+  ansible.builtin.systemd:
+    name: nut-driver-enumerator.service
+    state: restarted
+    daemon_reload: true
+
+- name: Restart NUT server
+  ansible.builtin.systemd:
+    name: nut-server.service
+    state: restarted
+
+- name: Restart NUT monitor
+  ansible.builtin.systemd:
+    name: nut-monitor.service
+    state: restarted

@@ -21,6 +21,14 @@
   roles:
     - raspberry_pi
 
+- name: Setup NUT UPS Servers
+  hosts: nut_servers
+  gather_facts: true
+  become: true
+
+  roles:
+    - nut_server
+
 - name: Setup Home Assistant Remote Nodes
   hosts: home_assistant_nodes
   gather_facts: true

@@ -108,11 +108,11 @@
   delay: 5
   timeout: 300
 
-- name: Install NUT package when NUT server is enabled
+- name: Install NUT package when NUT client is enabled
   community.general.homebrew:
     name: nut
     state: present
-  when: workstation_nut_server_enabled | default(false)
+  when: workstation_nut_client_enabled | default(false)
 
 - name: Verify Homebrew packages installation
   ansible.builtin.command: gh --version
@@ -300,7 +300,7 @@
     var: workstation_op_health_check
     verbosity: 2
 
-# Network UPS Tools (NUT) Server Configuration
-- name: Include Network UPS Tools (NUT) server tasks
-  ansible.builtin.include_tasks: nut-server-mac.yml
-  when: workstation_nut_server_enabled | default(false)
+# Network UPS Tools (NUT) Client Configuration
+- name: Include Network UPS Tools (NUT) client tasks
+  ansible.builtin.include_tasks: nut-client-mac.yml
+  when: workstation_nut_client_enabled | default(false)
