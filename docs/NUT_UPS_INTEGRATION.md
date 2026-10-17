@@ -8,7 +8,7 @@ A USB UPS is attached to the Raspberry Pi `bedroom-pi`, which runs the NUT serve
 [UPS] --USB--> [bedroom-pi: NUT server (upsd :3493) + upsmon primary]
                         │
           ┌─────────────┴──────────────┐
-          ▼ (LAN, 10.1.1.0/24)         ▼ (LAN)
+          ▼ (LAN, 10.1.1.0/24 and 10.0.0.0/24)         ▼ (LAN)
  [Home Assistant]               [Mac Studio: upsmon secondary]
   (NUT integration, read-only)   (shuts down on low battery / FSD)
 ```
@@ -45,7 +45,7 @@ Create the three items in 1Password before the first run.
 * `upsd.users`: the three accounts above
 * `upsmon.conf`: `MONITOR ups@localhost 1 upsmon_primary <password> primary`
 
-UFW allows port `3493` only from `nut_server_allowed_cidr` (default `10.1.1.0/24`); the rest of the Pi stays on the baseline firewall policy.
+UFW allows port `3493` only from the networks in `nut_server_allowed_cidrs` (default `10.1.1.0/24` and `10.0.0.0/24`); the rest of the Pi stays on the baseline firewall policy.
 
 ### Client configuration (`/opt/homebrew/etc/nut/` on the Mac)
 
@@ -64,7 +64,7 @@ The Mac tasks that need root use `become`, so run the playbook with `--ask-becom
 | `nut_server_ups_desc` | `Bedroom UPS` | Description |
 | `nut_server_pollinterval` | `15` | Poll interval (seconds) |
 | `nut_server_listen_address` / `_port` | `0.0.0.0` / `3493` | `upsd` listener |
-| `nut_server_allowed_cidr` | `10.1.1.0/24` | Source network allowed through UFW |
+| `nut_server_allowed_cidrs` | `10.1.1.0/24`, `10.0.0.0/24` | Source networks allowed through UFW |
 | `workstation_nut_client_enabled` | `false` | Enable the Mac NUT client (per-host opt-in) |
 | `workstation_nut_server_host` | `bedroom-pi.thesniderpad.com` | NUT server the Mac monitors |
 | `workstation_nut_ups_name` | `ups` | UPS name on the server |

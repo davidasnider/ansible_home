@@ -124,13 +124,14 @@
   no_log: true
   notify: Restart NUT monitor
 
-- name: Allow NUT port from the local network in UFW
+- name: Allow NUT port from the local networks in UFW
   community.general.ufw:
     rule: allow
     port: "{{ nut_server_listen_port | string }}"
     proto: tcp
-    from_ip: "{{ nut_server_allowed_cidr }}"
+    from_ip: "{{ item }}"
     comment: "NUT upsd from LAN"
+  loop: "{{ nut_server_allowed_cidrs }}"
 
 - name: Ensure NUT services are enabled and running
   ansible.builtin.systemd:

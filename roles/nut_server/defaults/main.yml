@@ -9,10 +9,12 @@ nut_server_ups_desc: "Bedroom UPS"
 nut_server_pollinterval: 15
 
 # upsd listener. The listener binds to all interfaces and ufw restricts access
-# to nut_server_allowed_cidr, so only the local network can reach port 3493.
+# to nut_server_allowed_cidrs, so only the local network can reach port 3493.
 nut_server_listen_address: "0.0.0.0"
 nut_server_listen_port: 3493
-nut_server_allowed_cidr: "10.1.1.0/24"
+nut_server_allowed_cidrs:
+  - "10.1.1.0/24"
+  - "10.0.0.0/24"
 
 # Accounts defined in upsd.users
 nut_server_ha_user: ha_monitor # read-only, used by Home Assistant
