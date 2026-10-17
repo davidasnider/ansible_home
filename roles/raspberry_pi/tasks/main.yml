@@ -92,3 +92,42 @@
     state: started
     enabled: true
   when: raspberry_pi_unattended_upgrades_enabled
+
+- name: Disable Wi-Fi power saving
+  when:
+    - raspberry_pi_wifi_power_save_off
+    - raspberry_pi_wifi_interface in ansible_facts.interfaces
+  block:
+    - name: Install iw
+      ansible.builtin.apt:
+        name: iw
+        state: present
+        cache_valid_time: 86400
+
+    - name: Install systemd unit to disable Wi-Fi power save
+      ansible.builtin.copy:
+        content: |
+          [Unit]
+          Description=Disable Wi-Fi power saving on {{ raspberry_pi_wifi_interface }}
+          BindsTo=sys-subsystem-net-devices-{{ raspberry_pi_wifi_interface }}.device
+          After=sys-subsystem-net-devices-{{ raspberry_pi_wifi_interface }}.device
+
+          [Service]
+          Type=oneshot
+          RemainAfterExit=yes
+          ExecStart=/usr/sbin/iw dev {{ raspberry_pi_wifi_interface }} set power_save off
+
+          [Install]
+          WantedBy=sys-subsystem-net-devices-{{ raspberry_pi_wifi_interface }}.device
+        dest: /etc/systemd/system/wifi-power-save-off.service
+        owner: root
+        group: root
+        mode: "0644"
+      register: raspberry_pi_wifi_unit
+
+    - name: Enable and start Wi-Fi power save unit
+      ansible.builtin.systemd:
+        name: wifi-power-save-off.service
+        enabled: true
+        state: "{{ 'restarted' if raspberry_pi_wifi_unit.changed else 'started' }}"
+        daemon_reload: true
