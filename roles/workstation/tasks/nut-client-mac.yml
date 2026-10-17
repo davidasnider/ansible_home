@@ -8,7 +8,7 @@
   ansible.builtin.set_fact:
     workstation_nut_secondary_password: >-
       {{ lookup('ansible.builtin.env', 'NUT_SECONDARY_PASSWORD')
-         | default(lookup('community.general.onepassword', 'NUT Secondary Password', field='password', errors='ignore'), true) }}
+         or lookup('community.general.onepassword', 'NUT Secondary Password', field='password', errors='ignore') }}
   no_log: true
 
 - name: Compose NUT monitor target

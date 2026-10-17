@@ -8,13 +8,13 @@
   ansible.builtin.set_fact:
     nut_server_ha_password: >-
       {{ lookup('ansible.builtin.env', nut_server_ha_password_env)
-         | default(lookup('community.general.onepassword', nut_server_ha_password_item, field='password', errors='ignore'), true) }}
+         or lookup('community.general.onepassword', nut_server_ha_password_item, field='password', errors='ignore') }}
     nut_server_primary_password: >-
       {{ lookup('ansible.builtin.env', nut_server_primary_password_env)
-         | default(lookup('community.general.onepassword', nut_server_primary_password_item, field='password', errors='ignore'), true) }}
+         or lookup('community.general.onepassword', nut_server_primary_password_item, field='password', errors='ignore') }}
     nut_server_secondary_password: >-
       {{ lookup('ansible.builtin.env', nut_server_secondary_password_env)
-         | default(lookup('community.general.onepassword', nut_server_secondary_password_item, field='password', errors='ignore'), true) }}
+         or lookup('community.general.onepassword', nut_server_secondary_password_item, field='password', errors='ignore') }}
   no_log: true
 
 - name: Fail if any NUT password is missing or too short
