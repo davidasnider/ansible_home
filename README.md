@@ -116,7 +116,7 @@ uv sync
 uv run ansible-playbook -i inventory/hosts.yml --limit raspberry_pis site.yml
 ```
 
-The sudo password is read from the 1Password item `Raspberry Pi Sudo` (field `password`) via `inventory/group_vars/raspberry_pis.yml`, so you must be signed in to 1Password (`op signin` or the desktop app integration) and no `--ask-become-pass` is needed.
+The sudo password is read from the 1Password item `Raspberry Pi Sudo` (field `password`) in the `pre_tasks` of `playbooks/raspberry_pis.yml`, so you must be signed in to 1Password (`op signin` or the desktop app integration) and no `--ask-become-pass` is needed.
 
 ## Detailed Setup Process
 
