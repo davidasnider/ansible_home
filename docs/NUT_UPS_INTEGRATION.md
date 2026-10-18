@@ -1,152 +1,104 @@
-# Network UPS Tools (NUT) Integration for macOS & Home Assistant
+# Network UPS Tools (NUT) Integration
 
-This document outlines the architecture, configuration, and operational procedures for integrating a Uninterruptible Power Supply (UPS) connected via USB to a Mac Studio into Home Assistant using Network UPS Tools (NUT).
+A USB UPS is attached to the Raspberry Pi `bedroom-pi`, which runs the NUT server. Home Assistant reads UPS telemetry from it, and the Mac Studio runs a NUT client so it shuts down cleanly when power is lost.
 
-## Architecture Overview
+## Architecture
 
 ```
-[UPS (e.g. CyberPower / APC)] --USB--> [Mac Studio (NUT Server: port 3493)]
-                                                │
-                                                ▼ (LAN query)
-                                     [Home Assistant]
-                                      (NUT Integration)
+[UPS] --USB--> [bedroom-pi: NUT server (upsd :3493) + upsmon primary]
+                        │
+          ┌─────────────┴──────────────┐
+          ▼ (LAN, 10.1.1.0/24 and 10.0.0.0/24)         ▼ (LAN)
+ [Home Assistant]               [Mac Studio: upsmon secondary]
+  (NUT integration, read-only)   (shuts down on low battery / FSD)
 ```
 
-The Mac Studio acts as the **NUT Server** (`MODE=netserver`), hosting the driver (`macosx-ups`) and data server daemon (`upsd`). Home Assistant queries the Mac Studio across the local network on port `3493` to retrieve real-time telemetry (line voltage, battery level, runtime remaining, current load).
-
-### Why the `macosx-ups` Driver on macOS?
-
-On macOS, the operating system kernel and native power daemon (`/usr/libexec/ioupsd`) claim exclusive access to any attached USB HID UPS. Because of macOS security protections (IOKit/SIP), standard `libusb`-based drivers like `usbhid-ups` cannot detach the kernel driver and fail with:
-```text
-Can't claim USB device: Access denied (insufficient permissions)
-```
-NUT includes a native macOS meta-driver—**`macosx-ups`**—specifically built into Homebrew's NUT formula. This driver interfaces directly with Apple's `IOPowerSources` API, providing seamless access to UPS telemetry without requiring root privileges, kernel driver detaching, or competing with macOS power management.
+* **bedroom-pi** (`nut_server` role) drives the UPS with `usbhid-ups` and serves `upsd` on port `3493`. Its local `upsmon` is the **primary**, so it declares the forced shutdown (FSD) and powers off last.
+* **Home Assistant** polls through a read-only `ha_monitor` account.
+* **Mac Studio** (`workstation` role) runs `upsmon` as a **secondary** under a root LaunchDaemon, so it can run `shutdown` when the server reports a low battery or FSD.
 
 ## Ansible Automation
 
-All configuration files, service daemons, and package installations are managed authoritatively via the `workstation` Ansible role:
+| Piece | Location |
+| --- | --- |
+| Server role | `roles/nut_server/` (applied to the `nut_servers` inventory group in `playbooks/raspberry_pis.yml`) |
+| Client tasks | `roles/workstation/tasks/nut-client-mac.yml` (included by `local-mac.yml`) |
+| Opt-in flags | `nut_servers` group in `inventory/hosts.yml`; `workstation_nut_client_enabled` on `localhost` |
 
-* **Role Tasks:** `roles/workstation/tasks/nut-server-mac.yml` (invoked via `local-mac.yml`)
-* **Role Defaults:** `roles/workstation/defaults/main.yml`
+### Passwords
 
-### Managed Configuration Files (`/opt/homebrew/etc/nut/`)
+Each secret resolves once per run, from an environment variable first and then 1Password. The roles fail early if one is shorter than 12 characters.
 
-1. **`nut.conf`**: Configured with `MODE=netserver` to allow network-based monitoring.
-2. **`ups.conf`**: Defines the hardware driver:
-   ```ini
-   [mac_ups]
-   driver = macosx-ups
-   port = auto
-   desc = "Mac Studio UPS"
-   pollinterval = 15
-   ```
-3. **`upsd.conf`**: Directs `upsd` to listen on a deliberately chosen address (loopback by default — see *Listener Binding* below):
-   ```ini
-   LISTEN 127.0.0.1 3493
-   ```
-4. **`upsd.users`**: Grants read-only access to the Home Assistant monitor (no `upsmon` role, since HA only polls data):
-   ```ini
-   [ha_monitor]
-   password = <secure_password>
-   ```
-5. **`upsmon.conf`**: *Not managed.* Local `upsmon` shutdown orchestration is intentionally not configured — Home Assistant receives telemetry only, and no local monitor daemon runs on the Mac.
+| 1Password item (field `password`) | Environment variable | Account | Used by |
+| --- | --- | --- | --- |
+| `Home Assistant NUT Password` | `NUT_HA_PASSWORD` | `ha_monitor` (read-only) | Home Assistant |
+| `NUT Primary Password` | `NUT_PRIMARY_PASSWORD` | `upsmon_primary` (`upsmon primary`) | upsmon on the Pi |
+| `NUT Secondary Password` | `NUT_SECONDARY_PASSWORD` | `upsmon_secondary` (`upsmon secondary`) | upsmon on the Mac |
 
-### LaunchAgent Background Daemon
+Create the three items in 1Password before the first run.
 
-A dedicated LaunchAgent is deployed to `~/Library/LaunchAgents/org.networkupstools.nut-server.plist` and managed via a runner script (`~/.local/bin/nut-server`). It:
-* Starts the `macosx-ups` driver via `upsdrvctl start`.
-* Runs `upsd -F` in the foreground so `launchd` manages process health and restarts it automatically.
-* Operates without requiring `sudo`.
+### Server configuration (`/etc/nut/` on the Pi)
 
-## Enabling on a Host
+* `nut.conf`: `MODE=netserver`
+* `ups.conf`: `[ups]` with `driver = usbhid-ups`, `port = auto`
+* `upsd.conf`: `LISTEN 0.0.0.0 3493`
+* `upsd.users`: the three accounts above
+* `upsmon.conf`: `MONITOR ups@localhost 1 upsmon_primary <password> primary`
 
-NUT server setup is **opt-in**: `workstation_nut_server_enabled` defaults to `false`, so a Mac without an attached UPS never starts the LaunchAgent (which would otherwise spin in an endless `KeepAlive` restart loop). Opt a specific host in via `host_vars`, e.g. `inventory/host_vars/<mac_studio_host>.yml`:
+UFW allows port `3493` only from the networks in `nut_server_allowed_cidrs` (default `10.1.1.0/24` and `10.0.0.0/24`); the rest of the Pi stays on the baseline firewall policy.
 
-```yaml
----
-workstation_nut_server_enabled: true
-# Deliberately expose the service on the interface Home Assistant uses:
-workstation_nut_listen_address: "<Mac_Studio_LAN_or_Tailscale_IP>"
-```
+### Client configuration (`/opt/homebrew/etc/nut/` on the Mac)
 
-(Or set the same variables in group vars for a `workstations` subgroup.)
+* `nut.conf`: `MODE=netclient`
+* `upsmon.conf` (root-only, `0600`): `MONITOR ups@bedroom-pi.thesniderpad.com:3493 1 upsmon_secondary <password> secondary`, `SHUTDOWNCMD "/sbin/shutdown -h +0"`
+* `/Library/LaunchDaemons/org.networkupstools.upsmon.plist` runs `upsmon -F` at boot and restarts it if it exits.
 
-## Configuration Variables
+The Mac tasks that need root use `become`, so run the playbook with `--ask-become-pass`. The same run removes the old Mac-hosted server (LaunchAgent, runner script, `ups.conf`, `upsd.conf`, `upsd.users`).
 
-The following variables can be customized in inventory or host variables:
+## Variables
 
-| Variable | Default Value | Description |
+| Variable | Default | Description |
 | --- | --- | --- |
-| `workstation_nut_server_enabled` | `false` | Enables (per-host opt-in) or disables the NUT server setup |
-| `workstation_nut_ups_name` | `mac_ups` | Name assigned to the UPS in NUT |
-| `workstation_nut_ups_driver` | `macosx-ups` | Hardware driver (`macosx-ups` for native macOS support) |
-| `workstation_nut_ups_port` | `auto` | Device port |
-| `workstation_nut_ups_desc` | `Mac Studio UPS` | Description string |
-| `workstation_nut_pollinterval` | `15` | Polling interval in seconds |
-| `workstation_nut_listen_address` | `127.0.0.1` | IP address for the `upsd` listener (see *Listener Binding*) |
-| `workstation_nut_listen_port` | `3493` | Port for `upsd` listener |
-| `workstation_nut_ha_user` | `ha_monitor` | Monitoring username for Home Assistant |
-| `workstation_nut_ha_password` | *(from env / 1Password — no weak default)* | Password for the Home Assistant monitor; the playbook fails early if none resolves |
+| `nut_server_ups_name` | `ups` | UPS name in NUT |
+| `nut_server_ups_driver` | `usbhid-ups` | Driver |
+| `nut_server_ups_desc` | `Bedroom UPS` | Description |
+| `nut_server_pollinterval` | `15` | Poll interval (seconds) |
+| `nut_server_listen_address` / `_port` | `0.0.0.0` / `3493` | `upsd` listener |
+| `nut_server_allowed_cidrs` | `10.1.1.0/24`, `10.0.0.0/24` | Source networks allowed through UFW |
+| `workstation_nut_client_enabled` | `false` | Enable the Mac NUT client (per-host opt-in) |
+| `workstation_nut_server_host` | `bedroom-pi.thesniderpad.com` | NUT server the Mac monitors |
+| `workstation_nut_ups_name` | `ups` | UPS name on the server |
 
-To provide a custom password via the environment, export:
+## Running
+
 ```bash
-export NUT_HA_PASSWORD="<custom_secret>"
-```
-Or store it in 1Password under the title `Home Assistant NUT Password`. The role **fails early** if no password of at least 12 characters resolves, so a placeholder can never be written into `upsd.users`.
+# Pi: install and configure the server
+uv run ansible-playbook -i inventory/hosts.yml --limit bedroom-pi site.yml
 
-### Listener Binding
-
-The listener binds to `127.0.0.1` by default — safe, but Home Assistant must run on the same machine. To let a remote Home Assistant instance connect:
-
-* Set `workstation_nut_listen_address` to the **specific** LAN (or Tailscale) IP/hostname Home Assistant uses to reach this Mac — recommended.
-* `0.0.0.0` should only be chosen deliberately: it exposes port 3493 on **every** interface (WAN, VPN, Tailscale) and therefore requires a strong per-deployment password (enforced by the fail-fast guard above).
-
-## Verification & Service Management
-
-### 1. Verification Script
-The playbook creates a verification script at `~/.local/bin/nut-check`. It targets the configured listener address (`workstation_nut_listen_address`), so it works with both the default loopback binding and a LAN/Tailscale opt-in binding:
-```bash
-~/.local/bin/nut-check
+# Mac: switch to the client and remove the old server
+uv run ansible-playbook -i inventory/hosts.yml --limit localhost site.yml --ask-become-pass
 ```
 
-### 2. Manual Testing (CLI)
-To test driver communication directly, target the address `upsd` is bound to:
+## Verification
+
 ```bash
-upsc mac_ups@127.0.0.1
+# On the Pi
+upsc ups@localhost
+systemctl status nut-server nut-monitor
+
+# From the Mac (also installed as ~/.local/bin/nut-check)
+upsc ups@bedroom-pi.thesniderpad.com
+sudo launchctl print system/org.networkupstools.upsmon
+tail /opt/homebrew/var/log/upsmon.log
 ```
 
-> **Note:** `upsd` listens only on `workstation_nut_listen_address` (default `127.0.0.1`). If you opted a host in to a LAN or Tailscale IP for remote Home Assistant, `@localhost` will fail even though the service is healthy — substitute that address instead (e.g. `upsc mac_ups@<Mac_Studio_IP>`).
+## Home Assistant
 
-### 3. Service Lifecycle
-The NUT server runs automatically under `launchd`. To view status or restart:
-```bash
-# Restart the service
-launchctl kickstart -k gui/$(id -u)/org.networkupstools.nut-server
+Update the existing NUT integration (**Settings** > **Devices & Services** > **Network UPS Tools**) to point at the Pi:
 
-# View daemon logs
-cat /opt/homebrew/var/log/nut-server.log
-```
+* **Host:** `bedroom-pi.thesniderpad.com` (or `10.1.1.249`)
+* **Port:** `3493`
+* **Username:** `ha_monitor`
+* **Password:** the `Home Assistant NUT Password` value
 
-## Adding to Home Assistant
-
-1. In Home Assistant, navigate to **Settings** > **Devices & Services** > **Add Integration**.
-2. Search for **Network UPS Tools (NUT)**.
-3. Enter the connection settings:
-   * **Host:** `<Mac_Studio_IP>` (e.g. the Mac's LAN or Tailscale IP/hostname)
-   * **Port:** `3493`
-   * **Username:** `ha_monitor`
-   * **Password:** *(the configured password)*
-4. Home Assistant will discover the UPS and expose entities for:
-   * Battery level (%)
-   * Battery runtime (seconds / minutes)
-   * Load percentage (%)
-   * Input voltage (V)
-   * Power status (`Online`, `On Battery`)
-
-## macOS Energy Considerations
-
-If the Mac Studio sleeps, the USB polling and NUT daemon pause, causing Home Assistant to lose live telemetry.
-
-To prevent this:
-1. Open macOS **System Settings** > **Energy**.
-2. Ensure **Prevent automatic sleeping when the display is off** is enabled.
+The UPS name changed from `mac_ups` to `ups`, so entity IDs may change. Re-select the UPS in the integration if it is not picked up automatically.

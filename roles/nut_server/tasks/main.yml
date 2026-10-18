@@ -1,0 +1,155 @@
+---
+# Network UPS Tools (NUT) server for a USB UPS attached to a Raspberry Pi.
+# Serves UPS telemetry to Home Assistant and shutdown events to upsmon clients.
+
+# Resolve each secret once. set_fact stores the rendered value, so 1Password is
+# not queried (and the user is not prompted) again for every task that uses it.
+- name: Resolve NUT passwords
+  ansible.builtin.set_fact:
+    nut_server_ha_password: >-
+      {{ lookup('ansible.builtin.env', nut_server_ha_password_env)
+         or lookup('community.general.onepassword', nut_server_ha_password_item, field='password', errors='ignore') }}
+    nut_server_primary_password: >-
+      {{ lookup('ansible.builtin.env', nut_server_primary_password_env)
+         or lookup('community.general.onepassword', nut_server_primary_password_item, field='password', errors='ignore') }}
+    nut_server_secondary_password: >-
+      {{ lookup('ansible.builtin.env', nut_server_secondary_password_env)
+         or lookup('community.general.onepassword', nut_server_secondary_password_item, field='password', errors='ignore') }}
+  no_log: true
+
+- name: Fail if any NUT password is missing or too short
+  ansible.builtin.fail:
+    msg: >-
+      NUT password '{{ item.name }}' is not configured. Set the {{ item.env }} environment
+      variable or create a 1Password item titled '{{ item.item }}' (min 12 characters).
+  when: (item.value | default('') | string | length) < 12
+  loop:
+    - name: ha
+      env: "{{ nut_server_ha_password_env }}"
+      item: "{{ nut_server_ha_password_item }}"
+      value: "{{ nut_server_ha_password }}"
+    - name: primary
+      env: "{{ nut_server_primary_password_env }}"
+      item: "{{ nut_server_primary_password_item }}"
+      value: "{{ nut_server_primary_password }}"
+    - name: secondary
+      env: "{{ nut_server_secondary_password_env }}"
+      item: "{{ nut_server_secondary_password_item }}"
+      value: "{{ nut_server_secondary_password }}"
+  loop_control:
+    label: "{{ item.name }}"
+
+- name: Install NUT
+  ansible.builtin.apt:
+    name: nut
+    state: present
+    cache_valid_time: 86400
+  notify: Reload udev rules for NUT
+
+- name: Configure NUT mode (nut.conf)
+  ansible.builtin.copy:
+    content: |
+      MODE=netserver
+    dest: /etc/nut/nut.conf
+    owner: root
+    group: nut
+    mode: "0640"
+  notify:
+    - Restart NUT drivers
+    - Restart NUT server
+    - Restart NUT monitor
+
+- name: Configure UPS hardware definition (ups.conf)
+  ansible.builtin.copy:
+    content: |
+      pollinterval = {{ nut_server_pollinterval }}
+
+      [{{ nut_server_ups_name }}]
+      driver = {{ nut_server_ups_driver }}
+      port = {{ nut_server_ups_port }}
+      desc = "{{ nut_server_ups_desc }}"
+    dest: /etc/nut/ups.conf
+    owner: root
+    group: nut
+    mode: "0640"
+  notify:
+    - Restart NUT drivers
+    - Restart NUT server
+
+- name: Configure NUT daemon listener (upsd.conf)
+  ansible.builtin.copy:
+    content: |
+      LISTEN {{ nut_server_listen_address }} {{ nut_server_listen_port }}
+    dest: /etc/nut/upsd.conf
+    owner: root
+    group: nut
+    mode: "0640"
+  notify: Restart NUT server
+
+# ha_monitor is read-only: Home Assistant only polls data, so it gets no
+# upsmon role and no actions. Only the primary may declare a forced shutdown.
+- name: Configure NUT users (upsd.users)
+  ansible.builtin.copy:
+    content: |
+      [{{ nut_server_ha_user }}]
+      password = {{ nut_server_ha_password }}
+
+      [{{ nut_server_primary_user }}]
+      password = {{ nut_server_primary_password }}
+      upsmon primary
+
+      [{{ nut_server_secondary_user }}]
+      password = {{ nut_server_secondary_password }}
+      upsmon secondary
+    dest: /etc/nut/upsd.users
+    owner: root
+    group: nut
+    mode: "0640"
+  no_log: true
+  notify: Restart NUT server
+
+# The Pi monitors its own UPS as the primary, so it triggers the forced shutdown
+# that secondaries (the Mac) react to, and powers off last.
+- name: Configure local UPS monitor (upsmon.conf)
+  ansible.builtin.copy:
+    content: |
+      MONITOR {{ nut_server_ups_name }}@localhost 1 {{ nut_server_primary_user }} {{ nut_server_primary_password }} primary
+      MINSUPPLIES 1
+      SHUTDOWNCMD "/sbin/shutdown -h +0"
+      POWERDOWNFLAG /etc/killpower
+    dest: /etc/nut/upsmon.conf
+    owner: root
+    group: nut
+    mode: "0640"
+  no_log: true
+  notify: Restart NUT monitor
+
+- name: Allow NUT port from the local networks in UFW
+  community.general.ufw:
+    rule: allow
+    port: "{{ nut_server_listen_port | string }}"
+    proto: tcp
+    from_ip: "{{ item }}"
+    comment: "NUT upsd from LAN"
+  loop: "{{ nut_server_allowed_cidrs }}"
+
+- name: Ensure NUT services are enabled and running
+  ansible.builtin.systemd:
+    name: "{{ item }}"
+    enabled: true
+    state: started
+  loop:
+    - nut-driver-enumerator.service
+    - nut-server.service
+    - nut-monitor.service
+
+- name: Flush handlers so NUT is up before verification
+  ansible.builtin.meta: flush_handlers
+
+- name: Verify the UPS responds locally
+  ansible.builtin.command: upsc {{ nut_server_ups_name }}@localhost ups.status
+  register: nut_server_upsc
+  changed_when: false
+  retries: 5
+  delay: 3
+  until: nut_server_upsc.rc == 0

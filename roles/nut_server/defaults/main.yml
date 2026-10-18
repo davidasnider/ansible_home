@@ -1,0 +1,31 @@
+---
+# defaults file for nut_server
+
+# UPS hardware definition (USB HID UPS attached to the Pi)
+nut_server_ups_name: ups
+nut_server_ups_driver: usbhid-ups
+nut_server_ups_port: auto
+nut_server_ups_desc: "Bedroom UPS"
+nut_server_pollinterval: 15
+
+# upsd listener. The listener binds to all interfaces and ufw restricts access
+# to nut_server_allowed_cidrs, so only the local network can reach port 3493.
+nut_server_listen_address: "0.0.0.0"
+nut_server_listen_port: 3493
+nut_server_allowed_cidrs:
+  - "10.1.1.0/24"
+  - "10.0.0.0/24"
+
+# Accounts defined in upsd.users
+nut_server_ha_user: ha_monitor # read-only, used by Home Assistant
+nut_server_primary_user: upsmon_primary # local upsmon on the Pi (can set FSD)
+nut_server_secondary_user: upsmon_secondary # remote upsmon clients (e.g. the Mac)
+
+# Passwords resolve once per run (env var first, then 1Password) in tasks/main.yml.
+# There are no weak defaults: the role fails early if a password is under 12 characters.
+nut_server_ha_password_env: NUT_HA_PASSWORD  # pragma: allowlist secret
+nut_server_ha_password_item: "Home Assistant NUT Password"  # pragma: allowlist secret
+nut_server_primary_password_env: NUT_PRIMARY_PASSWORD  # pragma: allowlist secret
+nut_server_primary_password_item: "NUT Primary Password"  # pragma: allowlist secret
+nut_server_secondary_password_env: NUT_SECONDARY_PASSWORD  # pragma: allowlist secret
+nut_server_secondary_password_item: "NUT Secondary Password"  # pragma: allowlist secret

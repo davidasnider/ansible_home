@@ -1,21 +1,14 @@
 ---
 # defaults file for workstation
 
-# Network UPS Tools (NUT) Server Configuration
-# Opt-in per host (host_vars or the `workstations` group); hosts without a UPS
-# attached would otherwise spin in an endless LaunchAgent restart loop.
-workstation_nut_server_enabled: false
-workstation_nut_ups_name: "mac_ups"
-workstation_nut_ups_driver: "macosx-ups"
-workstation_nut_ups_port: "auto"
-workstation_nut_ups_desc: "Mac Studio UPS"
-workstation_nut_pollinterval: 15
-# Deliberate binding: loopback by default; set a specific LAN/Tailscale IP per
-# host to expose the service, and only widen to 0.0.0.0 deliberately.
-workstation_nut_listen_address: "127.0.0.1"
-workstation_nut_listen_port: 3493
-workstation_nut_ha_user: "ha_monitor"
-# No weak default: nut-server-mac.yml fails early if no real password resolves.
-workstation_nut_ha_password: >-
-  {{ lookup('ansible.builtin.env', 'NUT_HA_PASSWORD')
-     | default(lookup('community.general.onepassword', 'Home Assistant NUT Password', field='password', errors='ignore'), true) }}
+# Network UPS Tools (NUT) client
+# The UPS is attached to a NUT server (bedroom-pi, see the nut_server role).
+# Opt-in per host; enabling it runs upsmon so the Mac shuts down cleanly when
+# the server reports a low battery.
+workstation_nut_client_enabled: false
+workstation_nut_server_host: "bedroom-pi.thesniderpad.com"
+workstation_nut_server_port: 3493
+workstation_nut_ups_name: "ups"
+workstation_nut_secondary_user: "upsmon_secondary"
+# The password is resolved once per run in nut-client-mac.yml (env var
+# NUT_SECONDARY_PASSWORD, then the 1Password item 'NUT Secondary Password').
