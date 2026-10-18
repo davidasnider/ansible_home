@@ -9,7 +9,7 @@ description: Runs the Ansible playbook to update the local macOS workstation con
 ### Prerequisites
 
 - Run this skill from the repository root so relative paths such as `inventory/hosts.yml` and `site.yml` resolve correctly.
-- No sudo password is required on macOS; the workstation role tasks for macOS all run with `become: false`.
+- Secrets (including the macOS sudo password) are fetched once from 1Password by `playbooks/secrets.yml`, imported first in `site.yml`, so sign in to 1Password (`op`) first and run via `site.yml`.
 - Ensure `uv` is installed and the project dependencies needed for `ansible-playbook` are available.
 - This skill is intended only for macOS.
 

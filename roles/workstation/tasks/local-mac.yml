@@ -165,6 +165,7 @@
       community.general.homebrew_cask:
         name:
           - antigravity-cli
+          - claude-code
           - iterm2
           - visual-studio-code
           - orbstack

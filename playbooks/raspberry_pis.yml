@@ -5,14 +5,11 @@
   become: true
 
   pre_tasks:
-    # Resolve 1Password secrets once per host. set_fact stores the rendered value,
-    # so later tasks do not trigger additional 1Password approval prompts.
-    - name: Fetch secrets from 1Password
+    # Secrets are fetched once for the whole run by playbooks/secrets.yml (see site.yml).
+    - name: Load secrets from localhost facts
       ansible.builtin.set_fact:
-        ansible_become_password: "{{ lookup('community.general.onepassword', 'Raspberry Pi Sudo', field='password') }}"
-        raspberry_pi_authorized_keys:
-          - "{{ lookup('community.general.onepassword', 'Giro SSH Key', field='public key') }}"
-          - "{{ lookup('community.general.onepassword', 'Git Commit SSH Key', field='public key') }}"
+        ansible_become_password: "{{ hostvars['localhost']['secrets_raspberry_pi_sudo'] }}"
+        raspberry_pi_authorized_keys: "{{ hostvars['localhost']['secrets_raspberry_pi_authorized_keys'] }}"
       no_log: true
 
     - name: Gather facts

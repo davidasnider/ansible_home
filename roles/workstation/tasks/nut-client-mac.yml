@@ -4,12 +4,8 @@
 # secondary so it shuts down cleanly when the server reports a low battery or a
 # forced shutdown. Running upsmon needs root, so it is a LaunchDaemon.
 
-- name: Resolve NUT secondary password
-  ansible.builtin.set_fact:
-    workstation_nut_secondary_password: >-
-      {{ lookup('ansible.builtin.env', 'NUT_SECONDARY_PASSWORD')
-         or lookup('community.general.onepassword', 'NUT Secondary Password', field='password', errors='ignore') }}
-  no_log: true
+# The sudo and NUT secondary passwords are fetched once per run by
+# playbooks/secrets.yml (imported first in site.yml).
 
 - name: Compose NUT monitor target
   ansible.builtin.set_fact:
@@ -62,7 +58,6 @@
     - /opt/homebrew/var/state/ups
     - /opt/homebrew/var/run
     - /opt/homebrew/var/log
-  become: true
 
 - name: Configure NUT client mode (nut.conf)
   ansible.builtin.copy:

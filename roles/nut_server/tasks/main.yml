@@ -2,19 +2,13 @@
 # Network UPS Tools (NUT) server for a USB UPS attached to a Raspberry Pi.
 # Serves UPS telemetry to Home Assistant and shutdown events to upsmon clients.
 
-# Resolve each secret once. set_fact stores the rendered value, so 1Password is
-# not queried (and the user is not prompted) again for every task that uses it.
-- name: Resolve NUT passwords
+# The passwords are fetched once per run by playbooks/secrets.yml (imported first
+# in site.yml), so 1Password is not queried again here.
+- name: Load NUT passwords from localhost facts
   ansible.builtin.set_fact:
-    nut_server_ha_password: >-
-      {{ lookup('ansible.builtin.env', nut_server_ha_password_env)
-         or lookup('community.general.onepassword', nut_server_ha_password_item, field='password', errors='ignore') }}
-    nut_server_primary_password: >-
-      {{ lookup('ansible.builtin.env', nut_server_primary_password_env)
-         or lookup('community.general.onepassword', nut_server_primary_password_item, field='password', errors='ignore') }}
-    nut_server_secondary_password: >-
-      {{ lookup('ansible.builtin.env', nut_server_secondary_password_env)
-         or lookup('community.general.onepassword', nut_server_secondary_password_item, field='password', errors='ignore') }}
+    nut_server_ha_password: "{{ hostvars['localhost']['secrets_nut_ha_password'] }}"
+    nut_server_primary_password: "{{ hostvars['localhost']['secrets_nut_primary_password'] }}"
+    nut_server_secondary_password: "{{ hostvars['localhost']['secrets_nut_secondary_password'] }}"
   no_log: true
 
 - name: Fail if any NUT password is missing or too short

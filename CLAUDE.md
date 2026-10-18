@@ -6,6 +6,7 @@
 - **Repository info**: Owner: `davidasnider`, Repo: `ansible_home`
 - **Issues & TODOs**: Use GitHub issues to track all feature requests and tasks
 - **Package management**: Add packages to Ansible roles, not direct brew installs
+- **Secrets**: Only pull passwords and other secrets from 1Password, and only in the single `op inject` call in `playbooks/secrets.yml` (imported first in `site.yml`). Never add `community.general.onepassword` lookups, `op read` calls or other secret fetches in roles or other playbooks; add the `op://` reference to `secrets.yml`, publish it as a localhost fact, and read it via `hostvars['localhost']`
 - **PR workflow**: Always validate changes before creating PRs, let CI/CD handle merging
 
 ## Testing Commands
