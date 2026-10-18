@@ -9,24 +9,32 @@
 ## 2. **Maintenance & Workflow**
 - [x] Repository cleanup automation (`make cleanup`).
 - [x] macOS workstation update skill.
+- [x] Claude code review workflow (`@claude review` on a PR; actions pinned to commit SHAs).
 
-## 3. **Secrets Management**
-- [ ] Secure secrets management by integrating HashiCorp Vault (and optionally Ansible Vault as a fallback).
-- [ ] Integrate HashiCorp Vault for centralized secrets management.
-- [ ] Document Vault usage in the `docs/` folder.
-- [ ] Optionally, set up Ansible Vault for local fallback encryption.
+## 3. **Raspberry Pis & Home Network**
+- [x] Raspberry Pi baseline role (SSH hardening, ufw, unattended upgrades).
+- [x] Add `bedroom-pi` (Wi-Fi power save disabled via a persistent systemd unit).
+- [x] NUT server on `bedroom-pi`; the Mac is a NUT client (see [NUT Integration](docs/NUT_UPS_INTEGRATION.md)).
+- [ ] Exercise the UPS shutdown path end to end (Mac `upsmon` secondary and Pi primary) during a planned power-loss test.
+- [ ] Add Molecule or CI coverage for the `raspberry_pi` and `nut_server` roles.
 
-## 4. **CI/CD and Testing**
+## 4. **Secrets Management**
+- [x] Fetch secrets from 1Password at runtime (Pi sudo password, SSH public keys, NUT passwords), resolved once per run.
+- [x] Document 1Password usage (`docs/1PASSWORD_SECURITY.md`).
+- ~~HashiCorp Vault / Ansible Vault~~ Superseded: 1Password is the secrets store for this repo. Reopen only if a need appears that 1Password can't cover.
+
+## 5. **CI/CD and Testing**
+- [x] Implement syntax-checking as a gate for pushes (`Ansible Syntax Check` job in `ci.yml`).
 - [ ] Set up GitHub Actions workflow for **Molecule** testing.
   - Optional enhancement (branch protection no longer strictly requires this).
-- [ ] Implement syntax-checking as a gate for pushes.
-- [ ] Integrate Pulumi automation (CD) for infrastructure changes.
+- [ ] Integrate Pulumi automation (CD) for infrastructure changes (`infrastructure/` exists, but no workflow runs it).
 
-## 5. **Documentation**
+## 6. **Documentation**
 - [x] Comprehensive README overhaul.
+- [x] NUT UPS integration guide (`docs/NUT_UPS_INTEGRATION.md`).
 - [ ] Create detailed onboarding guides in `docs/`.
 - [ ] Add Architecture Decision Records (ADRs) for Pro-Lazy shell and Role structure.
 
-## 6. **Scalability**
+## 7. **Scalability**
 - [ ] Introduce subdirectories in `roles/` for logical separation (e.g., `monitoring`, `logging`).
-- [ ] Maintain `library/` and `filter_plugins/` for custom logic.
+- [ ] Maintain `library/` and `filter_plugins/` for custom logic (neither directory exists yet).
