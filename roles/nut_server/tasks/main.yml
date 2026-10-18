@@ -133,13 +133,19 @@
     comment: "NUT upsd from LAN"
   loop: "{{ nut_server_allowed_cidrs }}"
 
+# A one-shot that exits after each run, so "started" would report a change every
+# time. The "Restart NUT drivers" handler runs it whenever ups.conf changes.
+- name: Ensure the NUT driver enumerator is enabled
+  ansible.builtin.systemd:
+    name: nut-driver-enumerator.service
+    enabled: true
+
 - name: Ensure NUT services are enabled and running
   ansible.builtin.systemd:
     name: "{{ item }}"
     enabled: true
     state: started
   loop:
-    - nut-driver-enumerator.service
     - nut-server.service
     - nut-monitor.service
 
