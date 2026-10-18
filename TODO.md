@@ -16,7 +16,7 @@
 - [x] Add `bedroom-pi` (Wi-Fi power save disabled via a persistent systemd unit).
 - [x] NUT server on `bedroom-pi`; the Mac is a NUT client (see [NUT Integration](docs/NUT_UPS_INTEGRATION.md)).
 - [ ] Exercise the UPS shutdown path end to end (Mac `upsmon` secondary and Pi primary) during a planned power-loss test.
-- [ ] Add Molecule or CI coverage for the `raspberry_pi` and `nut_server` roles.
+- [x] Molecule scenarios and a CI job for the `raspberry_pi` and `nut_server` roles (`make test-molecule`).
 
 ## 4. **Secrets Management**
 - [x] Fetch secrets from 1Password at runtime (Pi sudo password, SSH public keys, NUT passwords), resolved once per run.
@@ -25,8 +25,8 @@
 
 ## 5. **CI/CD and Testing**
 - [x] Implement syntax-checking as a gate for pushes (`Ansible Syntax Check` job in `ci.yml`).
-- [ ] Set up GitHub Actions workflow for **Molecule** testing.
-  - Optional enhancement (branch protection no longer strictly requires this).
+- [x] GitHub Actions `Molecule` job in `ci.yml` (currently covers `raspberry_pi` and `nut_server`).
+- [ ] Extend Molecule coverage to the `workstation` and `home_assistant_remote` roles (the existing `workstation` scenario only runs a few basic tasks and is not run in CI).
 - [ ] Integrate Pulumi automation (CD) for infrastructure changes (`infrastructure/` exists, but no workflow runs it).
 
 ## 6. **Documentation**

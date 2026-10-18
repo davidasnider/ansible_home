@@ -1,0 +1,12 @@
+---
+- name: Converge
+  hosts: all
+  become: true
+  gather_facts: true
+
+  vars:
+    raspberry_pi_allowed_ports:
+      - 8123
+
+  roles:
+    - role: raspberry_pi

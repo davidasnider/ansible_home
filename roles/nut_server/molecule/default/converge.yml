@@ -1,0 +1,14 @@
+---
+- name: Converge
+  hosts: all
+  become: true
+  gather_facts: true
+
+  vars:
+    nut_server_ups_driver: dummy-ups
+    nut_server_ups_port: /opt/nut-test/ups.dev
+    # Containers have no udevd; real hardware keeps the default (true).
+    nut_server_reload_udev: false
+
+  roles:
+    - role: nut_server

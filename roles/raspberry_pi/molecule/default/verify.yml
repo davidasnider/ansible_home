@@ -1,0 +1,72 @@
+---
+- name: Verify
+  hosts: all
+  become: true
+  gather_facts: true
+
+  tasks:
+    - name: Gather package and service facts
+      ansible.builtin.package_facts:
+
+    - name: Gather service facts
+      ansible.builtin.service_facts:
+
+    - name: Baseline packages are installed
+      ansible.builtin.assert:
+        that: item in ansible_facts.packages
+        fail_msg: "{{ item }} is not installed"
+      loop:
+        - ufw
+        - fail2ban
+        - unattended-upgrades
+        - curl
+
+    - name: Read sshd_config
+      ansible.builtin.slurp:
+        src: /etc/ssh/sshd_config
+      register: raspberry_pi_sshd_config
+
+    - name: SSH is hardened
+      ansible.builtin.assert:
+        that:
+          - "'PermitRootLogin no' in (raspberry_pi_sshd_config.content | b64decode)"
+          - "'PasswordAuthentication no' in (raspberry_pi_sshd_config.content | b64decode)"
+          - "'PermitEmptyPasswords no' in (raspberry_pi_sshd_config.content | b64decode)"
+
+    - name: Services are running
+      ansible.builtin.assert:
+        that:
+          - ansible_facts.services['fail2ban.service'].state == 'running'
+          - ansible_facts.services['unattended-upgrades.service'].state in ['running', 'active']
+
+    - name: Read automatic upgrade settings
+      ansible.builtin.slurp:
+        src: /etc/apt/apt.conf.d/20auto-upgrades
+      register: raspberry_pi_auto_upgrades
+
+    - name: Automatic upgrades are configured
+      ansible.builtin.assert:
+        that:
+          - '"Unattended-Upgrade \"1\"" in (raspberry_pi_auto_upgrades.content | b64decode)'
+
+    - name: Read configured UFW rules
+      ansible.builtin.command: ufw show added
+      register: raspberry_pi_ufw_added
+      changed_when: false
+
+    - name: UFW denies incoming and allows SSH plus the extra port
+      ansible.builtin.assert:
+        that:
+          - "'ufw allow 22/tcp' in raspberry_pi_ufw_added.stdout"
+          - "'ufw allow 8123/tcp' in raspberry_pi_ufw_added.stdout"
+
+    # The container has no wlan0, so the Wi-Fi power-save block must be skipped
+    # instead of failing (this is the case the review caught for wired hosts).
+    - name: Wi-Fi power save unit is skipped when there is no wlan0
+      ansible.builtin.stat:
+        path: /etc/systemd/system/wifi-power-save-off.service
+      register: raspberry_pi_wifi_unit
+
+    - name: Assert the Wi-Fi unit was not installed
+      ansible.builtin.assert:
+        that: not raspberry_pi_wifi_unit.stat.exists

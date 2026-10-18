@@ -16,6 +16,10 @@ nut_server_allowed_cidrs:
   - "10.1.1.0/24"
   - "10.0.0.0/24"
 
+# Reload and re-trigger udev after installing NUT so a UPS that was already plugged
+# in gets the nut group permissions. Disable where there is no udevd (containers).
+nut_server_reload_udev: true
+
 # Accounts defined in upsd.users
 nut_server_ha_user: ha_monitor # read-only, used by Home Assistant
 nut_server_primary_user: upsmon_primary # local upsmon on the Pi (can set FSD)

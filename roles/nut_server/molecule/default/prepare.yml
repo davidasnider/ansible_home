@@ -1,0 +1,31 @@
+---
+- name: Prepare
+  hosts: all
+  become: true
+  gather_facts: false
+
+  tasks:
+    # raspberry_pi installs ufw on a real Pi; nut_server only adds rules to it.
+    - name: Install ufw
+      ansible.builtin.apt:
+        name: ufw
+        state: present
+        update_cache: true
+
+    # No USB UPS in a container, so the dummy-ups driver replays this file.
+    - name: Create dummy UPS data directory
+      ansible.builtin.file:
+        path: /opt/nut-test
+        state: directory
+        mode: "0755"
+
+    - name: Create dummy UPS definition
+      ansible.builtin.copy:
+        content: |
+          ups.status: OL
+          battery.charge: 100
+          battery.runtime: 5900
+          ups.load: 5
+          device.model: Molecule Test UPS
+        dest: /opt/nut-test/ups.dev
+        mode: "0644"

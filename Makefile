@@ -17,13 +17,26 @@ dev-setup:
 	uv run pre-commit install --hook-type pre-commit --hook-type commit-msg --overwrite
 
 # Testing targets
-.PHONY: test test-all test-lint test-syntax clean-test cleanup check-updates
+.PHONY: test test-all test-lint test-syntax test-molecule molecule-test-raspberry-pi molecule-test-nut-server clean-test cleanup check-updates
 
 test: test-lint test-syntax
 	@echo "All tests completed successfully"
 
-test-all: test
+test-all: test test-molecule
 	@echo "Full suite completed"
+
+# Molecule scenarios need a running Docker daemon. With OrbStack the Python Docker
+# SDK does not read the CLI context, so export DOCKER_HOST first, e.g.
+#   export DOCKER_HOST=unix://$$HOME/.orbstack/run/docker.sock
+test-molecule: molecule-test-raspberry-pi molecule-test-nut-server
+
+molecule-test-raspberry-pi:
+	@echo "Running Molecule for the raspberry_pi role..."
+	cd roles/raspberry_pi && uv run molecule test
+
+molecule-test-nut-server:
+	@echo "Running Molecule for the nut_server role..."
+	cd roles/nut_server && uv run molecule test
 
 test-lint:
 	@echo "Running pre-commit formatting checks..."

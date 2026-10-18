@@ -1,0 +1,90 @@
+---
+- name: Verify
+  hosts: all
+  become: true
+  gather_facts: true
+
+  tasks:
+    - name: Gather service facts
+      ansible.builtin.service_facts:
+
+    - name: NUT services are running
+      ansible.builtin.assert:
+        that:
+          - ansible_facts.services['nut-server.service'].state == 'running'
+          - ansible_facts.services['nut-monitor.service'].state == 'running'
+          - ansible_facts.services['nut-driver@ups.service'].state == 'running'
+
+    - name: Query the UPS over TCP like a remote client
+      ansible.builtin.command: upsc ups@127.0.0.1:3493
+      register: nut_server_upsc
+      changed_when: false
+
+    - name: UPS data is served
+      ansible.builtin.assert:
+        that:
+          - "'ups.status: OL' in nut_server_upsc.stdout"
+          - "'battery.charge: 100' in nut_server_upsc.stdout"
+
+    - name: Check upsd listener
+      ansible.builtin.command: ss -ltn sport = :3493
+      register: nut_server_listen
+      changed_when: false
+
+    - name: The upsd daemon listens on all interfaces on 3493
+      ansible.builtin.assert:
+        that: "'0.0.0.0:3493' in nut_server_listen.stdout"
+
+    - name: Read upsd.users
+      ansible.builtin.slurp:
+        src: /etc/nut/upsd.users
+      register: nut_server_users
+
+    - name: Stat NUT config files
+      ansible.builtin.stat:
+        path: "/etc/nut/{{ item }}"
+      loop:
+        - nut.conf
+        - ups.conf
+        - upsd.conf
+        - upsd.users
+        - upsmon.conf
+      register: nut_server_config_stats
+
+    - name: Config files are not world-readable and are group nut
+      ansible.builtin.assert:
+        that:
+          - item.stat.pw_name == 'root'
+          - item.stat.gr_name == 'nut'
+          - item.stat.mode == '0640'
+        fail_msg: "{{ item.item }} has mode {{ item.stat.mode }} owner {{ item.stat.pw_name }}:{{ item.stat.gr_name }}"
+      loop: "{{ nut_server_config_stats.results }}"
+      loop_control:
+        label: "{{ item.item }}"
+
+    - name: Accounts and roles are defined
+      ansible.builtin.assert:
+        that:
+          - "'[ha_monitor]' in (nut_server_users.content | b64decode)"
+          - "'[upsmon_primary]' in (nut_server_users.content | b64decode)"
+          - "'[upsmon_secondary]' in (nut_server_users.content | b64decode)"
+          - "'upsmon primary' in (nut_server_users.content | b64decode)"
+          - "'upsmon secondary' in (nut_server_users.content | b64decode)"
+
+    - name: The ha_monitor account has no upsmon role (read-only)
+      ansible.builtin.assert:
+        that: >-
+          (nut_server_users.content | b64decode).split('[upsmon_primary]')[0]
+          is not search('upsmon')
+
+    - name: Read configured UFW rules
+      ansible.builtin.command: ufw show added
+      register: nut_server_ufw
+      changed_when: false
+
+    - name: Port 3493 is limited to the configured networks
+      ansible.builtin.assert:
+        that:
+          - "'ufw allow from 10.1.1.0/24 to any port 3493 proto tcp' in nut_server_ufw.stdout"
+          - "'ufw allow from 10.0.0.0/24 to any port 3493 proto tcp' in nut_server_ufw.stdout"
+          - "'ufw allow 3493' not in nut_server_ufw.stdout"

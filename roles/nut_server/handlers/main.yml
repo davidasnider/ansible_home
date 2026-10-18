@@ -7,6 +7,7 @@
     udevadm trigger --subsystem-match=usb --action=add
     udevadm settle
   changed_when: true
+  when: nut_server_reload_udev
 
 - name: Restart NUT drivers
   ansible.builtin.systemd:

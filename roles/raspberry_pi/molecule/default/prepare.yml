@@ -1,0 +1,13 @@
+---
+- name: Prepare
+  hosts: all
+  become: true
+  gather_facts: false
+
+  tasks:
+    # A real Pi ships with sshd; the role only edits its config and restarts it.
+    - name: Install openssh-server (preinstalled on Raspberry Pi OS)
+      ansible.builtin.apt:
+        name: openssh-server
+        state: present
+        update_cache: true

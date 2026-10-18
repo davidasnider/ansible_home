@@ -11,6 +11,26 @@ The testing suite includes:
 - **ansible-lint** for code quality assurance
 - **CI/CD integration** with GitHub Actions
 
+## Role Scenarios Run in CI
+
+The `raspberry_pi` and `nut_server` roles each have a Molecule scenario in `roles/<role>/molecule/default/`. CI runs both in the `Molecule` job of `.github/workflows/ci.yml` (one matrix entry per role), and the merge gate waits for them.
+
+* **Image:** `molecule/shared/Dockerfile.debian-systemd` builds Debian 13 (trixie) with systemd, the same release as Raspberry Pi OS. Containers run privileged so real services (sshd, fail2ban, ufw, NUT) start.
+* **Sequence:** `destroy`, `syntax`, `create`, `prepare`, `converge`, `idempotence`, `verify`, `destroy`. A second converge must report zero changes.
+* **`raspberry_pi` verify:** baseline packages, SSH hardening in `sshd_config`, fail2ban and unattended-upgrades running, UFW rules, and that the Wi-Fi power-save unit is skipped on a host with no `wlan0`.
+* **`nut_server` verify:** the `dummy-ups` driver replaces the USB UPS. It checks that `nut-server`, `nut-monitor` and the driver run, that `upsc` returns data over TCP on port 3493, that config files are `root:nut` `0640`, that the three accounts have the right roles (`ha_monitor` is read-only), and that UFW limits port 3493 to the configured networks. The test passwords come from environment variables in `molecule.yml`, so 1Password is not needed.
+
+Run them locally (needs Docker):
+
+```bash
+export DOCKER_HOST=unix://$HOME/.orbstack/run/docker.sock   # OrbStack only; other Docker setups can skip this
+make test-molecule                    # both scenarios
+make molecule-test-raspberry-pi       # one role
+make molecule-test-nut-server
+```
+
+Not covered: real USB UPS detection and the udev rule (containers have no `udevd`, so the scenario sets `nut_server_reload_udev: false`), and the Wi-Fi power-save unit itself (no `wlan0`).
+
 ## Test Scenarios
 
 ### 1. Default Scenario (`default`)
