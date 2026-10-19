@@ -42,3 +42,13 @@
 **Vulnerability:** Services defaulting to weak or standard passwords, or failing open, provide an easy target for attackers.
 **Learning:** Default weak passwords can easily be forgotten and left in place, opening up services to compromise.
 **Prevention:** Remove weak default passwords and enforce strict requirements (e.g., fail early if the password is under 12 characters, or if no password resolves) to enforce secure credentials.
+
+## 2026-10-18 - GitHub Actions Dependency Pinning
+**Vulnerability:** GitHub Action workflows referencing actions by floating tags (e.g., `v1`) or branches (e.g., `main`) can execute unexpected code if those refs are overwritten or compromised.
+**Learning:** Pinning actions to a specific commit SHA prevents unexpected code execution from compromised upstream repositories.
+**Prevention:** Pin all GitHub Action workflow actions to exact commit SHAs.
+
+## 2026-10-18 - Predictable /tmp File Creation Vulnerability during OpenCode Installation
+**Vulnerability:** The `local-mac.yml` playbook used `ansible.builtin.get_url` with static, predictable paths in the world-writable `/tmp` directory (`/tmp/opencode-install.sh`).
+**Learning:** Hardcoding `/tmp/filename` allows local privilege escalation or arbitrary code execution via Time-Of-Check to Time-Of-Use (TOCTOU) race conditions or malicious symlinking/pre-creation by an unprivileged local user.
+**Prevention:** Always use `ansible.builtin.tempfile` to securely create temporary files or directories with unpredictable, randomized names and strict permissions before writing data or downloading files into them.
