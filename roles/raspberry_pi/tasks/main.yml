@@ -28,11 +28,33 @@
     key: "{{ item }}"
   loop: "{{ raspberry_pi_authorized_keys }}"
 
+- name: Query current effective sshd configuration
+  # 🛡️ Sentinel: Run before the config edits below so we can detect which spelling of the
+  # kbd-interactive directive this sshd build supports (see next task). Read-only, so it
+  # also runs under --check where ordinary command tasks would be skipped.
+  ansible.builtin.command: /usr/sbin/sshd -T
+  register: raspberry_pi_sshd_current
+  changed_when: false
+  check_mode: false
+
+- name: Detect kbd-interactive directive supported by the target sshd
+  # 🛡️ Sentinel: OpenSSH renamed ChallengeResponseAuthentication to KbdInteractiveAuthentication in 8.7
+  # (the old name became a deprecated alias), so `sshd -t` rejects the new spelling on older
+  # releases (e.g. Bullseye ships OpenSSH 8.4) and `sshd -T` reports the directive under the
+  # matching key name. Pick the spelling from what this sshd build itself reports, so both
+  # older and newer Raspberry Pi OS releases are supported.
+  ansible.builtin.set_fact:
+    raspberry_pi_kbd_interactive_directive: >-
+      {{ 'ChallengeResponseAuthentication'
+         if raspberry_pi_sshd_current.stdout_lines | select('match', '^challengeresponseauthentication ') | list
+         else 'KbdInteractiveAuthentication' }}
+
 - name: Configure SSH Daemon settings
   # ⚡ Bolt: Consolidated multiple SSH configuration tasks into a single loop
   # Expected impact: Reduced task execution overhead and faster playbook runs
-  # 🛡️ Sentinel: Ensure KbdInteractiveAuthentication and ChallengeResponseAuthentication are explicitly disabled
-  # to prevent PAM password prompts/keyboard-interactive bypasses when PasswordAuthentication is disabled.
+  # 🛡️ Sentinel: Ensure keyboard-interactive authentication is explicitly disabled (using the directive
+  # spelling supported by this sshd build, detected above) to prevent PAM password prompts/keyboard-
+  # interactive bypasses when PasswordAuthentication is disabled.
   # 🛡️ Sentinel: Validate the candidate config with `sshd -t` before it is written, so a directive
   # rejected by the target OpenSSH build (or any malformed file) fails this task instead of being
   # applied and leaving sshd down on the headless Pi.
@@ -46,8 +68,7 @@
     - { regexp: "^#?Port ", line: "Port {{ raspberry_pi_ssh_port }}" }
     - { regexp: "^#?PermitRootLogin ", line: "PermitRootLogin {{ raspberry_pi_permit_root_login }}" }
     - { regexp: "^#?PasswordAuthentication ", line: "PasswordAuthentication {{ raspberry_pi_password_authentication }}" }
-    - { regexp: "^#?KbdInteractiveAuthentication ", line: "KbdInteractiveAuthentication no" }
-    - { regexp: "^#?ChallengeResponseAuthentication ", line: "ChallengeResponseAuthentication no" }
+    - { regexp: "^#?{{ raspberry_pi_kbd_interactive_directive }} ", line: "{{ raspberry_pi_kbd_interactive_directive }} no" }
     - { regexp: "^#?PermitEmptyPasswords ", line: "PermitEmptyPasswords no" }
   notify: Restart SSH service
 
@@ -57,16 +78,21 @@
   # the lines written above and silently no-op this hardening while `sshd -t` still passes.
   # Collect the effective configuration reported by `sshd -T` (no `-C`, so this covers
   # the default, non-Match section) and assert it line-by-line in the next task.
+  # Read-only, so run it even under --check (where command tasks are otherwise skipped);
+  # the assertion below is skipped on dry runs because the edits were not written.
   ansible.builtin.command: /usr/sbin/sshd -T
   register: raspberry_pi_sshd_effective
   changed_when: false
+  check_mode: false
 
 - name: Assert effective SSH auth settings are not overridden by drop-ins
   # 🛡️ Sentinel: Covers every auth-related directive written above, including
   # PermitRootLogin and PermitEmptyPasswords. Each expected value must appear as a
   # full line of the `sshd -T` output (line-anchored match, so substrings cannot
   # produce false positives), and a failure names the overridden directive instead
-  # of failing with an opaque "Conditional result was False".
+  # of failing with an opaque "Conditional result was False". Skipped under --check:
+  # the lineinfile edits are not written on dry runs, so `sshd -T` would only report
+  # the pre-edit configuration and could not validate the change.
   ansible.builtin.assert:
     that:
       - raspberry_pi_sshd_effective.stdout_lines | select('match', '^' ~ item.directive ~ '$') | list
@@ -76,12 +102,13 @@
       (e.g. cloud-init) is likely overriding the value written to /etc/ssh/sshd_config.
       Remove or fix the conflicting drop-in, then re-run this playbook.
   loop:
-    - { directive: "kbdinteractiveauthentication no" }
+    - { directive: "{{ raspberry_pi_kbd_interactive_directive | lower }} no" }
     - { directive: "passwordauthentication {{ raspberry_pi_password_authentication }}" }
     - { directive: "permitrootlogin {{ raspberry_pi_permit_root_login }}" }
     - { directive: "permitemptypasswords no" }
   loop_control:
     label: "{{ item.directive }}"
+  when: not ansible_check_mode
 
 - name: Configure UFW default policies
   community.general.ufw:
