@@ -41,3 +41,7 @@
 ## 2026-10-11 - Shell Traps and exec
 **Learning:** Using `exec` replaces the shell process with the target program, meaning any shell traps (like EXIT, INT, TERM) will not be carried over or fired. To ensure cleanup traps fire, the target program must run as a child process (e.g., in the background or foreground, without `exec`) so the shell can catch the signal and run the trap.
 **Action:** Run services as child processes, not with `exec`, when relying on shell traps to perform cleanup upon service unload or termination.
+
+## 2026-10-18 - Make Task Idempotent
+**Learning:** Tasks that register a variable and run unconditionally will cause changes on every run.
+**Action:** Use conditional checks, changed_when, or idempotent modules to ensure tasks don't register unnecessary changes when the system is already in the desired state.
