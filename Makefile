@@ -17,9 +17,9 @@ dev-setup:
 	uv run pre-commit install --hook-type pre-commit --hook-type commit-msg --overwrite
 
 # Testing targets
-.PHONY: test test-all test-lint test-syntax clean-test cleanup check-updates
+.PHONY: test test-all test-lint test-syntax test-pytest clean-test cleanup check-updates
 
-test: test-lint test-syntax
+test: test-lint test-syntax test-pytest
 	@echo "All tests completed successfully"
 
 test-all: test
@@ -34,6 +34,10 @@ test-lint:
 test-syntax:
 	@echo "Checking playbook syntax..."
 	uv run ansible-playbook --syntax-check -i inventory/hosts.yml site.yml
+
+test-pytest:
+	@echo "Running pytest suite..."
+	uv run pytest tests/
 
 check-updates:
 	@echo "Checking for remote_homeassistant updates..."

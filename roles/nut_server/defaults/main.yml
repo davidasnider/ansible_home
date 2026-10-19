@@ -21,11 +21,6 @@ nut_server_ha_user: ha_monitor # read-only, used by Home Assistant
 nut_server_primary_user: upsmon_primary # local upsmon on the Pi (can set FSD)
 nut_server_secondary_user: upsmon_secondary # remote upsmon clients (e.g. the Mac)
 
-# Passwords resolve once per run (env var first, then 1Password) in tasks/main.yml.
-# There are no weak defaults: the role fails early if a password is under 12 characters.
-nut_server_ha_password_env: NUT_HA_PASSWORD  # pragma: allowlist secret
-nut_server_ha_password_item: "Home Assistant NUT Password"  # pragma: allowlist secret
-nut_server_primary_password_env: NUT_PRIMARY_PASSWORD  # pragma: allowlist secret
-nut_server_primary_password_item: "NUT Primary Password"  # pragma: allowlist secret
-nut_server_secondary_password_env: NUT_SECONDARY_PASSWORD  # pragma: allowlist secret
-nut_server_secondary_password_item: "NUT Secondary Password"  # pragma: allowlist secret
+# Passwords come from localhost facts published once per run by
+# playbooks/secrets.yml (env var first, then 1Password). There are no weak
+# defaults: the role fails early if a password is missing or under 12 characters.

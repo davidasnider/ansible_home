@@ -4,6 +4,22 @@
 
 # The passwords are fetched once per run by playbooks/secrets.yml (imported first
 # in site.yml), so 1Password is not queried again here.
+
+# Fail loudly when playbooks/secrets.yml did not run in this invocation (e.g. a
+# --limit that excludes localhost): without the published facts the Load NUT
+# passwords task below would fail with an opaque undefined-variable error hidden
+# by its no_log.
+- name: Require NUT passwords published by playbooks/secrets.yml
+  ansible.builtin.assert:
+    that:
+      - "'secrets_nut_ha_password' in (hostvars['localhost'] | default({}))"
+      - "'secrets_nut_primary_password' in (hostvars['localhost'] | default({}))"
+      - "'secrets_nut_secondary_password' in (hostvars['localhost'] | default({}))"
+    fail_msg: >-
+      NUT passwords were not loaded on localhost; playbooks/secrets.yml did not
+      run in this invocation. Run via site.yml (do not use --limit to exclude
+      localhost) so the 1Password fetch can publish them.
+
 - name: Load NUT passwords from localhost facts
   ansible.builtin.set_fact:
     nut_server_ha_password: "{{ hostvars['localhost']['secrets_nut_ha_password'] }}"
@@ -11,6 +27,9 @@
     nut_server_secondary_password: "{{ hostvars['localhost']['secrets_nut_secondary_password'] }}"
   no_log: true
 
+# The env var names and 1Password item titles below mirror the definitions in
+# playbooks/secrets.yml (single source of truth for actually fetching them); they
+# only shape this error message, so they are kept inline rather than in defaults.
 - name: Fail if any NUT password is missing or too short
   ansible.builtin.fail:
     msg: >-
@@ -19,16 +38,16 @@
   when: (item.value | default('') | string | length) < 12
   loop:
     - name: ha
-      env: "{{ nut_server_ha_password_env }}"
-      item: "{{ nut_server_ha_password_item }}"
+      env: NUT_HA_PASSWORD
+      item: "Home Assistant NUT Password"
       value: "{{ nut_server_ha_password }}"
     - name: primary
-      env: "{{ nut_server_primary_password_env }}"
-      item: "{{ nut_server_primary_password_item }}"
+      env: NUT_PRIMARY_PASSWORD
+      item: "NUT Primary Password"
       value: "{{ nut_server_primary_password }}"
     - name: secondary
-      env: "{{ nut_server_secondary_password_env }}"
-      item: "{{ nut_server_secondary_password_item }}"
+      env: NUT_SECONDARY_PASSWORD
+      item: "NUT Secondary Password"
       value: "{{ nut_server_secondary_password }}"
   loop_control:
     label: "{{ item.name }}"

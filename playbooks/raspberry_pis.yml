@@ -6,11 +6,26 @@
 
   vars:
     # Facts published on localhost by playbooks/secrets.yml (see site.yml).
-    # `default({})` keeps runs where secrets.yml never ran on their existing
-    # undefined-variable error from the Load secrets task below.
+    # `default({})` keeps the presence check below readable when secrets.yml
+    # never ran, where it fails with a clear message instead of an undefined-
+    # variable error hidden by the no_log on the Load secrets task.
     raspberry_pi_secrets: "{{ hostvars['localhost'] | default({}) }}"
 
   pre_tasks:
+    # Fail loudly when playbooks/secrets.yml did not run in this invocation
+    # (running this playbook alone, or site.yml with a --limit that excludes
+    # localhost): without the published facts the Load secrets task below would
+    # fail with an opaque undefined-variable error hidden by its no_log.
+    - name: Require secrets published by playbooks/secrets.yml
+      ansible.builtin.assert:
+        that:
+          - "'secrets_raspberry_pi_sudo' in raspberry_pi_secrets"
+          - "'secrets_raspberry_pi_authorized_keys' in raspberry_pi_secrets"
+        fail_msg: >-
+          Raspberry Pi secrets were not loaded on localhost; playbooks/secrets.yml
+          did not run in this invocation. Run via site.yml (do not use --limit to
+          exclude localhost) so the 1Password fetch can publish them.
+
     # Secrets are fetched once for the whole run by playbooks/secrets.yml (see site.yml).
     # Fail early when this run still manages Pis but the published Raspberry Pi
     # secrets are empty (e.g. when the 1Password fetch was disabled via the
