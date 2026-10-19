@@ -14,6 +14,7 @@ When making changes to this repository, please adhere to the following principle
 - **Use the Makefile**: The `Makefile` contains all necessary commands for setup, testing, and validation. Use `make` targets instead of running commands manually.
 - **Dependencies are Managed**: All Python dependencies are managed with uv and are defined in `pyproject.toml`. The project requires **Python 3.12+**. Do not use `pip` directly.
 - **Validate Before Committing**: Always run the relevant tests (e.g., `make test`) to ensure your changes are correct and do not break existing functionality before creating a pull request.
+- **Secrets Come From 1Password, Once**: Only pull passwords and other secrets from 1Password, and only in the single `op inject` call in `playbooks/secrets.yml` (imported first in `site.yml`), so a full run needs one approval prompt. Never add `community.general.onepassword` lookups, `op read` calls or other secret fetches in roles or other playbooks. To add a secret, add its `op://` reference to `secrets.yml`, publish it as a localhost fact, and read it elsewhere via `hostvars['localhost']`.
 - **Sign Your Commits**: All commits must be GPG signed ($SSH_SIGNING_KEY$). A pre-commit hook is in place to enforce this.
 
 ## 3. Environment Setup

@@ -10,5 +10,5 @@ workstation_nut_server_host: "bedroom-pi.thesniderpad.com"
 workstation_nut_server_port: 3493
 workstation_nut_ups_name: "ups"
 workstation_nut_secondary_user: "upsmon_secondary"
-# The password is resolved once per run in nut-client-mac.yml (env var
+# workstation_nut_secondary_password is set by playbooks/secrets.yml (env var
 # NUT_SECONDARY_PASSWORD, then the 1Password item 'NUT Secondary Password').

@@ -1,3 +1,4 @@
 ---
+- import_playbook: playbooks/secrets.yml
 - import_playbook: playbooks/workstations.yml
 - import_playbook: playbooks/raspberry_pis.yml
