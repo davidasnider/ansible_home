@@ -31,6 +31,8 @@
 - name: Configure SSH Daemon settings
   # ⚡ Bolt: Consolidated multiple SSH configuration tasks into a single loop
   # Expected impact: Reduced task execution overhead and faster playbook runs
+  # 🛡️ Sentinel: Ensure KbdInteractiveAuthentication and ChallengeResponseAuthentication are explicitly disabled
+  # to prevent PAM password prompts/keyboard-interactive bypasses when PasswordAuthentication is disabled.
   ansible.builtin.lineinfile:
     path: /etc/ssh/sshd_config
     regexp: "{{ item.regexp }}"
@@ -40,6 +42,8 @@
     - { regexp: "^#?Port ", line: "Port {{ raspberry_pi_ssh_port }}" }
     - { regexp: "^#?PermitRootLogin ", line: "PermitRootLogin {{ raspberry_pi_permit_root_login }}" }
     - { regexp: "^#?PasswordAuthentication ", line: "PasswordAuthentication {{ raspberry_pi_password_authentication }}" }
+    - { regexp: "^#?KbdInteractiveAuthentication ", line: "KbdInteractiveAuthentication no" }
+    - { regexp: "^#?ChallengeResponseAuthentication ", line: "ChallengeResponseAuthentication no" }
     - { regexp: "^#?PermitEmptyPasswords ", line: "PermitEmptyPasswords no" }
   notify: Restart SSH service
 
