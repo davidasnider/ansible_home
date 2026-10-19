@@ -33,11 +33,15 @@
   # Expected impact: Reduced task execution overhead and faster playbook runs
   # 🛡️ Sentinel: Ensure KbdInteractiveAuthentication and ChallengeResponseAuthentication are explicitly disabled
   # to prevent PAM password prompts/keyboard-interactive bypasses when PasswordAuthentication is disabled.
+  # 🛡️ Sentinel: Validate the candidate config with `sshd -t` before it is written, so a directive
+  # rejected by the target OpenSSH build (or any malformed file) fails this task instead of being
+  # applied and leaving sshd down on the headless Pi.
   ansible.builtin.lineinfile:
     path: /etc/ssh/sshd_config
     regexp: "{{ item.regexp }}"
     line: "{{ item.line }}"
     state: present
+    validate: /usr/sbin/sshd -t -f %s
   loop:
     - { regexp: "^#?Port ", line: "Port {{ raspberry_pi_ssh_port }}" }
     - { regexp: "^#?PermitRootLogin ", line: "PermitRootLogin {{ raspberry_pi_permit_root_login }}" }
