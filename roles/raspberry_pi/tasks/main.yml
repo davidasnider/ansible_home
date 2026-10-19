@@ -51,6 +51,19 @@
     - { regexp: "^#?PermitEmptyPasswords ", line: "PermitEmptyPasswords no" }
   notify: Restart SSH service
 
+- name: Verify effective SSH auth settings
+  # 🛡️ Sentinel: sshd applies the first value it finds for each directive, so drop-ins
+  # pulled in via `Include /etc/ssh/sshd_config.d/*.conf` (e.g. cloud-init) can override
+  # the lines written above and silently no-op this hardening while `sshd -t` still passes.
+  # Assert the effective configuration reported by `sshd -T` so an overriding drop-in
+  # fails the play instead of being masked by a reported `changed`.
+  ansible.builtin.command: /usr/sbin/sshd -T
+  register: raspberry_pi_sshd_effective
+  changed_when: false
+  failed_when: >
+    'kbdinteractiveauthentication no' not in raspberry_pi_sshd_effective.stdout
+    or 'passwordauthentication ' ~ raspberry_pi_password_authentication not in raspberry_pi_sshd_effective.stdout
+
 - name: Configure UFW default policies
   community.general.ufw:
     direction: "{{ item.direction }}"
