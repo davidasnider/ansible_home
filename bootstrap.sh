@@ -9,9 +9,13 @@ sudo apt update && sudo apt upgrade -y
 echo "📦 [2/4] Installing curl and uv package manager..."
 sudo apt install curl -y
 curl -LsSf https://astral.sh/uv/install.sh | sh
-if [ -f "$HOME/.cargo/env" ]; then
+if [ -f "$HOME/.local/bin/env" ]; then
+    source "$HOME/.local/bin/env"
+elif [ -f "$HOME/.cargo/env" ]; then
     source "$HOME/.cargo/env"
 fi
+export PATH="$HOME/.local/bin:$PATH"
+command -v uv >/dev/null || { echo "❌ uv not found on PATH after install" >&2; exit 1; }
 
 echo "⚡ [3/4] Synchronizing Python dependencies..."
 uv sync
