@@ -72,6 +72,14 @@
     - { regexp: "^#?PermitEmptyPasswords ", line: "PermitEmptyPasswords no" }
   notify: Restart SSH service
 
+- name: Apply pending SSH config changes before verifying
+  # 🛡️ Sentinel: Run the "Restart SSH service" handler (if notified by lineinfile above)
+  # before verifying, so that even if the assert below fails on a drop-in override, sshd
+  # has already restarted with the `sshd -t`-validated config. Without this flush a failed
+  # assert would abort the host before handlers run, and a re-run (where lineinfile reports
+  # no change) would not notify the handler again, leaving sshd on stale settings.
+  ansible.builtin.meta: flush_handlers
+
 - name: Verify effective SSH auth settings
   # 🛡️ Sentinel: sshd applies the first value it finds for each directive, so drop-ins
   # pulled in via `Include /etc/ssh/sshd_config.d/*.conf` (e.g. cloud-init) can override
