@@ -55,14 +55,33 @@
   # 🛡️ Sentinel: sshd applies the first value it finds for each directive, so drop-ins
   # pulled in via `Include /etc/ssh/sshd_config.d/*.conf` (e.g. cloud-init) can override
   # the lines written above and silently no-op this hardening while `sshd -t` still passes.
-  # Assert the effective configuration reported by `sshd -T` so an overriding drop-in
-  # fails the play instead of being masked by a reported `changed`.
+  # Collect the effective configuration reported by `sshd -T` (no `-C`, so this covers
+  # the default, non-Match section) and assert it line-by-line in the next task.
   ansible.builtin.command: /usr/sbin/sshd -T
   register: raspberry_pi_sshd_effective
   changed_when: false
-  failed_when: >
-    'kbdinteractiveauthentication no' not in raspberry_pi_sshd_effective.stdout
-    or 'passwordauthentication ' ~ raspberry_pi_password_authentication not in raspberry_pi_sshd_effective.stdout
+
+- name: Assert effective SSH auth settings are not overridden by drop-ins
+  # 🛡️ Sentinel: Covers every auth-related directive written above, including
+  # PermitRootLogin and PermitEmptyPasswords. Each expected value must appear as a
+  # full line of the `sshd -T` output (line-anchored match, so substrings cannot
+  # produce false positives), and a failure names the overridden directive instead
+  # of failing with an opaque "Conditional result was False".
+  ansible.builtin.assert:
+    that:
+      - raspberry_pi_sshd_effective.stdout_lines | select('match', '^' ~ item.directive ~ '$') | list
+    fail_msg: >-
+      Effective sshd configuration (sshd -T) does not contain "{{ item.directive }}".
+      sshd uses first-match-wins, so a drop-in under /etc/ssh/sshd_config.d/*.conf
+      (e.g. cloud-init) is likely overriding the value written to /etc/ssh/sshd_config.
+      Remove or fix the conflicting drop-in, then re-run this playbook.
+  loop:
+    - { directive: "kbdinteractiveauthentication no" }
+    - { directive: "passwordauthentication {{ raspberry_pi_password_authentication }}" }
+    - { directive: "permitrootlogin {{ raspberry_pi_permit_root_login }}" }
+    - { directive: "permitemptypasswords no" }
+  loop_control:
+    label: "{{ item.directive }}"
 
 - name: Configure UFW default policies
   community.general.ufw:
