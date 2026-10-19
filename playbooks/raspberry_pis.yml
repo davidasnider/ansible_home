@@ -4,8 +4,32 @@
   gather_facts: false
   become: true
 
+  vars:
+    # Facts published on localhost by playbooks/secrets.yml (see site.yml).
+    # `default({})` keeps runs where secrets.yml never ran on their existing
+    # undefined-variable error from the Load secrets task below.
+    raspberry_pi_secrets: "{{ hostvars['localhost'] | default({}) }}"
+
   pre_tasks:
     # Secrets are fetched once for the whole run by playbooks/secrets.yml (see site.yml).
+    # Fail early when this run still manages Pis but the published Raspberry Pi
+    # secrets are empty (e.g. when the 1Password fetch was disabled via the
+    # `secrets_fetch_enabled` variable): with empty credentials, become and the
+    # authorized_key loop below would only fail obscurely later.
+    - name: Fail early when Raspberry Pi secrets are empty
+      ansible.builtin.assert:
+        that:
+          - not ('secrets_raspberry_pi_sudo' in raspberry_pi_secrets)
+            or (raspberry_pi_secrets['secrets_raspberry_pi_sudo'] | length > 0)
+          - not ('secrets_raspberry_pi_authorized_keys' in raspberry_pi_secrets)
+            or (raspberry_pi_secrets['secrets_raspberry_pi_authorized_keys'] | select('match', '^$') | list | length == 0)
+        fail_msg: >-
+          Raspberry Pi secrets were published empty on localhost; do not disable the
+          1Password fetch (the `secrets_fetch_enabled` variable) for runs that manage
+          raspberry_pis - they need the Pi sudo password and SSH keys. Re-run via
+          site.yml with the fetch enabled (the default) so playbooks/secrets.yml can
+          supply them.
+
     - name: Load secrets from localhost facts
       ansible.builtin.set_fact:
         ansible_become_password: "{{ hostvars['localhost']['secrets_raspberry_pi_sudo'] }}"
