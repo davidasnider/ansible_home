@@ -107,6 +107,8 @@
       changed_when: false
 
     - name: Verify Pulumi installation
+      # ⚡ Bolt: Skip redundant Pulumi verification when Pulumi is already installed
+      # Expected impact: Saves ~500ms-1s per workstation playbook run on hosts where Pulumi is already present
       ansible.builtin.shell: |
         export PATH=$HOME/.pulumi/bin:$PATH
         pulumi version
@@ -116,6 +118,7 @@
       retries: 5
       delay: 10
       until: workstation_pulumi_version_check.rc == 0
+      when: workstation_pulumi_check.rc != 0 and not workstation_optimized_base_check.stat.exists
 
   rescue:
     - name: Fail if Pulumi installation failed

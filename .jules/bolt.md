@@ -45,3 +45,7 @@
 ## 2026-10-18 - Make Task Idempotent
 **Learning:** Tasks that register a variable and run unconditionally will cause changes on every run.
 **Action:** Use conditional checks, changed_when, or idempotent modules to ensure tasks don't register unnecessary changes when the system is already in the desired state.
+
+## 2026-10-26 - Conditional Verification Tasks
+**Learning:** Verification tasks within installation blocks that lack conditional guards (`when`) run on every playbook execution, even when the software check confirmed the application is already installed.
+**Action:** Always add the same `when` condition to post-install verification tasks as used for installation steps to avoid redundant subshell execution on idempotent runs.
