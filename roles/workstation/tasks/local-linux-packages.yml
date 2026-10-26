@@ -48,10 +48,11 @@
       register: workstation_opencode_tmpdir
 
     - name: Download OpenCode installation script
+      # 🛡️ Sentinel: Restrict permissions to 0700 (owner only) to enforce least privilege
       ansible.builtin.get_url:
         url: https://opencode.ai/install
         dest: "{{ workstation_opencode_tmpdir.path }}/install.sh"
-        mode: "0755"
+        mode: "0700"
       register: workstation_opencode_download_linux
       retries: 3
       delay: 5
@@ -90,10 +91,11 @@
       when: workstation_pulumi_check.rc != 0 and not workstation_optimized_base_check.stat.exists
 
     - name: Download Pulumi installation script
+      # 🛡️ Sentinel: Restrict permissions to 0700 (owner only) to enforce least privilege
       ansible.builtin.get_url:
         url: https://get.pulumi.com
         dest: "{{ workstation_pulumi_tmpdir.path }}/install.sh"
-        mode: "0755"
+        mode: "0700"
       when: workstation_pulumi_check.rc != 0 and not workstation_optimized_base_check.stat.exists
       retries: 3
       delay: 5
