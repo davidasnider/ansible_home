@@ -52,3 +52,8 @@
 **Vulnerability:** The `local-mac.yml` playbook used `ansible.builtin.get_url` with static, predictable paths in the world-writable `/tmp` directory (`/tmp/opencode-install.sh`).
 **Learning:** Hardcoding `/tmp/filename` allows local privilege escalation or arbitrary code execution via Time-Of-Check to Time-Of-Use (TOCTOU) race conditions or malicious symlinking/pre-creation by an unprivileged local user.
 **Prevention:** Always use `ansible.builtin.tempfile` to securely create temporary files or directories with unpredictable, randomized names and strict permissions before writing data or downloading files into them.
+
+## 2026-10-26 - Principle of Least Privilege for Temporary Installer Scripts
+**Vulnerability:** Temporary installer scripts downloaded into temporary directories during Ansible provisioning used `0755` permissions, making them readable and executable by any unprivileged user on the host.
+**Learning:** Even when temporary directories have randomized names, setting overly permissive `0755` permissions on downloaded scripts allows other local users on shared/multi-user systems to read script contents or execute them.
+**Prevention:** Always enforce the principle of least privilege by restricting temporary script permissions to `0700` (owner read/write/execute only).

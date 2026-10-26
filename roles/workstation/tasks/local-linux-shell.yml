@@ -21,10 +21,11 @@
       register: workstation_omp_tmpdir
 
     - name: Download oh-my-posh installation script
+      # 🛡️ Sentinel: Restrict permissions to 0700 (owner only) to enforce least privilege
       ansible.builtin.get_url:
         url: https://ohmyposh.dev/install.sh
         dest: "{{ workstation_omp_tmpdir.path }}/oh-my-posh-install.sh"
-        mode: "0755"
+        mode: "0700"
       retries: 3
       delay: 5
 
