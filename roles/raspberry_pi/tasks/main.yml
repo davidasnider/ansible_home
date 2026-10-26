@@ -103,7 +103,7 @@
   # the pre-edit configuration and could not validate the change.
   ansible.builtin.assert:
     that:
-      - raspberry_pi_sshd_effective.stdout_lines | select('match', '^' ~ item.directive ~ '$') | list
+      - raspberry_pi_sshd_effective.stdout_lines | select('match', '^' ~ item.directive ~ '$') | list | length > 0
     fail_msg: >-
       Effective sshd configuration (sshd -T) does not contain "{{ item.directive }}".
       sshd uses first-match-wins, so a drop-in under /etc/ssh/sshd_config.d/*.conf
