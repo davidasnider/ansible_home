@@ -146,6 +146,15 @@
     comment: "NUT upsd from LAN"
   loop: "{{ nut_server_allowed_cidrs }}"
 
+- name: Remove NUT UFW rules for retired networks
+  community.general.ufw:
+    rule: allow
+    port: "{{ nut_server_listen_port | string }}"
+    proto: tcp
+    from_ip: "{{ item }}"
+    delete: true
+  loop: "{{ nut_server_retired_cidrs }}"
+
 # A one-shot that exits after each run, so "started" would report a change every
 # time. The "Restart NUT drivers" handler runs it whenever ups.conf changes.
 - name: Ensure the NUT driver enumerator is enabled

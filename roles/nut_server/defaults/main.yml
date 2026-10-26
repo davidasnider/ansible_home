@@ -14,7 +14,11 @@ nut_server_listen_address: "0.0.0.0"
 nut_server_listen_port: 3493
 nut_server_allowed_cidrs:
   - "10.1.1.0/24"
-  - "10.0.0.0/24"
+  - "10.9.0.0/24"
+# Networks that were once allowed and whose UFW rules are removed on each run
+# (the ufw module only adds rules, so retired CIDRs must be deleted explicitly).
+nut_server_retired_cidrs:
+  - "10.0.0.0/24" # old CORE network, now 10.9.0.0/24
 
 # Accounts defined in upsd.users
 nut_server_ha_user: ha_monitor # read-only, used by Home Assistant
