@@ -62,3 +62,8 @@
 **Vulnerability:** Hardening settings written directly to `sshd_config` can be silently overridden by drop-in configuration files (e.g., `cloud-init` in `/etc/ssh/sshd_config.d/*.conf`) because `sshd` uses a first-match-wins strategy.
 **Learning:** Checking the raw file or syntax alone does not reflect the final runtime configuration, leaving intended security controls silently ineffective.
 **Prevention:** Always verify the effective configuration reported by the daemon (e.g., using `sshd -T`) and assert that critical security directives are enforced in the final resolved state.
+
+## 2026-10-26 - Principle of Least Privilege for Temporary Installer Scripts
+**Vulnerability:** Temporary installer scripts downloaded into temporary directories during Ansible provisioning used `0755` permissions, making them readable and executable by any unprivileged user on the host.
+**Learning:** Even when temporary directories have randomized names, setting overly permissive `0755` permissions on downloaded scripts allows other local users on shared/multi-user systems to read script contents or execute them.
+**Prevention:** Always enforce the principle of least privilege by restricting temporary script permissions to `0700` (owner read/write/execute only).

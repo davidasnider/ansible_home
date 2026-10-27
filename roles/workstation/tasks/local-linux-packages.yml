@@ -48,10 +48,11 @@
       register: workstation_opencode_tmpdir
 
     - name: Download OpenCode installation script
+      # 🛡️ Sentinel: Restrict permissions to 0700 (owner only) to enforce least privilege
       ansible.builtin.get_url:
         url: https://opencode.ai/install
         dest: "{{ workstation_opencode_tmpdir.path }}/install.sh"
-        mode: "0755"
+        mode: "0700"
       register: workstation_opencode_download_linux
       retries: 3
       delay: 5
@@ -90,10 +91,11 @@
       when: workstation_pulumi_check.rc != 0 and not workstation_optimized_base_check.stat.exists
 
     - name: Download Pulumi installation script
+      # 🛡️ Sentinel: Restrict permissions to 0700 (owner only) to enforce least privilege
       ansible.builtin.get_url:
         url: https://get.pulumi.com
         dest: "{{ workstation_pulumi_tmpdir.path }}/install.sh"
-        mode: "0755"
+        mode: "0700"
       when: workstation_pulumi_check.rc != 0 and not workstation_optimized_base_check.stat.exists
       retries: 3
       delay: 5
@@ -107,6 +109,10 @@
       changed_when: false
 
     - name: Verify Pulumi installation
+      # ⚡ Bolt: Skip redundant Pulumi verification when Pulumi is already installed (on PATH)
+      # Expected impact: Saves ~500ms-1s per workstation playbook run on hosts where Pulumi is already present
+      # Note: Still verifies after a fresh install and on optimized base images, where Pulumi lives in
+      # ~/.pulumi/bin (added to PATH below) and `which pulumi` alone would not find it.
       ansible.builtin.shell: |
         export PATH=$HOME/.pulumi/bin:$PATH
         pulumi version
@@ -116,6 +122,7 @@
       retries: 5
       delay: 10
       until: workstation_pulumi_version_check.rc == 0
+      when: workstation_pulumi_check.rc != 0
 
   rescue:
     - name: Fail if Pulumi installation failed

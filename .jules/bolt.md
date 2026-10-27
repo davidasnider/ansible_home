@@ -53,3 +53,7 @@
 ## 2026-10-19 - Consolidate Secret Fetches
 **Learning:** Fetching secrets individually from external systems (like 1Password) causes execution delays due to multiple network calls, command invocations, or user prompts (e.g., multiple authentication approvals).
 **Action:** Consolidate secret fetches into a single bulk operation (e.g., passing all needed references to a single `op inject` call), and publish the results as facts to eliminate redundant calls and repeated user prompts.
+
+## 2026-10-26 - Conditional Verification Tasks
+**Learning:** Verification tasks within installation blocks that lack conditional guards (`when`) run on every playbook execution, even when the software check confirmed the application is already installed.
+**Action:** Always add the same `when` condition to post-install verification tasks as used for installation steps to avoid redundant subshell execution on idempotent runs.
