@@ -46,6 +46,14 @@
 **Learning:** Tasks that register a variable and run unconditionally will cause changes on every run.
 **Action:** Use conditional checks, changed_when, or idempotent modules to ensure tasks don't register unnecessary changes when the system is already in the desired state.
 
+## 2026-10-19 - Redundant File Permissions Tasks
+**Learning:** Setting file permissions (`owner`, `group`, `mode`) using a separate `ansible.builtin.file` task after a creation module like `ansible.builtin.copy` is redundant. Many file creation modules in Ansible support setting these permissions natively during creation.
+**Action:** Use native file permission arguments within creation modules (e.g., `copy`, `template`, `get_url`) to set `owner`, `group`, and `mode`, rather than using subsequent `ansible.builtin.file` tasks to avoid extra execution overhead.
+
+## 2026-10-19 - Consolidate Secret Fetches
+**Learning:** Fetching secrets individually from external systems (like 1Password) causes execution delays due to multiple network calls, command invocations, or user prompts (e.g., multiple authentication approvals).
+**Action:** Consolidate secret fetches into a single bulk operation (e.g., passing all needed references to a single `op inject` call), and publish the results as facts to eliminate redundant calls and repeated user prompts.
+
 ## 2026-10-26 - Conditional Verification Tasks
 **Learning:** Verification tasks within installation blocks that lack conditional guards (`when`) run on every playbook execution, even when the software check confirmed the application is already installed.
 **Action:** Always add the same `when` condition to post-install verification tasks as used for installation steps to avoid redundant subshell execution on idempotent runs.

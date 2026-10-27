@@ -53,6 +53,16 @@
 **Learning:** Hardcoding `/tmp/filename` allows local privilege escalation or arbitrary code execution via Time-Of-Check to Time-Of-Use (TOCTOU) race conditions or malicious symlinking/pre-creation by an unprivileged local user.
 **Prevention:** Always use `ansible.builtin.tempfile` to securely create temporary files or directories with unpredictable, randomized names and strict permissions before writing data or downloading files into them.
 
+## 2026-10-19 - Pre-Validate SSH Daemon Configuration
+**Vulnerability:** Editing the `sshd_config` file and restarting the SSH daemon without prior validation can lead to malformed configurations or unsupported directives, causing the SSH daemon to fail to start and potentially locking out administrators from headless machines.
+**Learning:** Validating the configuration locally (e.g., using `sshd -t`) before applying it ensures that syntax errors or unsupported settings prevent the application of a broken configuration.
+**Prevention:** Use the `validate` parameter in modules like `ansible.builtin.lineinfile` (e.g., `validate: /usr/sbin/sshd -t -f %s`) to verify configurations before they are permanently written.
+
+## 2026-10-19 - Verify Effective SSH Daemon Configuration
+**Vulnerability:** Hardening settings written directly to `sshd_config` can be silently overridden by drop-in configuration files (e.g., `cloud-init` in `/etc/ssh/sshd_config.d/*.conf`) because `sshd` uses a first-match-wins strategy.
+**Learning:** Checking the raw file or syntax alone does not reflect the final runtime configuration, leaving intended security controls silently ineffective.
+**Prevention:** Always verify the effective configuration reported by the daemon (e.g., using `sshd -T`) and assert that critical security directives are enforced in the final resolved state.
+
 ## 2026-10-26 - Principle of Least Privilege for Temporary Installer Scripts
 **Vulnerability:** Temporary installer scripts downloaded into temporary directories during Ansible provisioning used `0755` permissions, making them readable and executable by any unprivileged user on the host.
 **Learning:** Even when temporary directories have randomized names, setting overly permissive `0755` permissions on downloaded scripts allows other local users on shared/multi-user systems to read script contents or execute them.
