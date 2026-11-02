@@ -52,35 +52,37 @@
     path: "{{ home_assistant_remote_config_dir }}/custom_components/remote_homeassistant"
   register: home_assistant_remote_dir
 
-- name: Create temporary directory for integration download
-  ansible.builtin.tempfile:
-    state: directory
-    suffix: remote_ha
-  register: home_assistant_remote_temp_dir
+- name: Download, unpack, and install remote_homeassistant integration
   when: not home_assistant_remote_dir.stat.exists
+  block:
+    - name: Create temporary directory for integration download
+      ansible.builtin.tempfile:
+        state: directory
+        suffix: remote_ha
+      register: home_assistant_remote_temp_dir
 
-- name: Download and unpack remote_homeassistant integration archive
-  ansible.builtin.unarchive:
-    src: "{{ home_assistant_remote_zip_url }}"
-    dest: "{{ home_assistant_remote_temp_dir.path }}"
-    remote_src: true
-  when: not home_assistant_remote_dir.stat.exists
+    - name: Download and unpack remote_homeassistant integration archive
+      ansible.builtin.unarchive:
+        src: "{{ home_assistant_remote_zip_url }}"
+        dest: "{{ home_assistant_remote_temp_dir.path }}"
+        remote_src: true
 
-- name: Install remote_homeassistant custom component
-  ansible.builtin.copy:
-    src: "{{ home_assistant_remote_temp_dir.path }}/remote_homeassistant-{{ home_assistant_remote_version }}/custom_components/remote_homeassistant"
-    dest: "{{ home_assistant_remote_config_dir }}/custom_components/"
-    remote_src: true
-    owner: "{{ home_assistant_remote_user }}"
-    group: "{{ home_assistant_remote_user }}"
-    mode: "0755"
-  when: not home_assistant_remote_dir.stat.exists
+    - name: Install remote_homeassistant custom component
+      ansible.builtin.copy:
+        src: "{{ home_assistant_remote_temp_dir.path }}/remote_homeassistant-{{ home_assistant_remote_version }}/custom_components/remote_homeassistant"
+        dest: "{{ home_assistant_remote_config_dir }}/custom_components/"
+        remote_src: true
+        owner: "{{ home_assistant_remote_user }}"
+        group: "{{ home_assistant_remote_user }}"
+        mode: "0755"
 
-- name: Clean up temporary integration download directory
-  ansible.builtin.file:
-    path: "{{ home_assistant_remote_temp_dir.path }}"
-    state: absent
-  when: not home_assistant_remote_dir.stat.exists
+  always:
+    - name: Clean up temporary integration download directory
+      # 🛡️ Sentinel: Guarantee cleanup of temporary directory to prevent orphaned files or sensitive leftovers
+      ansible.builtin.file:
+        path: "{{ home_assistant_remote_temp_dir.path }}"
+        state: absent
+      when: home_assistant_remote_temp_dir is defined and home_assistant_remote_temp_dir.path is defined
 
 - name: Ensure correct permissions on Home Assistant configuration directory
   ansible.builtin.file:
