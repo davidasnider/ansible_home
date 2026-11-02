@@ -15,3 +15,7 @@
 ## 2026-10-19 - Fail Fast on Missing Dependencies
 **Learning:** Allowing a script to proceed when critical commands (like `uv`) are missing results in confusing errors further down the line that are harder to debug.
 **Action:** Explicitly check for the presence of critical commands (e.g., using `command -v`) early in the execution and fail fast with an actionable error message if they are not found.
+
+## 2026-10-27 - Actionable Remediation Output for CLI Diagnostics
+**Learning:** Warning users about outdated dependencies or configuration mismatches without providing the exact target file path and YAML/config keys forces the user to manually search through roles. Presenting clear per-item status and ready-to-paste remediation snippets turns an alert directly into a fast, error-free fix.
+**Action:** Always provide explicit config file paths and copy-pasteable remediation snippets alongside diagnostic warning alerts in CLI tools.

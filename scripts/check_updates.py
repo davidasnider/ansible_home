@@ -43,24 +43,30 @@ def main():
     latest_remote = get_latest_version("custom-components/remote_homeassistant")
     latest_ha = get_latest_version("home-assistant/core")
 
-    print(f"remote_homeassistant: Pinned={current['remote_homeassistant']}, Latest={latest_remote}")
-    print(f"home_assistant: Pinned={current['home_assistant']}, Latest={latest_ha}")
+    print(f"Checking dependencies against {DEFAULTS_FILE.relative_to(DEFAULTS_FILE.parent.parent.parent)}...")
 
-    updates_available = False
+    updates = []
+    checks = [
+        ("remote_homeassistant", "home_assistant_remote_version", current["remote_homeassistant"], latest_remote),
+        ("home_assistant", "home_assistant_remote_ha_version", current["home_assistant"], latest_ha),
+    ]
 
-    if current['remote_homeassistant'] != latest_remote:
-        print(f"🚨 UPDATE AVAILABLE: A new version ({latest_remote}) of remote_homeassistant is available!")
-        updates_available = True
+    for name, key, pinned, latest in checks:
+        if pinned == latest:
+            print(f"  ✅ {name}: {pinned} (up to date)")
+        else:
+            print(f"  🚨 {name}: {pinned} -> {latest} (update available)")
+            updates.append((name, key, pinned, latest))
 
-    if current['home_assistant'] != latest_ha:
-        print(f"🚨 UPDATE AVAILABLE: A new version ({latest_ha}) of home-assistant/core is available!")
-        updates_available = True
-
-    if updates_available:
+    if updates:
+        print("\n💡 Actionable next steps:")
+        print(f"   Update the pinned versions in '{DEFAULTS_FILE.relative_to(DEFAULTS_FILE.parent.parent.parent)}':")
+        for _, key, _, latest in updates:
+            print(f"     {key}: \"{latest}\"")
         # Exit with code 1 to indicate an update is available (triggers CI failure/email notification)
         sys.exit(1)
     else:
-        print("✅ All dependencies up to date.")
+        print("\n✨ All dependencies are up to date.")
         sys.exit(0)
 
 if __name__ == "__main__":
