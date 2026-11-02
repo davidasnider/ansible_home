@@ -5,7 +5,9 @@ import yaml
 from pathlib import Path
 
 # Paths
-DEFAULTS_FILE = Path(__file__).resolve().parent.parent / "roles/home_assistant_remote/defaults/main.yml"
+REPO_ROOT = Path(__file__).resolve().parent.parent
+DEFAULTS_FILE = REPO_ROOT / "roles/home_assistant_remote/defaults/main.yml"
+DEFAULTS_REL = DEFAULTS_FILE.relative_to(REPO_ROOT)
 
 def get_current_versions():
     try:
@@ -43,7 +45,7 @@ def main():
     latest_remote = get_latest_version("custom-components/remote_homeassistant")
     latest_ha = get_latest_version("home-assistant/core")
 
-    print(f"Checking dependencies against {DEFAULTS_FILE.relative_to(DEFAULTS_FILE.parent.parent.parent)}...")
+    print(f"Checking dependencies against {DEFAULTS_REL}...")
 
     updates = []
     checks = [
@@ -60,7 +62,7 @@ def main():
 
     if updates:
         print("\n💡 Actionable next steps:")
-        print(f"   Update the pinned versions in '{DEFAULTS_FILE.relative_to(DEFAULTS_FILE.parent.parent.parent)}':")
+        print(f"   Update the pinned versions in '{DEFAULTS_REL}':")
         for _, key, _, latest in updates:
             print(f"     {key}: \"{latest}\"")
         # Exit with code 1 to indicate an update is available (triggers CI failure/email notification)

@@ -31,6 +31,7 @@ def test_main_all_up_to_date(capsys):
     assert "✅ remote_homeassistant: 4.6 (up to date)" in captured.out
     assert "✅ home_assistant: 2026.8.1 (up to date)" in captured.out
     assert "✨ All dependencies are up to date." in captured.out
+    assert "roles/home_assistant_remote/defaults/main.yml" in captured.out
 
 
 def test_main_update_available(capsys):
@@ -55,3 +56,4 @@ def test_main_update_available(capsys):
     assert "💡 Actionable next steps:" in captured.out
     assert 'home_assistant_remote_version: "4.7"' in captured.out
     assert 'home_assistant_remote_ha_version: "2026.10.4"' in captured.out
+    assert "roles/home_assistant_remote/defaults/main.yml" in captured.out
