@@ -19,3 +19,7 @@
 ## 2026-10-27 - Actionable Remediation Output for CLI Diagnostics
 **Learning:** Warning users about outdated dependencies or configuration mismatches without providing the exact target file path and YAML/config keys forces the user to manually search through roles. Presenting clear per-item status and ready-to-paste remediation snippets turns an alert directly into a fast, error-free fix.
 **Action:** Always provide explicit config file paths and copy-pasteable remediation snippets alongside diagnostic warning alerts in CLI tools.
+
+## 2026-11-09 - Post-Setup Completion Guidance and Timing Feedback
+**Learning:** Terminal setup scripts that terminate with only a basic completion notice leave users unsure of next immediate actions (e.g. reloading the shell environment or running validations) and offer no feedback on execution duration. Displaying total elapsed time along with clear next steps creates a polished, reassuring onboarding experience.
+**Action:** Provide elapsed execution time and concrete follow-up commands at the conclusion of multi-step bootstrap scripts.
