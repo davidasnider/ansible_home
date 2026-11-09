@@ -67,3 +67,8 @@
 **Vulnerability:** Temporary installer scripts downloaded into temporary directories during Ansible provisioning used `0755` permissions, making them readable and executable by any unprivileged user on the host.
 **Learning:** Even when temporary directories have randomized names, setting overly permissive `0755` permissions on downloaded scripts allows other local users on shared/multi-user systems to read script contents or execute them.
 **Prevention:** Always enforce the principle of least privilege by restricting temporary script permissions to `0700` (owner read/write/execute only).
+
+## 2026-11-09 - Guaranteed Temporary Directory Cleanup for Installer Scripts
+**Vulnerability:** The Hermes Agent installer in `local-mac.yml` downloaded an external installation script into a temporary directory without wrapping execution in a `block`/`always` structure, leaving temporary directories and script files orphaned on disk if download, execution, or verification failed.
+**Learning:** Ansible tasks executed sequentially abort playbook execution on failure before subsequent cleanup tasks run. Temporary files and installer scripts left behind can accumulate, expose sensitive script remnants, or become attack surfaces on multi-user systems.
+**Prevention:** In Ansible playbooks and tasks where temporary directories are created using `ansible.builtin.tempfile`, wrap operations in a `block` with an `always` section to guarantee removal of the temporary directory (`state: absent`) regardless of success or failure.
