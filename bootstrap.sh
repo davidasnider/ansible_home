@@ -1,6 +1,7 @@
 #!/bin/bash
 set -eo pipefail
 
+START_TIME=$(date +%s)
 echo "🚀 Starting system bootstrap..."
 
 if ! command -v apt >/dev/null 2>&1; then
@@ -33,4 +34,8 @@ uv sync
 echo "🛠️ [4/4] Executing Ansible site playbook..."
 uv run ansible-playbook site.yml --ask-become-pass
 
-echo "✨ System bootstrap completed successfully!"
+ELAPSED=$(($(date +%s) - START_TIME))
+echo "✨ System bootstrap completed successfully in ${ELAPSED}s!"
+echo "💡 Next steps:"
+echo "   - Restart your shell or run 'exec zsh' to apply shell changes"
+echo "   - Validate your setup by running 'make test'"
