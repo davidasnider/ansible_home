@@ -225,52 +225,54 @@
   changed_when: false
   failed_when: false
 
-- name: Create secure temp directory for Hermes install script
-  ansible.builtin.tempfile:
-    state: directory
-    suffix: hermes_install
-  register: workstation_hermes_tmpdir
-  when: workstation_hermes_check.rc != 0
-
-- name: Download Hermes Agent install script
-  ansible.builtin.get_url:
-    url: https://raw.githubusercontent.com/NousResearch/hermes-agent/v2026.4.23/scripts/install.sh
-    dest: "{{ workstation_hermes_tmpdir.path }}/install.sh"
-    mode: "0700"
-    timeout: 300
-  when: workstation_hermes_check.rc != 0
-  register: workstation_hermes_download_result
-  retries: 3
-  delay: 5
-  until: workstation_hermes_download_result is succeeded
-
 - name: Install Hermes Agent
-  ansible.builtin.command:
-    argv:
-      - "{{ workstation_hermes_tmpdir.path }}/install.sh"
-      - --skip-setup
-  become: false
   when: workstation_hermes_check.rc != 0
-  register: workstation_hermes_install_result
-  changed_when: false
+  block:
+    - name: Create secure temp directory for Hermes install script
+      ansible.builtin.tempfile:
+        state: directory
+        suffix: hermes_install
+      register: workstation_hermes_tmpdir
 
-- name: Remove Hermes Agent install script temp directory
-  ansible.builtin.file:
-    path: "{{ workstation_hermes_tmpdir.path }}"
-    state: absent
-  when: workstation_hermes_check.rc != 0
+    - name: Download Hermes Agent install script
+      ansible.builtin.get_url:
+        url: https://raw.githubusercontent.com/NousResearch/hermes-agent/v2026.4.23/scripts/install.sh
+        dest: "{{ workstation_hermes_tmpdir.path }}/install.sh"
+        mode: "0700"
+        timeout: 300
+      register: workstation_hermes_download_result
+      retries: 3
+      delay: 5
+      until: workstation_hermes_download_result is succeeded
 
-- name: Debug Hermes Agent installation result
-  ansible.builtin.debug:
-    var: workstation_hermes_install_result
-    verbosity: 2
+    - name: Run Hermes Agent installer
+      ansible.builtin.command:
+        argv:
+          - "{{ workstation_hermes_tmpdir.path }}/install.sh"
+          - --skip-setup
+      become: false
+      register: workstation_hermes_install_result
+      changed_when: false
 
-- name: Verify Hermes Agent installation
-  ansible.builtin.command: hermes --version
-  register: workstation_hermes_version_check
-  changed_when: false
-  failed_when: workstation_hermes_version_check.rc != 0
-  when: workstation_hermes_check.rc != 0
+    - name: Debug Hermes Agent installation result
+      ansible.builtin.debug:
+        var: workstation_hermes_install_result
+        verbosity: 2
+
+    - name: Verify Hermes Agent installation
+      ansible.builtin.command: hermes --version
+      register: workstation_hermes_version_check
+      changed_when: false
+      failed_when: workstation_hermes_version_check.rc != 0
+
+  always:
+    - name: Clean up Hermes Agent temporary directory
+      # 🛡️ Sentinel: Guarantee cleanup of temporary directory to prevent orphaned files or sensitive leftovers
+      ansible.builtin.file:
+        path: "{{ workstation_hermes_tmpdir.path }}"
+        state: absent
+      changed_when: false
+      when: workstation_hermes_tmpdir is defined and workstation_hermes_tmpdir.path is defined
 
 - name: Copy zsh configuration files
   # ⚡ Bolt: Consolidated multiple copy tasks into a loop to reduce task parsing and initialization overhead
