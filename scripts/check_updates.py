@@ -21,6 +21,11 @@ def get_current_versions():
         print(f"Error reading defaults file: {e}", file=sys.stderr)
         sys.exit(2)
 
+# Bounded wait for api.github.com: without a timeout, urlopen() falls back to the
+# socket global default (None here) and a single stalled connection would hang the
+# CI job forever instead of failing with exit code 2.
+HTTP_TIMEOUT_SECONDS = 30
+
 def get_latest_version(repo):
     url = f"https://api.github.com/repos/{repo}/releases/latest"
     req = urllib.request.Request(
@@ -28,7 +33,7 @@ def get_latest_version(repo):
         headers={"User-Agent": "ansible-home-update-checker"}
     )
     try:
-        with urllib.request.urlopen(req) as res:
+        with urllib.request.urlopen(req, timeout=HTTP_TIMEOUT_SECONDS) as res:
             data = json.loads(res.read().decode("utf-8"))
             # Github tags can sometimes start with "v", strip it if present
             return data.get("tag_name").lstrip("v")
