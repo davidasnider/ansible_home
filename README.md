@@ -53,7 +53,6 @@ ansible_home/
 │           ├── local-mac.yml            # macOS-specific tasks
 │           ├── setup-git.yml            # Global Git configuration
 │           ├── 1password-security.yml   # 1Password security enhancements
-│           ├── install-oh-my-zsh.yml    # Oh My Zsh installation
 │           ├── gemini-setup.yml         # Gemini prompt setup
 │           ├── zshrc-linux              # Linux zsh configuration template
 ├── src/
@@ -311,7 +310,7 @@ The `local-linux.yml` file serves as the main entry point for Linux configuratio
 ## Common Tasks Across Platforms
 - Git user configuration (name and email)
 - `~/code` directory creation
-- Oh My Zsh installation and configuration (extracted to `roles/workstation/tasks/install-oh-my-zsh.yml`)
+- Oh My Zsh installation and configuration (inlined in `local-mac.yml` on macOS, `local-linux-shell.yml` on Linux)
 - Zsh plugin management (syntax highlighting, autosuggestions)
 - oh-my-posh theme engine setup
 - Python virtual environment detection and auto-activation
