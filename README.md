@@ -137,7 +137,7 @@ The sudo password is read from the 1Password item `Raspberry Pi Sudo` (field `pa
 
 ### uv Configuration
 - **Package Mode**: Disabled (`package-mode = false`) as this is a configuration project
-- **Dependencies**: Ansible 11.5+ and hvac for Vault integration
+- **Dependencies**: Ansible 13+ and hvac for Vault integration
 - **Dev Dependencies**: pre-commit for code quality
 
 ### Virtual Environment
