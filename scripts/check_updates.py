@@ -2,6 +2,7 @@ import sys
 import urllib.request
 import json
 import yaml
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 # Paths
@@ -47,8 +48,15 @@ def main():
         print("Could not find required versions in defaults.", file=sys.stderr)
         sys.exit(2)
 
-    latest_remote = get_latest_version("custom-components/remote_homeassistant")
-    latest_ha = get_latest_version("home-assistant/core")
+    # The two release lookups are independent, so fetch them concurrently: the
+    # script then waits for the slower call instead of their sum (worst case is
+    # one 30s timeout, not two). Results are read back in the original order,
+    # and a failure still surfaces as SystemExit(2) from .result().
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        remote_future = pool.submit(get_latest_version, "custom-components/remote_homeassistant")
+        home_assistant_future = pool.submit(get_latest_version, "home-assistant/core")
+        latest_remote = remote_future.result()
+        latest_ha = home_assistant_future.result()
 
     print(f"Checking dependencies against {DEFAULTS_REL}...")
 

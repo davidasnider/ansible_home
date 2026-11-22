@@ -95,3 +95,34 @@ def test_get_latest_version_fails_fast_on_timeout():
             check_updates.get_latest_version("home-assistant/core")
 
     assert exc_info.value.code == 2
+
+
+def test_main_fetches_both_releases_concurrently():
+    """The two independent GitHub release lookups must run in parallel (the
+    script's wall time is the slower call, not their sum). If they run on the
+    same thread, they must have been serialised."""
+    import threading
+    import time
+
+    calls = []
+
+    def fake_latest_version(repo):
+        # Hold the worker busy so a concurrent run is observable.
+        time.sleep(0.3)
+        calls.append((repo, threading.get_ident()))
+        return "4.6" if "remote_homeassistant" in repo else "2026.8.1"
+
+    mock_versions = {
+        "remote_homeassistant": "4.6",
+        "home_assistant": "2026.8.1",
+    }
+    with patch.object(check_updates, "get_current_versions", return_value=mock_versions):
+        with patch.object(check_updates, "get_latest_version", side_effect=fake_latest_version):
+            with pytest.raises(SystemExit) as exc_info:
+                check_updates.main()
+
+    assert exc_info.value.code == 0
+    repos = {repo for repo, _ in calls}
+    assert repos == {"custom-components/remote_homeassistant", "home-assistant/core"}
+    threads = {thread_ident for _, thread_ident in calls}
+    assert len(threads) == 2, f"expected both lookups to run on separate threads, got: {calls}"
