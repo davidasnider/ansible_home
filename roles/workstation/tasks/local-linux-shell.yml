@@ -26,6 +26,9 @@
         url: https://ohmyposh.dev/install.sh
         dest: "{{ workstation_omp_tmpdir.path }}/oh-my-posh-install.sh"
         mode: "0700"
+        # 🛡️ Sentinel: bounded wait so a stalled connection fails instead of
+        # hanging the playbook forever (get_url has no default timeout).
+        timeout: 300
       retries: 3
       delay: 5
 
