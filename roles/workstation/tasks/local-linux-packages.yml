@@ -53,6 +53,9 @@
         url: https://opencode.ai/install
         dest: "{{ workstation_opencode_tmpdir.path }}/install.sh"
         mode: "0700"
+        # 🛡️ Sentinel: get_url has no default socket timeout; bound the wait so a
+        # stalled connection fails (and retries) instead of hanging the run forever.
+        timeout: 300
       register: workstation_opencode_download_linux
       retries: 3
       delay: 5
@@ -96,6 +99,9 @@
         url: https://get.pulumi.com
         dest: "{{ workstation_pulumi_tmpdir.path }}/install.sh"
         mode: "0700"
+        # 🛡️ Sentinel: bounded wait so a stalled connection fails instead of
+        # hanging the playbook forever (get_url has no default timeout).
+        timeout: 300
       when: workstation_pulumi_check.rc != 0 and not workstation_optimized_base_check.stat.exists
       retries: 3
       delay: 5
@@ -158,6 +164,9 @@
         dest: "{{ workstation_1password_tmpdir.path }}/1password.asc"
         mode: "0644"
         force: false
+        # 🛡️ Sentinel: bounded wait so a stalled connection fails instead of
+        # hanging the playbook forever (get_url has no default timeout).
+        timeout: 300
       register: workstation_gpg_key_download
       when: not workstation_gpg_keyring_exists.stat.exists
       changed_when: false
